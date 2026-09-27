@@ -12,7 +12,7 @@ const CONTENT_SECURITY_POLICY = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data:",
   "font-src 'self'",
-  "connect-src 'self' https://scamguard-app-service.onrender.com https://*.onrender.com http://localhost:8000 http://127.0.0.1:8000",
+  "connect-src 'self' https://scamguard-ai-ecnj.onrender.com https://*.onrender.com http://localhost:8000 http://127.0.0.1:8000",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
