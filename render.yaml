@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: scamguard-app-service
+    env: docker
+    dockerfilePath: infra/docker/Dockerfile.app_service
+    dockerContext: backend
+    plan: free
+    envVars:
+      - key: PORT
+        value: "8000"
+      - key: APP_ENV
+        value: "production"
+      - key: DEBUG
+        value: "false"
+      # One worker fits the free instance's 512 MB (~250 MB per worker).
+      - key: UVICORN_WORKERS
+        value: "1"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: scamguard-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: "http://localhost:3000,https://frontend-psi-ebon-83.vercel.app"
+
+databases:
+  - name: scamguard-db
+    plan: free

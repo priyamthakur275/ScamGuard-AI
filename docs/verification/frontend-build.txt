@@ -1,0 +1,46 @@
+
+> scam-detection-frontend@1.0.0 build
+> next build
+
+  ▲ Next.js 14.2.35
+  - Environments: .env.local
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/16) ...
+   Generating static pages (4/16) 
+   Generating static pages (8/16) 
+   Generating static pages (12/16) 
+ ✓ Generating static pages (16/16)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                              Size     First Load JS
+┌ ○ /                                    9.04 kB         157 kB
+├ ○ /_not-found                          153 B            88 kB
+├ ○ /admin                               7.06 kB         155 kB
+├ ○ /admin/model-evaluation              2.37 kB         110 kB
+├ ○ /admin/robustness-test               3 kB            111 kB
+├ ○ /analytics                           4.25 kB         160 kB
+├ ○ /analyze                             7.89 kB         147 kB
+├ ○ /cases                               3.13 kB         111 kB
+├ ƒ /cases/[id]                          4.72 kB         112 kB
+├ ○ /dashboard                           4.38 kB         156 kB
+├ ○ /demo                                16.2 kB         159 kB
+├ ○ /history                             8.05 kB         163 kB
+├ ○ /login                               1.63 kB         125 kB
+├ ○ /register                            1.69 kB         125 kB
+└ ○ /settings                            6.8 kB          153 kB
++ First Load JS shared by all            87.9 kB
+  ├ chunks/2117-985760b1031fcc60.js      31.9 kB
+  ├ chunks/fd9d1056-482349a383bac764.js  53.6 kB
+  └ other shared chunks (total)          2.31 kB
+
+
+ƒ Middleware                             26.6 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

@@ -1,0 +1,54 @@
+# syntax=docker/dockerfile:1
+# Build context: backend/
+# Build with:  docker build -f infra/docker/Dockerfile.ml_service -t scamguard-ml-service backend
+
+FROM python:3.12-slim AS builder
+
+WORKDIR /build
+
+RUN set -eux; \
+        apt-get update; \
+        for i in 1 2 3 4 5; do \
+            apt-get install -y --no-install-recommends build-essential && break || (apt-get update && sleep 2); \
+        done; \
+        rm -rf /var/lib/apt/lists/*
+
+COPY requirements-ml.txt .
+RUN pip install --no-cache-dir --user -r requirements-ml.txt
+
+# --------------------------------------------------------------------------
+
+FROM python:3.12-slim AS runtime
+
+RUN set -eux; \
+        apt-get update; \
+        for i in 1 2 3 4 5; do \
+            apt-get install -y --no-install-recommends curl && break || (apt-get update && sleep 2); \
+        done; \
+        rm -rf /var/lib/apt/lists/*; \
+        useradd --create-home --uid 1000 appuser
+
+WORKDIR /app
+
+COPY --from=builder /root/.local /home/appuser/.local
+COPY ml_common ./ml_common
+COPY ml_service ./ml_service
+COPY ml_training ./ml_training
+
+ENV PATH=/home/appuser/.local/bin:$PATH \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    ARTIFACTS_DIR=/app/artifacts
+
+RUN mkdir -p /app/artifacts && chown -R appuser:appuser /app
+USER appuser
+
+# Bake the model artifacts directly into the image
+RUN python -m ml_training.run_training --dataset ml_training/datasets/sample_messages.csv --version v1 --artifacts-dir /app/artifacts
+
+EXPOSE 8002
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+    CMD curl -f http://localhost:${PORT:-8002}/api/v1/health || exit 1
+
+CMD uvicorn ml_service.main:app --host 0.0.0.0 --port ${PORT:-8002} --workers ${UVICORN_WORKERS:-2}

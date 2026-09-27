@@ -1,0 +1,59 @@
+# syntax=docker/dockerfile:1
+# Build context: backend/
+# Build with:  docker build -f infra/docker/Dockerfile.app_service -t scamguard-app-service backend
+
+FROM python:3.12-slim AS builder
+
+WORKDIR /build
+RUN set -eux; \
+        apt-get update; \
+        for i in 1 2 3 4 5; do \
+            apt-get install -y --no-install-recommends build-essential libpq-dev && break || (apt-get update && sleep 2); \
+        done; \
+        rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir --user -r requirements.txt
+
+# --------------------------------------------------------------------------
+
+FROM python:3.12-slim AS runtime
+
+RUN set -eux; \
+        apt-get update; \
+        for i in 1 2 3 4 5; do \
+            apt-get install -y --no-install-recommends libpq5 curl tesseract-ocr libzbar0 && break || (apt-get update && sleep 2); \
+        done; \
+        rm -rf /var/lib/apt/lists/*; \
+        useradd --create-home --uid 1000 appuser
+
+WORKDIR /app
+
+COPY --from=builder /root/.local /home/appuser/.local
+COPY app_service ./app_service
+COPY ml_common ./ml_common
+COPY ml_service ./ml_service
+COPY artifacts ./artifacts
+COPY alembic ./alembic
+COPY alembic.ini .
+
+RUN chown -R appuser:appuser /app
+USER appuser
+
+ENV PATH=/home/appuser/.local/bin:$PATH \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+    CMD curl -f http://localhost:${PORT:-8000}/api/v1/health || exit 1
+
+# Run migrations, then start the API server. Defaults to ONE uvicorn worker:
+# each worker loads its own copy of the model, scikit-learn/numpy and OCR
+# stack (~250 MB RSS measured after OCR/PDF/model use), so the previous
+# default of 4 exceeded the 512 MB of Render's free instance and got the
+# container OOM-killed. Raise UVICORN_WORKERS only on an instance with the
+# memory for it (roughly 300 MB per worker).
+CMD alembic upgrade head && \
+    uvicorn app_service.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers ${UVICORN_WORKERS:-1}

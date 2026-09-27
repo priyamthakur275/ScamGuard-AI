@@ -1,0 +1,30 @@
+name: Keep backend warm
+
+# Render's free tier spins the app_service container down after 15 minutes
+# of inactivity, which is what causes the "Cloud backend is waking from
+# standby" delay users see on first login of the day. This workflow pings
+# the real health endpoint often enough that Render never sees 15 idle
+# minutes, so the delay never happens in the first place.
+#
+# This costs nothing extra: GitHub Actions on a public repo is free, and a
+# GET to /api/v1/health does no DB writes and no ML inference.
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping health endpoint
+        run: |
+          set -e
+          url="https://scamguard-app-service.onrender.com/api/v1/health"
+          status=$(curl -s -o /tmp/health.json -w "%{http_code}" --max-time 60 "$url" || echo "000")
+          echo "HTTP $status"
+          cat /tmp/health.json 2>/dev/null || true
+          if [ "$status" != "200" ]; then
+            echo "::warning::Health check did not return 200 (got $status). The backend may be down, not just cold."
+          fi

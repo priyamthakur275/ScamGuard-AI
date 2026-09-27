@@ -1,0 +1,38 @@
+/home/claude/sg/backend/.venv/lib/python3.12/site-packages/pytest_asyncio/plugin.py:208: PytestDeprecationWarning: The configuration option "asyncio_default_fixture_loop_scope" is unset.
+The event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: "function", "class", "module", "package", "session"
+
+  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))
+........................................................................ [ 13%]
+........................................................................ [ 27%]
+........................................................................ [ 41%]
+........................................................................ [ 55%]
+........................................................................ [ 69%]
+........................................................................ [ 83%]
+........................................................................ [ 97%]
+.............                                                            [100%]
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/starlette/testclient.py:40
+  /home/claude/sg/backend/.venv/lib/python3.12/site-packages/starlette/testclient.py:40: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = typing.Callable[[], typing.ContextManager[anyio.abc.BlockingPortal]]
+
+.venv/lib/python3.12/site-packages/passlib/utils/__init__.py:854
+  /home/claude/sg/backend/.venv/lib/python3.12/site-packages/passlib/utils/__init__.py:854: DeprecationWarning: 'crypt' is deprecated and slated for removal in Python 3.13
+    from crypt import crypt as _crypt
+
+tests/test_analytics.py: 77 warnings
+tests/test_cases.py: 55 warnings
+tests/test_copilot.py: 6 warnings
+tests/test_correlation.py: 18 warnings
+tests/test_demo.py: 32 warnings
+tests/test_messages.py: 45 warnings
+tests/test_model_evaluation.py: 6 warnings
+tests/test_rbac.py: 8 warnings
+tests/test_reports.py: 28 warnings
+tests/test_robustness.py: 3 warnings
+tests/test_security_headers_and_body_limit.py: 1 warning
+tests/test_users.py: 1 warning
+  /home/claude/sg/backend/.venv/lib/python3.12/site-packages/jose/jwt.py:311: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    now = timegm(datetime.utcnow().utctimetuple())
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+517 passed, 282 warnings in 96.16s (0:01:36)
