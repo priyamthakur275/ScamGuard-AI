@@ -35,9 +35,7 @@ COPY backend/ml_common ./ml_common
 COPY backend/ml_service ./ml_service
 COPY backend/artifacts ./artifacts
 COPY backend/alembic ./alembic
-# Generate Alembic config in-image so the Docker build does not depend on
-# the config file being included in the Docker build context.
-RUN printf '%s\n' '[alembic]' 'script_location = alembic' 'prepend_sys_path = .' 'sqlalchemy.url =' > /app/alembic.ini
+COPY backend/alembic.ini ./alembic.ini
 
 RUN chown -R appuser:appuser /app
 USER appuser
