@@ -12,7 +12,7 @@ RUN set -eux; \
         done; \
         rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
+COPY backend/requirements.txt .
 RUN pip install --no-cache-dir --user -r requirements.txt
 
 # --------------------------------------------------------------------------
@@ -30,11 +30,11 @@ RUN set -eux; \
 WORKDIR /app
 
 COPY --from=builder /root/.local /home/appuser/.local
-COPY app_service ./app_service
-COPY ml_common ./ml_common
-COPY ml_service ./ml_service
-COPY artifacts ./artifacts
-COPY alembic ./alembic
+COPY backend/app_service ./app_service
+COPY backend/ml_common ./ml_common
+COPY backend/ml_service ./ml_service
+COPY backend/artifacts ./artifacts
+COPY backend/alembic ./alembic
 # Generate Alembic config in-image so the Docker build does not depend on
 # the config file being included in the Docker build context.
 RUN printf '%s\\n' \\
