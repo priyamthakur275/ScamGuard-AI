@@ -1,0 +1,72 @@
+name: Backend CI (app_service)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/app_service/**"
+      - "backend/alembic/**"
+      - "backend/requirements.txt"
+      - "backend/pytest.ini"
+      - "backend/tests/**"
+      - ".github/workflows/backend-ci.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "backend/app_service/**"
+      - "backend/alembic/**"
+      - "backend/requirements.txt"
+      - "backend/pytest.ini"
+      - "backend/tests/**"
+      - ".github/workflows/backend-ci.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_pass
+          POSTGRES_DB: test_scam_detection
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test_user"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Alembic migrations against the test database
+        env:
+          SECRET_KEY: ci-test-secret-key-at-least-32-characters-long
+          DATABASE_URL: postgresql+psycopg2://test_user:test_pass@localhost:5432/test_scam_detection
+        run: alembic upgrade head
+
+      - name: Run test suite
+        env:
+          SECRET_KEY: ci-test-secret-key-at-least-32-characters-long
+          DATABASE_URL: postgresql+psycopg2://test_user:test_pass@localhost:5432/test_scam_detection
+        run: pytest tests -v
+
+      - name: Build Docker image
+        run: |
+          docker build -f ../infra/docker/Dockerfile.app_service -t scamguard-app-service:ci .

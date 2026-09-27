@@ -1,0 +1,128 @@
+{
+  "date": "2026-09-25",
+  "runtime": "Next.js production server + FastAPI + SQLite, Chromium (Playwright 1.56)",
+  "passed": 29,
+  "total": 29,
+  "checks": [
+    {
+      "name": "landing renders",
+      "result": "PASS"
+    },
+    {
+      "name": "register with CAPTCHA -> dashboard",
+      "result": "PASS"
+    },
+    {
+      "name": "text scan -> verdict",
+      "result": "PASS"
+    },
+    {
+      "name": "feedback submit",
+      "result": "PASS"
+    },
+    {
+      "name": "copilot answer",
+      "result": "PASS"
+    },
+    {
+      "name": "PDF report download",
+      "result": "PASS"
+    },
+    {
+      "name": "URL scan -> verdict",
+      "result": "PASS"
+    },
+    {
+      "name": "email scan -> verdict + forensics",
+      "result": "PASS"
+    },
+    {
+      "name": "image OCR scan -> verdict",
+      "result": "PASS"
+    },
+    {
+      "name": "PDF scan -> verdict",
+      "result": "PASS"
+    },
+    {
+      "name": "QR scan -> verdict",
+      "result": "PASS"
+    },
+    {
+      "name": "voice transcript -> verdict",
+      "result": "PASS"
+    },
+    {
+      "name": "camera tab renders (no device)",
+      "result": "PASS"
+    },
+    {
+      "name": "dashboard page renders",
+      "result": "PASS"
+    },
+    {
+      "name": "history page renders",
+      "result": "PASS"
+    },
+    {
+      "name": "analytics page renders",
+      "result": "PASS"
+    },
+    {
+      "name": "cases page renders",
+      "result": "PASS"
+    },
+    {
+      "name": "settings page renders",
+      "result": "PASS"
+    },
+    {
+      "name": "demo page renders",
+      "result": "PASS"
+    },
+    {
+      "name": "admin page as regular user",
+      "result": "PASS"
+    },
+    {
+      "name": "wrong CAPTCHA -> new challenge -> register succeeds",
+      "result": "PASS"
+    },
+    {
+      "name": "case: create from scan, status, note, PDF+JSON report",
+      "result": "PASS"
+    },
+    {
+      "name": "history: fits width, threat filter, CSV export, expand, delete",
+      "result": "PASS"
+    },
+    {
+      "name": "copilot: free-text question, full-width input",
+      "result": "PASS"
+    },
+    {
+      "name": "dark theme toggle",
+      "result": "PASS"
+    },
+    {
+      "name": "mobile 390px: no page overflow or clipped elements (8 pages + verdict)",
+      "result": "PASS"
+    },
+    {
+      "name": "logout",
+      "result": "PASS"
+    },
+    {
+      "name": "login",
+      "result": "PASS"
+    },
+    {
+      "name": "protected route redirects when logged out",
+      "result": "PASS"
+    }
+  ],
+  "console_errors": [
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)"
+  ],
+  "uncaught_page_errors": 0
+}

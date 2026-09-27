@@ -1,0 +1,57 @@
+name: ML CI (ml_common / ml_training / ml_service)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/ml_common/**"
+      - "backend/ml_training/**"
+      - "backend/ml_service/**"
+      - "backend/requirements-ml.txt"
+      - "backend/pytest.ini"
+      - ".github/workflows/ml-ci.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "backend/ml_common/**"
+      - "backend/ml_training/**"
+      - "backend/ml_service/**"
+      - "backend/requirements-ml.txt"
+      - "backend/pytest.ini"
+      - ".github/workflows/ml-ci.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: backend/requirements-ml.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements-ml.txt
+
+      - name: Run test suite
+        run: pytest ml_common/tests ml_training/tests ml_service/tests -v
+
+      - name: Train a smoke-test model
+        run: |
+          python -m ml_training.run_training \
+            --dataset ml_training/datasets/sample_messages.csv \
+            --version ci-smoke \
+            --artifacts-dir /tmp/ci-artifacts
+
+      - name: Build ml_trainer Docker image
+        run: docker build -f ../infra/docker/Dockerfile.ml_trainer -t scamguard-ml-trainer:ci .
+
+      - name: Build ml_service Docker image
+        run: docker build -f ../infra/docker/Dockerfile.ml_service -t scamguard-ml-service:ci .
