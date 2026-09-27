@@ -19,7 +19,6 @@ const CONTENT_SECURITY_POLICY = [
 ].join("; ");
 
 const nextConfig = {
-  output: "standalone",
   reactStrictMode: true,
   async headers() {
     const securityHeaders = [
