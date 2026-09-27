@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /analyze
+Disallow: /history
+Disallow: /analytics
+Disallow: /settings

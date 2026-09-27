@@ -1,0 +1,43 @@
+# syntax=docker/dockerfile:1
+# Build context: backend/
+# Build with:  docker build -f infra/docker/Dockerfile.ml_trainer -t scamguard-ml-trainer backend
+#
+# This image runs ONCE to produce a trained, registered model into a
+# shared volume that ml_service then mounts read-only. It is not a
+# long-running service.
+
+FROM python:3.12-slim AS builder
+
+WORKDIR /build
+
+RUN set -eux; \
+        apt-get update; \
+        for i in 1 2 3 4 5; do \
+            apt-get install -y --no-install-recommends build-essential && break || (apt-get update && sleep 2); \
+        done; \
+        rm -rf /var/lib/apt/lists/*
+
+COPY requirements-ml.txt .
+RUN pip install --no-cache-dir --user -r requirements-ml.txt
+
+# --------------------------------------------------------------------------
+
+FROM python:3.12-slim AS runtime
+
+RUN useradd --create-home --uid 1000 appuser
+
+WORKDIR /app
+
+COPY --from=builder /root/.local /home/appuser/.local
+COPY ml_common ./ml_common
+COPY ml_training ./ml_training
+
+RUN mkdir -p /app/artifacts && chown -R appuser:appuser /app
+USER appuser
+
+ENV PATH=/home/appuser/.local/bin:$PATH \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+ENTRYPOINT ["python", "-m", "ml_training.run_training"]
+CMD ["--dataset", "ml_training/datasets/sample_messages.csv", "--version", "v1", "--artifacts-dir", "/app/artifacts"]

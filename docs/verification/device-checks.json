@@ -1,0 +1,10 @@
+[
+  {
+    "name": "Camera preview, frame capture, OCR, real inference using test video device",
+    "status": "PASS"
+  },
+  {
+    "name": "SpeechRecognition capability",
+    "supported": false
+  }
+]
