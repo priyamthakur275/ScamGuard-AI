@@ -93,7 +93,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             </div>
             <div className="flex flex-col">
               <span className="text-sm font-semibold leading-none tracking-tight text-foreground">ScamGuard</span>
-              <span className="mt-1 font-mono text-[9px] font-medium uppercase tracking-[0.2em] text-primary">Threat Intel</span>
             </div>
           </Link>
           <Button variant="ghost" size="icon" className="md:hidden" onClick={onClose} aria-label="Close menu">
@@ -101,7 +100,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           </Button>
         </div>
 
-        <div className="px-6 pb-2 pt-7 console-kicker">Workspace</div>
+        <div className="pt-5" />
         <nav className="flex-1 space-y-1 overflow-y-auto px-3 pb-6">
           {navItems.map(({ href, label, icon: Icon }) => {
             const isActive = pathname === href || pathname.startsWith(`${href}/`);

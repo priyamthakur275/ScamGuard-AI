@@ -55,7 +55,7 @@ export function StatCard({ label, value, icon: Icon, accent = "default" }: StatC
           <Icon className="h-5 w-5" aria-hidden="true" />
         </div>
         <div>
-          <p className="font-mono text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+          <p className="text-xs font-medium text-muted-foreground">{label}</p>
           <p className="font-sans text-2xl font-semibold text-foreground"><Counter value={value} /></p>
         </div>
       </CardContent>

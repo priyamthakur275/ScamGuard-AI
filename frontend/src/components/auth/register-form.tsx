@@ -166,7 +166,7 @@ export function RegisterForm() {
 
       {isWakingServer && (
         <div className="border border-primary/25 bg-primary/10 p-3 text-center">
-          <p className="font-mono text-xs font-medium uppercase tracking-wide text-primary">
+          <p className="text-xs font-medium text-primary">
             Waiting for the server — {secondsElapsed}s elapsed
           </p>
           <p className="mt-1 text-[11px] text-muted-foreground">

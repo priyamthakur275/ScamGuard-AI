@@ -1,725 +1,400 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Download, Eye, EyeOff, Moon, Sun, Trash2 } from "lucide-react";
 import { useDialogFocus } from "@/hooks/use-dialog-focus";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  User as UserIcon,
-  Shield,
-  Sliders,
-  Bell,
-  Database,
-  AlertTriangle,
-  Eye,
-  EyeOff,
-  CheckCircle2,
-  Download,
-  Trash2,
-  Lock,
-} from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth/auth-context";
 import { useTheme } from "@/lib/theme/theme-context";
-import { updateProfile, changePassword, deleteAccount, exportUserData } from "@/lib/api/users";
+import { useLanguage } from "@/lib/i18n/language-context";
+import { changePassword, deleteAccount, exportUserData, updateProfile } from "@/lib/api/users";
 import { clearHistory } from "@/lib/api/messages";
 import { ApiError } from "@/lib/api/client";
-import { formatDate } from "@/lib/utils";
+import { cn, formatDate } from "@/lib/utils";
+
+const DEMO_EMAIL = "demo@scamguard.app";
+
+const SCAN_TABS = [
+  ["text", "Text message"],
+  ["url", "Link"],
+  ["email", "Email"],
+  ["image", "Screenshot"],
+  ["voice", "Voice call"],
+  ["pdf", "PDF"],
+  ["qr", "QR code"],
+] as const;
+
+function Section({ id, title, description, children }: { id: string; title: string; description: string; children: ReactNode }) {
+  return (
+    <section id={id} aria-labelledby={`${id}-title`} className="sg-card grid gap-6 border border-border p-6 md:grid-cols-[minmax(0,14rem)_minmax(0,1fr)] md:p-8">
+      <div>
+        <h2 id={`${id}-title`} className="font-display text-lg font-semibold">{title}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+      </div>
+      <div className="min-w-0">{children}</div>
+    </section>
+  );
+}
+
+function Segmented<T extends string>({ value, options, onChange, label }: { value: T; options: readonly (readonly [T, ReactNode])[]; onChange: (v: T) => void; label: string }) {
+  return (
+    <div role="radiogroup" aria-label={label} className="inline-flex rounded-xl border border-border bg-muted/40 p-1">
+      {options.map(([v, node]) => (
+        <button
+          key={v}
+          type="button"
+          role="radio"
+          aria-checked={value === v}
+          onClick={() => onChange(v)}
+          className={cn(
+            "flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-sm transition-colors",
+            value === v ? "bg-card text-foreground shadow-sm ring-1 ring-primary/40" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          {node}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function PasswordField({ label, value, onChange, autoComplete }: { label: string; value: string; onChange: (v: string) => void; autoComplete: string }) {
+  const [show, setShow] = useState(false);
+  return (
+    <label className="block">
+      <span className="text-sm font-medium">{label}</span>
+      <span className="relative mt-1.5 block">
+        <input
+          type={show ? "text" : "password"}
+          value={value}
+          autoComplete={autoComplete}
+          onChange={(e) => onChange(e.target.value)}
+          className="h-11 w-full border border-border bg-background px-3 pr-11 text-sm"
+        />
+        <button
+          type="button"
+          onClick={() => setShow(!show)}
+          aria-label={show ? `Hide ${label.toLowerCase()}` : `Show ${label.toLowerCase()}`}
+          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-muted-foreground hover:text-foreground"
+        >
+          {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+        </button>
+      </span>
+    </label>
+  );
+}
 
 export default function SettingsPage() {
   const { toast } = useToast();
   const { user, refreshUser, logout } = useAuth();
   const { theme, setTheme } = useTheme();
+  const { lang, setLang } = useLanguage();
+  const isDemo = user?.email === DEMO_EMAIL;
 
-  const [activeTab, setActiveTab] = useState("profile");
-
-  // Profile Form State
   const [fullName, setFullName] = useState("");
-  const [isSubmittingProfile, setIsSubmittingProfile] = useState(false);
+  const [savingName, setSavingName] = useState(false);
+  const [defaultTab, setDefaultTab] = useState("text");
 
-  // Security Form State
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isSubmittingPassword, setIsSubmittingPassword] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
 
-  // Detection Preferences State
-  const [autoSaveHistory, setAutoSaveHistory] = useState(true);
-  const [defaultInputChannel, setDefaultInputChannel] = useState("text");
-  const [highThreatAudio, setHighThreatAudio] = useState(true);
-  const [isSavingPreferences, setIsSavingPreferences] = useState(false);
-
-  // Notifications State
-  const [securityAlerts, setSecurityAlerts] = useState(true);
-  const [weeklyDigest, setWeeklyDigest] = useState(false);
-  const [isSavingNotifications, setIsSavingNotifications] = useState(false);
-
-  // Privacy & Danger State
-  const [isExporting, setIsExporting] = useState(false);
-  const [showClearHistoryModal, setShowClearHistoryModal] = useState(false);
-  const [isClearingHistory, setIsClearingHistory] = useState(false);
-
-  const [showDangerModal, setShowDangerModal] = useState(false);
-  const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  const clearRef = useRef<HTMLDivElement>(null);
-  const deleteRef = useRef<HTMLDivElement>(null);
-  const closeClear = useCallback(() => { if (!isClearingHistory) setShowClearHistoryModal(false); }, [isClearingHistory]);
-  const closeDelete = useCallback(() => { if (!isDeleting) setShowDangerModal(false); }, [isDeleting]);
-  useDialogFocus(showClearHistoryModal, clearRef, closeClear);
-  useDialogFocus(showDangerModal, deleteRef, closeDelete);
-
-  // Sync user data
-  useEffect(() => {
-    if (user) {
-      setFullName(user.full_name || "");
-      if (user.preferences) {
-        setAutoSaveHistory(true);
-        setDefaultInputChannel(String(user.preferences.default_channel || "text"));
-        setHighThreatAudio(user.preferences.high_threat_alerts !== false);
-        setSecurityAlerts(user.preferences.security_alerts !== false);
-        setWeeklyDigest(Boolean(user.preferences.weekly_digest));
-      }
+  const [exporting, setExporting] = useState(false);
+  const [confirm, setConfirm] = useState<"clear" | "delete" | null>(null);
+  const [deleteText, setDeleteText] = useState("");
+  const [working, setWorking] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeDialog = useCallback(() => {
+    if (!working) {
+      setConfirm(null);
+      setDeleteText("");
     }
+  }, [working]);
+  useDialogFocus(confirm !== null, dialogRef, closeDialog);
+
+  useEffect(() => {
+    if (!user) return;
+    setFullName(user.full_name || "");
+    setDefaultTab(String(user.preferences?.default_channel || "text"));
   }, [user]);
 
-  const TABS = [
-    { id: "profile", label: "Profile", icon: UserIcon },
-    { id: "security", label: "Security", icon: Shield },
-    { id: "preferences", label: "Detection Preferences", icon: Sliders },
-    { id: "notifications", label: "Notifications", icon: Bell },
-    { id: "privacy", label: "Privacy & Data", icon: Database },
-    { id: "danger", label: "Danger Zone", icon: AlertTriangle, danger: true },
-  ];
+  const fail = (error: unknown, fallback: string) =>
+    toast({ title: error instanceof ApiError ? error.message : fallback, variant: "error" });
 
-  // 1. Profile Update Handler
-  const handleUpdateProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmittingProfile(true);
+  async function savePreference(patch: Record<string, unknown>, done: string) {
     try {
-      await updateProfile({
-        full_name: fullName.trim(),
-        preferences: {
-          ...user?.preferences,
-          theme,
-        },
-      });
+      await updateProfile({ preferences: { ...user?.preferences, ...patch } });
       await refreshUser();
-      toast({ title: "Profile updated successfully", variant: "success" });
-    } catch (error) {
-      const msg = error instanceof ApiError ? error.message : "Failed to update profile";
-      toast({ title: msg, variant: "error" });
-    } finally {
-      setIsSubmittingProfile(false);
+      toast({ title: done, variant: "success" });
+    } catch (e) {
+      fail(e, "Couldn't save that setting. Try again.");
     }
-  };
+  }
 
-  // 2. Password Change Handler
-  const hasMinLength = newPassword.length >= 8;
-  const hasNumber = /\d/.test(newPassword);
-  const hasUpper = /[A-Z]/.test(newPassword);
-  const passwordsMatch = newPassword.length > 0 && newPassword === confirmPassword;
-
-  const handleUpdatePassword = async (e: React.FormEvent) => {
+  async function saveName(e: FormEvent) {
     e.preventDefault();
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      toast({ title: "Please fill in all password fields", variant: "error" });
-      return;
+    setSavingName(true);
+    try {
+      await updateProfile({ full_name: fullName.trim() });
+      await refreshUser();
+      toast({ title: "Name saved", variant: "success" });
+    } catch (err) {
+      fail(err, "Couldn't save your name. Try again.");
+    } finally {
+      setSavingName(false);
     }
-    if (!hasMinLength || !hasNumber || !hasUpper) {
-      toast({ title: "New password does not meet security requirements", variant: "error" });
-      return;
-    }
-    if (!passwordsMatch) {
-      toast({ title: "New passwords do not match", variant: "error" });
-      return;
-    }
+  }
 
-    setIsSubmittingPassword(true);
+  const rules = [
+    { ok: newPassword.length >= 8, text: "8 or more characters" },
+    { ok: /\d/.test(newPassword), text: "A number" },
+    { ok: /[A-Z]/.test(newPassword), text: "A capital letter" },
+    { ok: newPassword.length > 0 && newPassword === confirmPassword, text: "Both new passwords match" },
+  ];
+  const passwordReady = currentPassword.length > 0 && rules.every((r) => r.ok);
+
+  async function savePassword(e: FormEvent) {
+    e.preventDefault();
+    if (!passwordReady) return;
+    setSavingPassword(true);
     try {
       await changePassword(currentPassword, newPassword);
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      toast({ title: "Password changed successfully", variant: "success" });
-    } catch (error) {
-      const msg = error instanceof ApiError ? error.message : "Failed to change password";
-      toast({ title: msg, variant: "error" });
+      toast({ title: "Password changed", variant: "success" });
+    } catch (err) {
+      fail(err, "Couldn't change your password. Check your current password and try again.");
     } finally {
-      setIsSubmittingPassword(false);
+      setSavingPassword(false);
     }
-  };
+  }
 
-  // 3. Detection Preferences Handler
-  const handleSavePreferences = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSavingPreferences(true);
-    try {
-      await updateProfile({
-        preferences: {
-          ...user?.preferences,
-          auto_save_history: autoSaveHistory,
-          default_channel: defaultInputChannel,
-          high_threat_alerts: highThreatAudio,
-        },
-      });
-      await refreshUser();
-      toast({ title: "Detection preferences saved", variant: "success" });
-    } catch (error) {
-      const msg = error instanceof ApiError ? error.message : "Failed to save preferences";
-      toast({ title: msg, variant: "error" });
-    } finally {
-      setIsSavingPreferences(false);
-    }
-  };
-
-  // 4. Notifications Handler
-  const handleSaveNotifications = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSavingNotifications(true);
-    try {
-      await updateProfile({
-        preferences: {
-          ...user?.preferences,
-          security_alerts: securityAlerts,
-          weekly_digest: weeklyDigest,
-        },
-      });
-      await refreshUser();
-      toast({ title: "Notification settings saved", variant: "success" });
-    } catch (error) {
-      const msg = error instanceof ApiError ? error.message : "Failed to save notification settings";
-      toast({ title: msg, variant: "error" });
-    } finally {
-      setIsSavingNotifications(false);
-    }
-  };
-
-  // 5. Privacy & Data Export Handler
-  const handleExportData = async () => {
-    setIsExporting(true);
+  async function downloadData() {
+    setExporting(true);
     try {
       const data = await exportUserData();
-      const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(data, null, 2))}`;
-      const downloadAnchor = document.createElement("a");
-      downloadAnchor.setAttribute("href", jsonString);
-      downloadAnchor.setAttribute("download", `scamguard-export-${new Date().toISOString().slice(0, 10)}.json`);
-      document.body.appendChild(downloadAnchor);
-      downloadAnchor.click();
-      downloadAnchor.remove();
-      toast({ title: "Data exported successfully", variant: "success" });
-    } catch (error) {
-      const msg = error instanceof ApiError ? error.message : "Failed to export data";
-      toast({ title: msg, variant: "error" });
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `scamguard-my-data-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+      toast({ title: "Your data is downloading", variant: "success" });
+    } catch (err) {
+      fail(err, "Couldn't prepare your data. Try again.");
     } finally {
-      setIsExporting(false);
+      setExporting(false);
     }
-  };
+  }
 
-  // Clear History
-  const handleClearHistory = async () => {
-    setIsClearingHistory(true);
+  async function runConfirmed() {
+    setWorking(true);
     try {
-      await clearHistory();
-      setShowClearHistoryModal(false);
-      toast({ title: "Analysis history cleared", variant: "success" });
-    } catch (error) {
-      const msg = error instanceof ApiError ? error.message : "Failed to clear history";
-      toast({ title: msg, variant: "error" });
+      if (confirm === "clear") {
+        await clearHistory();
+        toast({ title: "Scan history deleted", variant: "success" });
+        setConfirm(null);
+      } else if (confirm === "delete") {
+        await deleteAccount();
+        await logout();
+        toast({ title: "Account deleted", variant: "success" });
+      }
+    } catch (err) {
+      fail(err, "That didn't work. Try again.");
     } finally {
-      setIsClearingHistory(false);
+      setWorking(false);
     }
-  };
+  }
 
-  // 6. Danger Zone: Delete Account Handler
-  const handleDeleteAccount = async () => {
-    if (deleteConfirmationText !== "DELETE") {
-      toast({ title: "Please type DELETE to confirm", variant: "error" });
-      return;
-    }
-    setIsDeleting(true);
-    try {
-      await deleteAccount();
-      await logout();
-      toast({ title: "Your account has been deleted", variant: "success" });
-    } catch (error) {
-      const msg = error instanceof ApiError ? error.message : "Failed to delete account";
-      toast({ title: msg, variant: "error" });
-      setIsDeleting(false);
-      setShowDangerModal(false);
-    }
-  };
-
-  const ToggleSwitch = ({
-    checked,
-    onChange,
-    label,
-    description,
-  }: {
-    checked: boolean;
-    onChange: (c: boolean) => void;
-    label: string;
-    description: string;
-  }) => (
-    <div className="flex items-center justify-between py-3">
-      <div className="flex flex-col gap-0.5">
-        <span className="text-sm font-medium text-foreground">{label}</span>
-        <span className="text-xs text-muted-foreground">{description}</span>
-      </div>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={checked}
-        aria-label={label}
-        onClick={() => onChange(!checked)}
-        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
-          checked ? "bg-primary" : "bg-muted-foreground/30"
-        }`}
-      >
-        <span
-          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-            checked ? "translate-x-5" : "translate-x-0"
-          }`}
-        />
-      </button>
-    </div>
-  );
+  const initials = (user?.full_name || user?.email || "?")
+    .split(/[\s@.]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase())
+    .join("");
 
   return (
-    <div className="sg-page flex flex-col gap-8 animate-slide-up pb-12">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight mb-2">Account Settings</h1>
-        <p className="text-muted-foreground">Manage your profile, security credentials, preferences, and data privacy.</p>
-      </div>
-
-      <div className="flex flex-col md:flex-row gap-8 items-start">
-        {/* Navigation Sidebar */}
-        <div className="w-full md:w-64 flex flex-col gap-1 bg-card border border-border p-2 shrink-0">
-          {TABS.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
-                  isActive
-                    ? tab.danger
-                      ? "bg-destructive/15 text-destructive font-semibold"
-                      : "bg-primary/10 text-primary font-semibold"
-                    : tab.danger
-                    ? "text-destructive/70 hover:bg-destructive/10"
-                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                {tab.label}
-              </button>
-            );
-          })}
+    <div className="sg-page flex flex-col gap-6 pb-12">
+      <header className="signal-aurora flex flex-wrap items-center gap-5 rounded-3xl border border-border p-6 md:p-8">
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-risk-low font-display text-2xl font-bold text-primary-foreground shadow-lg">
+          {initials}
         </div>
-
-        {/* Content Box */}
-        <div className="flex-1 w-full bg-card border border-border p-6 sm:p-8 min-h-[420px]">
-          <AnimatePresence mode="wait">
-            {/* 1. PROFILE TAB */}
-            {activeTab === "profile" && (
-              <motion.div key="profile" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-                <h2 className="text-xl font-semibold mb-1">Profile Details</h2>
-                <p className="text-sm text-muted-foreground mb-6">Manage your public information and appearance.</p>
-
-                <form onSubmit={handleUpdateProfile} className="flex flex-col gap-6 max-w-xl">
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm font-medium">Account Email</label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={user?.email || ""}
-                        disabled
-                        className="flex-1 h-10 rounded-md border border-input bg-muted px-3 text-sm opacity-80 cursor-not-allowed text-muted-foreground"
-                      />
-                      <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-primary/10 text-primary font-medium">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        Account email
-                      </span>
-                    </div>
-                    <span className="text-xs text-muted-foreground">Primary identity used for sign-in and security notifications.</span>
-                  </div>
-
-                  <div className="flex flex-col gap-2">
-                    <label htmlFor="profile-name" className="text-sm font-medium">Display Name</label>
-                    <input
-                      type="text"
-                      id="profile-name"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      placeholder="Enter your name"
-                      className="h-10 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 py-3 border-y border-border/50 text-xs">
-                    <div>
-                      <span className="text-muted-foreground block">Account Role</span>
-                      <span className="font-semibold uppercase tracking-wider text-foreground">{user?.role || "USER"}</span>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground block">Member Since</span>
-                      <span className="font-semibold text-foreground">{user?.created_at ? formatDate(user.created_at) : "Recent"}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-3">
-                    <h3 className="text-sm font-semibold">Appearance Theme</h3>
-                    <div className="flex gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setTheme("dark")}
-                        className={`flex-1 py-2.5 px-4 rounded-lg border text-sm font-medium text-center transition-all ${
-                          theme === "dark" ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-muted"
-                        }`}
-                      >
-                        Dark Mode
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setTheme("light")}
-                        className={`flex-1 py-2.5 px-4 rounded-lg border text-sm font-medium text-center transition-all ${
-                          theme === "light" ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-muted"
-                        }`}
-                      >
-                        Light Mode
-                      </button>
-                    </div>
-                  </div>
-
-                  <Button type="submit" isLoading={isSubmittingProfile} className="w-fit mt-2">
-                    Save Profile Changes
-                  </Button>
-                </form>
-              </motion.div>
-            )}
-
-            {/* 2. SECURITY TAB */}
-            {activeTab === "security" && (
-              <motion.div key="security" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-                <h2 className="text-xl font-semibold mb-1">Account Security</h2>
-                <p className="text-sm text-muted-foreground mb-6">Update your password to keep your account safe.</p>
-
-                <form onSubmit={handleUpdatePassword} className="flex flex-col gap-5 max-w-xl">
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm font-medium">Current Password</label>
-                    <div className="relative">
-                      <input
-                        type={showCurrentPassword ? "text" : "password"}
-                        value={currentPassword}
-                        onChange={(e) => setCurrentPassword(e.target.value)}
-                        className="h-10 w-full rounded-md border border-input bg-background px-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-                        required
-                      />
-                      <button
-                        type="button"
-                        aria-label="Toggle current password visibility"
-                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                        className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
-                      >
-                        {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm font-medium">New Password</label>
-                    <div className="relative">
-                      <input
-                        type={showNewPassword ? "text" : "password"}
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        className="h-10 w-full rounded-md border border-input bg-background px-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-                        required
-                      />
-                      <button
-                        type="button"
-                        aria-label="Toggle new password visibility"
-                        onClick={() => setShowNewPassword(!showNewPassword)}
-                        className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
-                      >
-                        {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Password Strength Checklist */}
-                  <div className="rounded-lg bg-muted/40 p-3 text-xs space-y-1.5 border border-border/50">
-                    <span className="font-semibold text-foreground block mb-1">Password Requirements:</span>
-                    <div className={`flex items-center gap-2 ${hasMinLength ? "text-emerald-500 font-medium" : "text-muted-foreground"}`}>
-                      <span>{hasMinLength ? "✓" : "○"}</span> At least 8 characters
-                    </div>
-                    <div className={`flex items-center gap-2 ${hasUpper ? "text-emerald-500 font-medium" : "text-muted-foreground"}`}>
-                      <span>{hasUpper ? "✓" : "○"}</span> At least one uppercase letter (A–Z)
-                    </div>
-                    <div className={`flex items-center gap-2 ${hasNumber ? "text-emerald-500 font-medium" : "text-muted-foreground"}`}>
-                      <span>{hasNumber ? "✓" : "○"}</span> At least one number (0–9)
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm font-medium">Confirm New Password</label>
-                    <div className="relative">
-                      <input
-                        type={showConfirmPassword ? "text" : "password"}
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="h-10 w-full rounded-md border border-input bg-background px-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-                        required
-                      />
-                      <button
-                        type="button"
-                        aria-label="Toggle confirm password visibility"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
-                      >
-                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                    {confirmPassword && !passwordsMatch && (
-                      <span className="text-xs text-destructive">Passwords do not match.</span>
-                    )}
-                  </div>
-
-                  <Button
-                    type="submit"
-                    isLoading={isSubmittingPassword}
-                    disabled={!passwordsMatch || !hasMinLength || !hasNumber || !hasUpper}
-                    className="w-fit mt-2"
-                  >
-                    Update Password
-                  </Button>
-                </form>
-              </motion.div>
-            )}
-
-            {/* 3. DETECTION PREFERENCES TAB */}
-            {activeTab === "preferences" && (
-              <motion.div key="preferences" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-                <h2 className="text-xl font-semibold mb-1">Detection Preferences</h2>
-                <p className="text-sm text-muted-foreground mb-6">Customize how AI scam analysis operates for your account.</p>
-
-                <form onSubmit={handleSavePreferences} className="flex flex-col gap-6 max-w-xl">
-                  <fieldset disabled className="opacity-60">
-                  <p className="mb-2 text-xs">Scans are always saved. History opt-out is not available.</p>
-                  <ToggleSwitch
-                    checked={autoSaveHistory}
-                    onChange={setAutoSaveHistory}
-                    label="Auto-Save Scans to History"
-                    description="Automatically log scan results and extracted indicators to your account history."
-                  /></fieldset>
-
-                  <div className="flex flex-col gap-2 py-3 border-t border-border/50">
-                    <label className="text-sm font-medium">Default Analysis Tab</label>
-                    <select
-                      value={defaultInputChannel}
-                      onChange={(e) => setDefaultInputChannel(e.target.value)}
-                      className="h-10 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-                    >
-                      <option value="text">Raw Text (SMS / Message)</option>
-                      <option value="url">Web URL Analysis</option>
-                      <option value="email">Email Analysis (.eml / Text)</option>
-                      <option value="image">Screenshot / Image OCR</option>
-                      <option value="pdf">Document PDF</option>
-                      <option value="qr">QR Code Scanner</option>
-                    </select>
-                    <span className="text-xs text-muted-foreground">The tab selected by default when you open the Analyze page.</span>
-                  </div>
-
-                  <fieldset disabled className="opacity-60"><p className="text-xs">Severity indicators are always shown. Custom warning behavior is not available.</p>
-                  <ToggleSwitch
-                    checked={highThreatAudio}
-                    onChange={setHighThreatAudio}
-                    label="High Threat Visual Warnings"
-                    description="Display evidence-based severity on every verdict."
-                  /></fieldset>
-
-                  <Button type="submit" isLoading={isSavingPreferences} className="w-fit mt-2">
-                    Save Detection Preferences
-                  </Button>
-                </form>
-              </motion.div>
-            )}
-
-            {/* 4. NOTIFICATIONS TAB */}
-            {activeTab === "notifications" && (
-              <motion.div key="notifications" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-                <h2 className="text-xl font-semibold mb-1">Notification Preferences</h2>
-                <p className="text-sm text-muted-foreground mb-6">Choose how and when ScamGuard sends you security alerts.</p>
-
-                <p className="mb-5 rounded-lg border border-border bg-muted p-4 text-sm">Notification delivery is not implemented in this deployment. These controls are unavailable.</p>
-                <fieldset disabled className="opacity-50"><form onSubmit={handleSaveNotifications} className="flex flex-col gap-5 max-w-xl">
-                  <ToggleSwitch
-                    checked={securityAlerts}
-                    onChange={setSecurityAlerts}
-                    label="Critical Security Alerts"
-                    description="Notify me when high-risk scam indicators or account security events are detected."
-                  />
-
-                  <ToggleSwitch
-                    checked={weeklyDigest}
-                    onChange={setWeeklyDigest}
-                    label="Weekly Threat Summary"
-                    description="Receive an aggregate summary of newly discovered phishing tactics and platform intelligence."
-                  />
-
-                  <Button type="submit" isLoading={isSavingNotifications} className="w-fit mt-3">
-                    Save Notification Settings
-                  </Button>
-                </form></fieldset>
-              </motion.div>
-            )}
-
-            {/* 5. PRIVACY & DATA TAB */}
-            {activeTab === "privacy" && (
-              <motion.div key="privacy" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-                <h2 className="text-xl font-semibold mb-1">Privacy & Data Management</h2>
-                <p className="text-sm text-muted-foreground mb-6">Export or purge your analysis history and account telemetry.</p>
-
-                <div className="flex flex-col gap-6 max-w-xl">
-                  <div className="border border-border p-5 bg-card space-y-3">
-                    <div className="flex items-center gap-3">
-                      <Download className="w-5 h-5 text-primary" />
-                      <div>
-                        <h3 className="text-sm font-semibold">Export Account Data</h3>
-                        <p className="text-xs text-muted-foreground">Download a complete JSON record of your account profile, settings, and prediction history.</p>
-                      </div>
-                    </div>
-                    <Button variant="outline" size="sm" onClick={handleExportData} isLoading={isExporting}>
-                      Export Data (.json)
-                    </Button>
-                  </div>
-
-                  <div className="border border-border p-5 bg-card space-y-3">
-                    <div className="flex items-center gap-3">
-                      <Trash2 className="w-5 h-5 text-destructive" />
-                      <div>
-                        <h3 className="text-sm font-semibold text-foreground">Clear Scan History</h3>
-                        <p className="text-xs text-muted-foreground">Delete all previous scam prediction records and extracted telemetry from our database.</p>
-                      </div>
-                    </div>
-                    <Button variant="outline" size="sm" onClick={() => setShowClearHistoryModal(true)} className="text-destructive hover:bg-destructive/10">
-                      Clear History
-                    </Button>
-                  </div>
-
-                  <div className="rounded-lg bg-muted/40 p-4 border border-border/40 text-xs text-muted-foreground space-y-1.5">
-                    <span className="font-semibold text-foreground block">Data Retention Notice</span>
-                    <p>
-                      Submitted text, extracted evidence, and analysis results are stored in your account history. You can export or delete them here. Browser speech recognition may send audio to your browser vendor for transcription.
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {/* 6. DANGER ZONE TAB */}
-            {activeTab === "danger" && (
-              <motion.div key="danger" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-                <h2 className="text-xl font-semibold mb-1 text-destructive">Danger Zone</h2>
-                <p className="text-sm text-muted-foreground mb-6">Irreversible actions that permanently impact your account.</p>
-
-                <div className="border border-destructive/30 bg-destructive/5 p-6 max-w-xl">
-                  <h3 className="font-semibold text-foreground mb-2 flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 text-destructive" />
-                    Delete Account Permanently
-                  </h3>
-                  <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-                    Once your account is deleted, all your profile details, session tokens, and saved detection history will be permanently deleted from our database. This action cannot be undone.
-                  </p>
-                  <Button variant="destructive" onClick={() => setShowDangerModal(true)}>
-                    Delete My Account
-                  </Button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+        <div className="min-w-0">
+          <h1 className="font-display text-3xl font-bold">{user?.full_name || "Your account"}</h1>
+          <p className="text-sm text-muted-foreground">
+            {user?.email}
+            {user?.created_at ? ` · member since ${formatDate(user.created_at)}` : ""}
+          </p>
         </div>
-      </div>
+      </header>
 
-      {/* Clear History Confirmation Modal */}
-      <AnimatePresence>
-        {showClearHistoryModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              ref={clearRef} role="dialog" aria-modal="true" aria-label="Clear scan history" tabIndex={-1}
-              className="rounded-lg bg-card border border-border p-6 max-w-md w-full"
-            >
-              <h3 className="text-lg font-bold mb-2">Clear Scan History?</h3>
-              <p className="text-sm text-muted-foreground mb-6">
-                Are you sure you want to delete all saved scan records? This action cannot be reverted.
-              </p>
-              <div className="flex justify-end gap-3">
-                <Button variant="outline" size="sm" onClick={() => setShowClearHistoryModal(false)} disabled={isClearingHistory}>
-                  Cancel
-                </Button>
-                <Button variant="destructive" size="sm" onClick={handleClearHistory} isLoading={isClearingHistory}>
-                  Yes, Clear All History
-                </Button>
-              </div>
-            </motion.div>
+      {isDemo && (
+        <p className="rounded-2xl border border-risk-medium/40 bg-risk-medium/10 p-4 text-sm">
+          This is the shared demo account, so the name, password and account can&apos;t be changed. Language, theme and
+          scanning choices still work.
+        </p>
+      )}
+
+      <Section id="profile" title="Your name" description="Shown on your dashboard and on reports you download.">
+        <form onSubmit={saveName} className="flex max-w-lg flex-col gap-3 sm:flex-row sm:items-end">
+          <label className="block flex-1">
+            <span className="text-sm font-medium">Full name</span>
+            <input
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              disabled={isDemo}
+              maxLength={80}
+              autoComplete="name"
+              className="mt-1.5 h-11 w-full border border-border bg-background px-3 text-sm disabled:opacity-60"
+            />
+          </label>
+          <Button type="submit" isLoading={savingName} disabled={isDemo || fullName.trim() === (user?.full_name || "")}>
+            Save name
+          </Button>
+        </form>
+      </Section>
+
+      <Section id="look" title="Language and look" description="Applies on this device straight away.">
+        <div className="flex flex-col gap-5">
+          <div>
+            <p className="mb-2 text-sm font-medium">Language</p>
+            <Segmented label="Language" value={lang} onChange={setLang} options={[["en", "English"], ["hi", "हिंदी"]] as const} />
           </div>
-        )}
-      </AnimatePresence>
+          <div>
+            <p className="mb-2 text-sm font-medium">Theme</p>
+            <Segmented
+              label="Theme"
+              value={theme}
+              onChange={setTheme}
+              options={[["dark", <><Moon className="h-4 w-4" /> Dark</>], ["light", <><Sun className="h-4 w-4" /> Light</>]] as const}
+            />
+          </div>
+        </div>
+      </Section>
 
-      {/* Delete Account Modal with Strict Confirmation */}
-      <AnimatePresence>
-        {showDangerModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              ref={deleteRef} role="dialog" aria-modal="true" aria-label="Delete account" tabIndex={-1}
-              className="rounded-lg bg-card border border-border p-6 sm:p-8 max-w-md w-full"
+      <Section id="scanning" title="Scanning" description="Pick what the Investigate page opens on.">
+        <div className="flex flex-wrap gap-2">
+          {SCAN_TABS.map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={defaultTab === value}
+              onClick={() => {
+                setDefaultTab(value);
+                void savePreference({ default_channel: value }, `Investigate will open on ${label}`);
+              }}
+              className={cn(
+                "rounded-xl border px-3.5 py-2 text-sm transition-colors",
+                defaultTab === value ? "border-primary/60 bg-primary/15 text-foreground" : "border-border text-muted-foreground hover:text-foreground",
+              )}
             >
-              <div className="flex items-center gap-3 mb-4 text-destructive">
-                <AlertTriangle className="w-7 h-7 shrink-0" />
-                <h3 className="text-xl font-bold">Delete Account?</h3>
-              </div>
-              <p className="text-sm text-muted-foreground mb-4">
-                This will permanently delete your account and all associated prediction data. Please type{" "}
-                <span className="font-mono font-bold text-foreground">DELETE</span> below to confirm.
+              {label}
+            </button>
+          ))}
+        </div>
+      </Section>
+
+      <Section id="password" title="Password" description="Use one you don't use anywhere else.">
+        <form onSubmit={savePassword} className="grid max-w-lg gap-4">
+          <PasswordField label="Current password" value={currentPassword} onChange={setCurrentPassword} autoComplete="current-password" />
+          <PasswordField label="New password" value={newPassword} onChange={setNewPassword} autoComplete="new-password" />
+          <PasswordField label="Repeat new password" value={confirmPassword} onChange={setConfirmPassword} autoComplete="new-password" />
+          <ul className="grid grid-cols-2 gap-1.5 text-sm">
+            {rules.map((r) => (
+              <li key={r.text} className={r.ok ? "text-risk-low" : "text-muted-foreground"}>
+                {r.ok ? "✓" : "○"} {r.text}
+              </li>
+            ))}
+          </ul>
+          <div>
+            <Button type="submit" isLoading={savingPassword} disabled={isDemo || !passwordReady}>
+              Change password
+            </Button>
+          </div>
+        </form>
+      </Section>
+
+      <Section id="data" title="Your data" description="Everything ScamGuard stores about you, and how to remove it.">
+        <ul className="divide-y divide-border rounded-2xl border border-border">
+          <li className="flex flex-wrap items-center justify-between gap-3 p-4">
+            <div>
+              <p className="text-sm font-medium">Download my data</p>
+              <p className="text-sm text-muted-foreground">Your profile and every saved scan, as a JSON file.</p>
+            </div>
+            <Button variant="outline" onClick={downloadData} isLoading={exporting}>
+              <Download className="h-4 w-4" /> Download
+            </Button>
+          </li>
+          <li className="flex flex-wrap items-center justify-between gap-3 p-4">
+            <div>
+              <p className="text-sm font-medium">Delete scan history</p>
+              <p className="text-sm text-muted-foreground">Removes all saved scans. Your account stays.</p>
+            </div>
+            <Button variant="outline" onClick={() => setConfirm("clear")}>
+              <Trash2 className="h-4 w-4" /> Delete history
+            </Button>
+          </li>
+          <li className="flex flex-wrap items-center justify-between gap-3 p-4">
+            <div>
+              <p className="text-sm font-medium text-destructive">Delete account</p>
+              <p className="text-sm text-muted-foreground">Permanently removes your account and all scans.</p>
+            </div>
+            <Button variant="destructive" onClick={() => setConfirm("delete")} disabled={isDemo}>
+              Delete account
+            </Button>
+          </li>
+        </ul>
+      </Section>
+
+      <AnimatePresence>
+        {confirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={closeDialog}>
+            <motion.div
+              ref={dialogRef}
+              role="dialog"
+              aria-modal="true"
+              aria-label={confirm === "clear" ? "Delete scan history" : "Delete account"}
+              tabIndex={-1}
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md border border-border bg-card p-6"
+            >
+              <h3 className="font-display text-xl font-semibold">
+                {confirm === "clear" ? "Delete all saved scans?" : "Delete your account?"}
+              </h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {confirm === "clear"
+                  ? "Every saved scan will be removed. This can't be undone."
+                  : "Your account and every saved scan will be removed. This can't be undone."}
               </p>
-              <input
-                type="text"
-                aria-label="Type DELETE to confirm"
-                placeholder="Type DELETE to confirm"
-                value={deleteConfirmationText}
-                onChange={(e) => setDeleteConfirmationText(e.target.value)}
-                className="h-10 w-full rounded-md border border-destructive/40 bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-destructive/50 mb-6 font-mono"
-              />
-              <div className="flex justify-end gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowDangerModal(false);
-                    setDeleteConfirmationText("");
-                  }}
-                  disabled={isDeleting}
-                >
-                  Cancel
+              {confirm === "delete" && (
+                <label className="mt-4 block text-sm">
+                  Type <strong>DELETE</strong> to confirm
+                  <input
+                    value={deleteText}
+                    onChange={(e) => setDeleteText(e.target.value)}
+                    className="mt-1.5 h-11 w-full border border-destructive/40 bg-background px-3 text-sm"
+                  />
+                </label>
+              )}
+              <div className="mt-6 flex justify-end gap-3">
+                <Button variant="outline" onClick={closeDialog} disabled={working}>
+                  Keep {confirm === "clear" ? "history" : "account"}
                 </Button>
                 <Button
                   variant="destructive"
-                  onClick={handleDeleteAccount}
-                  disabled={deleteConfirmationText !== "DELETE" || isDeleting}
-                  isLoading={isDeleting}
+                  onClick={runConfirmed}
+                  isLoading={working}
+                  disabled={confirm === "delete" && deleteText !== "DELETE"}
                 >
-                  Permanently Delete
+                  {confirm === "clear" ? "Delete history" : "Delete account"}
                 </Button>
               </div>
             </motion.div>

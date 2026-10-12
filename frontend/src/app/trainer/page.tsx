@@ -76,7 +76,7 @@ export default function TrainerPage() {
 
   return (
     <PublicShell>
-      <p className="font-mono text-xs uppercase tracking-[0.16em] text-primary">{t("tr.kicker")}</p>
+      <p className="text-xs text-primary">{t("tr.kicker")}</p>
       <h1 className="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">{t("tr.title")}</h1>
       <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
         {t("tr.sub")}
@@ -94,7 +94,7 @@ export default function TrainerPage() {
 
       {item && !finished && (
         <section className="mt-6 border border-border p-5">
-          <p className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             {item.channel} · from {item.from}
           </p>
           <p className="mt-3 border-l-2 border-primary/50 bg-muted/30 p-4 text-base leading-relaxed">{item.message}</p>

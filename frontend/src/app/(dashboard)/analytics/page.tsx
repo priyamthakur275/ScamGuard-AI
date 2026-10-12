@@ -132,11 +132,7 @@ export default function AnalyticsPage() {
               key={filter}
               aria-pressed={timeFilter === filter}
               onClick={() => setTimeFilter(filter)}
-              className={`rounded-sm px-3 py-1.5 font-mono text-xs uppercase tracking-wide transition-colors ${
-                timeFilter === filter
-                  ? "bg-primary/10 font-medium text-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
+              className={`rounded-sm px-3 py-1.5 text-xs transition-colors ${ timeFilter === filter ? "bg-primary/10 font-medium text-primary" : "text-muted-foreground hover:text-foreground" }`}
             >
               {filter === "24h" ? "24h" : filter === "7d" ? "7 days" : filter === "30d" ? "30 days" : "All time"}
             </button>

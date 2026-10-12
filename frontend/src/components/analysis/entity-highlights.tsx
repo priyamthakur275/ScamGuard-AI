@@ -50,7 +50,7 @@ export function EntityHighlights({ entities }: EntityHighlightsProps) {
 
   return (
     <div className="flex flex-col gap-3">
-      <h4 className="font-mono text-xs font-semibold uppercase tracking-wide text-foreground">Observed entities</h4>
+      <h4 className="text-xs font-semibold text-foreground">Observed entities</h4>
       <div className="flex flex-wrap gap-2">
         {activeEntities.map((config) => {
           const items = entities[config.key as keyof typeof entities] ?? [];

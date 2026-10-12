@@ -55,7 +55,7 @@ export default function RobustnessTestPage() {
       </Link>
 
       <div className="border border-primary/30 bg-primary/10 p-4">
-        <p className="flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wide text-primary">
+        <p className="flex items-center gap-2 text-xs font-semibold text-primary">
           <FlaskConical className="h-4 w-4" />
           Internal engineering tool — robustness testing
         </p>
@@ -81,7 +81,7 @@ export default function RobustnessTestPage() {
             <Card key={report.message_id}>
               <CardContent className="flex flex-col gap-4 p-5">
                 <div>
-                  <p className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     {CATEGORY_LABEL[report.category]}
                   </p>
                   <p className="mt-1 text-sm text-foreground">{report.base_text}</p>
@@ -93,10 +93,10 @@ export default function RobustnessTestPage() {
                 <div className="overflow-x-auto"><table className="w-full min-w-[520px] text-sm">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="p-2 text-left font-mono text-[11px] uppercase text-muted-foreground">Transform</th>
-                      <th className="p-2 text-left font-mono text-[11px] uppercase text-muted-foreground">Result</th>
-                      <th className="p-2 text-left font-mono text-[11px] uppercase text-muted-foreground">Delta</th>
-                      <th className="p-2 text-left font-mono text-[11px] uppercase text-muted-foreground">Stability</th>
+                      <th className="p-2 text-left text-xs text-muted-foreground">Transform</th>
+                      <th className="p-2 text-left text-xs text-muted-foreground">Result</th>
+                      <th className="p-2 text-left text-xs text-muted-foreground">Delta</th>
+                      <th className="p-2 text-left text-xs text-muted-foreground">Stability</th>
                     </tr>
                   </thead>
                   <tbody>

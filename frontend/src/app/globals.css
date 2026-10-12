@@ -3,47 +3,55 @@
 @tailwind utilities;
 
 :root {
-  --background: 210 40% 98%;
-  --foreground: 222 47% 11%;
+  /* Night Signal — light ("paper") variant */
+  --background: 230 54% 97%;
+  --foreground: 237 53% 15%;
   --card: 0 0% 100%;
-  --card-foreground: 222 47% 11%;
-  --border: 214 32% 91%;
-  --muted: 210 40% 96%;
-  --muted-foreground: 215 16% 40%;
-  --primary: 216 64% 40%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: 210 40% 96%;
-  --secondary-foreground: 222 47% 11%;
-  --destructive: 0 72% 42%;
+  --card-foreground: 237 53% 15%;
+  --border: 231 45% 90%;
+  --muted: 231 52% 95%;
+  --muted-foreground: 234 22% 43%;
+  --primary: 246 71% 59%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 231 52% 95%;
+  --secondary-foreground: 237 53% 15%;
+  --destructive: 8 67% 50%;
   --destructive-foreground: 0 0% 100%;
-  --risk-low: 158 70% 28%;
-  --risk-medium: 36 90% 32%;
-  --risk-high: 22 85% 38%;
-  --risk-very-low: 158 70% 28%;
-  --risk-critical: 0 72% 42%;
-  --radius: 0.625rem;
+  --safe: 174 82% 31%;
+  --caution: 35 100% 35%;
+  --risk-low: 174 82% 31%;
+  --risk-medium: 35 100% 35%;
+  --risk-high: 19 73% 45%;
+  --risk-very-low: 174 82% 31%;
+  --risk-critical: 8 67% 50%;
+  --glow: 246 71% 59%;
+  --radius: 0.875rem;
 }
 
 .dark {
   color-scheme: dark;
-  --background: 225 12% 7%;
-  --foreground: 220 16% 94%;
-  --card: 225 10% 10%;
-  --card-foreground: 220 16% 94%;
-  --border: 223 9% 21%;
-  --muted: 225 9% 14%;
-  --muted-foreground: 220 9% 66%;
-  --primary: 216 85% 72%;
-  --primary-foreground: 225 30% 10%;
-  --secondary: 223 10% 17%;
-  --secondary-foreground: 220 16% 92%;
-  --destructive: 0 76% 70%;
-  --destructive-foreground: 225 30% 10%;
-  --risk-low: 157 44% 61%;
-  --risk-medium: 39 77% 65%;
-  --risk-high: 17 75% 66%;
-  --risk-very-low: 157 44% 61%;
-  --risk-critical: 0 76% 70%;
+  /* Night Signal — ink indigo, colour carries meaning */
+  --background: 235 44% 8%;
+  --foreground: 233 100% 97%;
+  --card: 234 42% 12%;
+  --card-foreground: 233 100% 97%;
+  --border: 234 34% 22%;
+  --muted: 234 38% 16%;
+  --muted-foreground: 234 30% 72%;
+  --primary: 247 100% 77%;
+  --primary-foreground: 235 44% 8%;
+  --secondary: 234 38% 16%;
+  --secondary-foreground: 233 100% 97%;
+  --destructive: 10 100% 65%;
+  --destructive-foreground: 235 44% 8%;
+  --safe: 174 63% 52%;
+  --caution: 36 100% 64%;
+  --risk-low: 174 63% 52%;
+  --risk-medium: 36 100% 64%;
+  --risk-high: 21 100% 65%;
+  --risk-very-low: 174 63% 52%;
+  --risk-critical: 10 100% 65%;
+  --glow: 247 100% 77%;
 }
 
 html {
@@ -219,4 +227,154 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 }
 @media (prefers-reduced-motion: reduce) {
   .sg-button:active:not(:disabled) { transform: none; }
+}
+
+/* ------------------------------------------------------------------ */
+/* Night Signal polish layer                                          */
+/* One memorable element: the signal aurora behind the hero and the   */
+/* verdict, tinted by meaning. Everything else stays quiet.           */
+/* ------------------------------------------------------------------ */
+@keyframes aurora-drift {
+  0%   { transform: translate3d(-4%, -2%, 0) rotate(0deg) scale(1); }
+  50%  { transform: translate3d(4%, 3%, 0) rotate(8deg) scale(1.08); }
+  100% { transform: translate3d(-4%, -2%, 0) rotate(0deg) scale(1); }
+}
+@keyframes sheen {
+  from { transform: translateX(-120%) skewX(-18deg); }
+  to   { transform: translateX(220%) skewX(-18deg); }
+}
+@keyframes shimmer-x {
+  from { background-position: -200% 0; }
+  to   { background-position: 200% 0; }
+}
+
+@layer base {
+  body {
+    background-image:
+      radial-gradient(60rem 28rem at 85% -10%, hsl(var(--glow) / .10), transparent 60%),
+      radial-gradient(40rem 22rem at -10% 10%, hsl(var(--safe) / .06), transparent 60%);
+    background-attachment: fixed;
+  }
+  h1, h2, .font-display { font-family: var(--font-display), var(--font-sans), sans-serif; }
+  h1 { font-weight: 700; letter-spacing: -0.035em; }
+  h2 { font-weight: 650; }
+}
+
+@layer components {
+  /* Section labels: sentence case, quiet, not monospace caps. */
+  .console-kicker {
+    color: hsl(var(--primary));
+    font-family: var(--font-sans);
+    font-size: .8rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  /* Panels: soft glass with a single top highlight. */
+  .sg-card, .console-panel {
+    border-radius: calc(var(--radius) + 2px);
+    background: linear-gradient(180deg, hsl(var(--card) / .92), hsl(var(--card) / .78));
+    backdrop-filter: blur(14px) saturate(140%);
+    box-shadow:
+      inset 0 1px 0 hsl(0 0% 100% / .06),
+      0 1px 2px hsl(235 44% 4% / .06),
+      0 12px 32px -18px hsl(var(--glow) / .35);
+  }
+  .evidence-grid > *, .copilot-panel, .scanner-panel {
+    border-radius: var(--radius);
+    background: hsl(var(--card) / .55);
+    backdrop-filter: blur(10px);
+  }
+
+  /* Buttons: primary carries a gradient and a sheen on hover. */
+  .sg-button { position: relative; overflow: hidden; border-radius: .7rem; isolation: isolate; }
+  .sg-button.bg-primary {
+    background-image: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / .78) 55%, hsl(var(--safe) / .85));
+    box-shadow: 0 6px 22px -8px hsl(var(--primary) / .7), inset 0 1px 0 hsl(0 0% 100% / .25);
+  }
+  .sg-button.bg-primary::after {
+    content: ""; position: absolute; inset: 0 auto 0 0; width: 40%; z-index: -1;
+    background: linear-gradient(90deg, transparent, hsl(0 0% 100% / .35), transparent);
+    transform: translateX(-120%) skewX(-18deg);
+  }
+  .sg-button.bg-primary:hover::after { animation: sheen 900ms ease-out; }
+  .sg-button.bg-primary:hover { box-shadow: 0 10px 30px -8px hsl(var(--primary) / .85), inset 0 1px 0 hsl(0 0% 100% / .3); }
+
+  /* Inputs: glow ring on focus. */
+  input:not([type=checkbox]):not([type=radio]):not([type=file]), textarea, select { border-radius: .7rem; }
+  input:focus-visible, textarea:focus-visible, select:focus-visible {
+    outline: none;
+    border-color: hsl(var(--primary) / .7) !important;
+    box-shadow: 0 0 0 4px hsl(var(--primary) / .18);
+  }
+
+  /* Sidebar: active item glows. */
+  .sg-sidebar { background: hsl(var(--background) / .6); backdrop-filter: blur(16px); }
+  .sg-sidebar nav a { border-radius: .7rem; transition: background-color 160ms, color 160ms; }
+  .sg-sidebar nav a[aria-current=page] {
+    background: linear-gradient(90deg, hsl(var(--primary) / .18), hsl(var(--primary) / .04));
+    border-color: hsl(var(--primary) / .35);
+    box-shadow: inset 2px 0 0 hsl(var(--primary)), 0 0 24px -10px hsl(var(--primary) / .8);
+  }
+
+  /* Scanner tabs: pill segment with a lit active state. */
+  .scanner-tabs button { border-radius: .7rem; }
+  .scanner-tabs button[aria-pressed=true] {
+    background: hsl(var(--card));
+    border-color: hsl(var(--primary) / .45);
+    box-shadow: 0 0 0 1px hsl(var(--primary) / .15), 0 8px 20px -12px hsl(var(--primary) / .9);
+  }
+
+  /* The signal aurora. Tint follows meaning: brand by default,
+     ember for a scam verdict, teal for a safe one. */
+  .signal-aurora, .verdict-heading { position: relative; isolation: isolate; overflow: hidden; }
+  .signal-aurora::before, .verdict-heading::before {
+    content: ""; position: absolute; inset: -40%; z-index: -1; pointer-events: none;
+    background:
+      radial-gradient(35% 45% at 25% 30%, hsl(var(--aurora-a, var(--glow)) / .32), transparent 70%),
+      radial-gradient(30% 40% at 75% 60%, hsl(var(--aurora-b, var(--safe)) / .22), transparent 70%),
+      radial-gradient(25% 35% at 55% 20%, hsl(var(--aurora-c, var(--primary)) / .18), transparent 70%);
+    filter: blur(30px);
+    animation: aurora-drift 18s ease-in-out infinite;
+  }
+  .verdict-heading { border-radius: calc(var(--radius) + 4px); background: hsl(var(--card) / .6); }
+  .verdict-heading[data-verdict=scam] { --aurora-a: var(--destructive); --aurora-b: var(--caution); --aurora-c: var(--destructive); border-color: hsl(var(--destructive) / .35); }
+  .verdict-heading[data-verdict=safe] { --aurora-a: var(--safe); --aurora-b: var(--primary); --aurora-c: var(--safe); border-color: hsl(var(--safe) / .35); }
+
+  /* Full-bleed hero glow: no hard edges, fades out downward. */
+  .hero-glow {
+    position: absolute; inset: 0 0 auto 0; height: 58rem; z-index: -1; pointer-events: none;
+    background:
+      radial-gradient(38rem 26rem at 72% 30%, hsl(var(--glow) / .26), transparent 70%),
+      radial-gradient(30rem 22rem at 88% 62%, hsl(var(--safe) / .16), transparent 70%),
+      radial-gradient(34rem 24rem at 18% 12%, hsl(var(--primary) / .12), transparent 70%);
+    -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent);
+    mask-image: linear-gradient(to bottom, #000 55%, transparent);
+    filter: blur(10px);
+    animation: aurora-drift 22s ease-in-out infinite;
+  }
+
+  /* Shimmer for loading placeholders. */
+  .shimmer {
+    background: linear-gradient(90deg, hsl(var(--muted)) 0%, hsl(var(--primary) / .14) 50%, hsl(var(--muted)) 100%);
+    background-size: 200% 100%;
+    animation: shimmer-x 1.6s linear infinite;
+  }
+
+  /* Gradient text for the hero headline only. */
+  .text-signal {
+    background: linear-gradient(100deg, hsl(var(--foreground)) 20%, hsl(var(--primary)) 60%, hsl(var(--safe)));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+
+  /* Tables and dialogs follow the softer radius. */
+  .sg-page table { border-radius: var(--radius); overflow: hidden; }
+  .sg-page th { text-transform: none; letter-spacing: 0; font-size: .75rem; }
+  [role=dialog] { border-radius: calc(var(--radius) + 4px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .signal-aurora::before, .verdict-heading::before, .shimmer, .hero-glow { animation: none; }
+  .sg-button.bg-primary:hover::after { animation: none; }
 }

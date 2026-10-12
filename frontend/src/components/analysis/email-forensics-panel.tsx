@@ -16,7 +16,7 @@ function EvidenceList({ signals }: { signals: EmailEvidenceSignal[] }) {
     <ul className="flex flex-col gap-2">
       {signals.map((signal) => (
         <li key={signal.code} className="flex items-start gap-2 text-sm">
-          <span className="mt-0.5 shrink-0 font-mono text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <span className="mt-0.5 shrink-0 text-xs font-semibold text-muted-foreground">
             [{SEVERITY_LABEL[signal.severity] ?? signal.severity}]
           </span>
           <span className="text-muted-foreground">{signal.reason}</span>
@@ -40,7 +40,7 @@ export function EmailForensicsPanel({ forensics }: EmailForensicsPanelProps) {
 
   return (
     <div className="flex flex-col gap-4 border border-border p-5">
-      <p className="flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wide text-foreground">
+      <p className="flex items-center gap-2 text-xs font-semibold text-foreground">
         <Mail className="h-3.5 w-3.5 text-primary" />
         Email forensics
       </p>
@@ -57,13 +57,13 @@ export function EmailForensicsPanel({ forensics }: EmailForensicsPanelProps) {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <p className="mb-1.5 font-mono text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <p className="mb-1.5 text-xs font-semibold text-muted-foreground">
             From
           </p>
           <p className="text-sm text-foreground">{headers.from_address ?? "Not available"}</p>
         </div>
         <div>
-          <p className="mb-1.5 font-mono text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <p className="mb-1.5 text-xs font-semibold text-muted-foreground">
             Reply-To
           </p>
           <p className="text-sm text-foreground">{headers.reply_to ?? "Not available"}</p>
@@ -72,7 +72,7 @@ export function EmailForensicsPanel({ forensics }: EmailForensicsPanelProps) {
 
       {/* HEADER EVIDENCE */}
       <div>
-        <p className="mb-2 flex items-center gap-1.5 font-mono text-[11px] font-semibold uppercase tracking-wide text-foreground">
+        <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-foreground">
           <ShieldAlert className="h-3 w-3" />
           Header evidence
         </p>
@@ -81,7 +81,7 @@ export function EmailForensicsPanel({ forensics }: EmailForensicsPanelProps) {
 
       {/* CONTENT EVIDENCE */}
       <div>
-        <p className="mb-2 font-mono text-[11px] font-semibold uppercase tracking-wide text-foreground">
+        <p className="mb-2 text-xs font-semibold text-foreground">
           Content evidence
         </p>
         <EvidenceList signals={forensics.content_evidence} />
@@ -90,7 +90,7 @@ export function EmailForensicsPanel({ forensics }: EmailForensicsPanelProps) {
       {/* ATTACHMENT EVIDENCE */}
       {forensics.attachments.length > 0 && (
         <div>
-          <p className="mb-2 font-mono text-[11px] font-semibold uppercase tracking-wide text-foreground">
+          <p className="mb-2 text-xs font-semibold text-foreground">
             Attachments ({forensics.attachments.length})
           </p>
           <ul className="mb-2 flex flex-wrap gap-2">
@@ -107,7 +107,7 @@ export function EmailForensicsPanel({ forensics }: EmailForensicsPanelProps) {
       {/* URL EVIDENCE (links found in the email body) */}
       {urlCount > 0 && (
         <div>
-          <p className="mb-2 font-mono text-[11px] font-semibold uppercase tracking-wide text-foreground">
+          <p className="mb-2 text-xs font-semibold text-foreground">
             Links found ({urlCount})
           </p>
           <ul className="flex flex-col gap-1.5">

@@ -16,7 +16,7 @@ const STEPS = [
 export default function ExtensionPage() {
   return (
     <PublicShell>
-      <p className="font-mono text-xs uppercase tracking-[0.16em] text-primary">Browser extension</p>
+      <p className="text-xs text-primary">Browser extension</p>
       <h1 className="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">Check scams without leaving the page</h1>
       <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
         Works on WhatsApp Web, Gmail, Telegram Web or any site. Nothing you check is saved.

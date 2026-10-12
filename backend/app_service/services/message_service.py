@@ -89,6 +89,7 @@ class MessageService:
         # modality (text/URL/email/image OCR/PDF/voice) benefits from it
         # without duplicating this call in each extractor.
         from ml_common.preprocessing.multilingual import analyze_multilingual, normalize_for_analysis
+        original_text = text
         multilingual = analyze_multilingual(text)
         text = normalize_for_analysis(text)
         if metadata is None:
@@ -159,6 +160,11 @@ class MessageService:
             )
 
         data, metadata = self._apply_community_reports(data, metadata)
+        try:
+            from ml_service.inference.scam_xray import xray
+            metadata = {**metadata, "xray": xray(original_text)}
+        except Exception:
+            logger.warning("Scam X-Ray failed", exc_info=True)
         return data, text, metadata
 
     def _apply_community_reports(self, data: dict, metadata: dict) -> tuple[dict, dict]:

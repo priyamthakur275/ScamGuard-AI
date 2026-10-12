@@ -25,6 +25,7 @@ import { ReportDownloadMenu } from "@/components/analysis/report-download-menu";
 import { ShareWarning } from "@/components/analysis/share-warning";
 import { ReportScam } from "@/components/analysis/report-scam";
 import { ChatPanel } from "@/components/analysis/chat-panel";
+import { ScamXray, type XrayData } from "@/components/analysis/scam-xray";
 import { CommunityReports } from "@/components/analysis/community-reports";
 
 interface VerdictCardProps {
@@ -71,7 +72,7 @@ export function VerdictCard({ result, onFeedback }: VerdictCardProps) {
             {/* Header: verdict reads as a stamped case-file result, not a
                 dashboard tile -- the stamp is the one bold element on this
                 screen; everything else here stays quiet. */}
-            <div className={`verdict-heading flex flex-col gap-8 xl:flex-row xl:items-start sm:justify-between ${isDemo ? "border-b border-border pb-8" : ""}`}>
+            <div data-verdict={isSafe ? "safe" : "scam"} className={`verdict-heading flex flex-col gap-8 xl:flex-row xl:items-start sm:justify-between ${isDemo ? "border-b border-border pb-8" : ""}`}>
               <div className="flex min-w-0 items-start gap-4">
                 <div
                   className={`flex h-12 w-12 shrink-0 rounded-lg items-center justify-center border-2 font-mono ${
@@ -111,7 +112,7 @@ export function VerdictCard({ result, onFeedback }: VerdictCardProps) {
               </div>
 
               <div className="flex flex-wrap items-center gap-6 sm:pt-1">
-                <div className={`border-l border-current pl-5 ${severityClass}`}><p className="font-mono text-xs uppercase tracking-wider">Threat score</p><p className="mt-1 text-4xl font-semibold tracking-tight">{Math.round(result.threat_score * 100)}<span className="text-base text-muted-foreground"> / 100</span></p><p className="mt-1 text-xs text-muted-foreground">ML model + scam-intent signals</p></div>
+                <div className={`border-l border-current pl-5 ${severityClass}`}><p className="text-xs">Threat score</p><p className="mt-1 text-4xl font-semibold tracking-tight">{Math.round(result.threat_score * 100)}<span className="text-base text-muted-foreground"> / 100</span></p><p className="mt-1 text-xs text-muted-foreground">ML model + scam-intent signals</p></div>
                 <ConfidenceGauge value={result.confidence_score} />
 
               </div>
@@ -123,6 +124,7 @@ export function VerdictCard({ result, onFeedback }: VerdictCardProps) {
               {result.verdict !== "legitimate" && <ShareWarning result={result} />}
             </div>}
             {isDemo && result.verdict !== "legitimate" && <div className="-mt-4 border-b border-border pb-6"><ShareWarning result={result} /></div>}
+            <ScamXray xray={(result.metadata?.xray as XrayData | undefined) ?? null} />
             {result.verdict !== "legitimate" && <ReportScam result={result} />}
             {/* AI Explanation */}
             <AIExplanation
@@ -162,7 +164,7 @@ export function VerdictCard({ result, onFeedback }: VerdictCardProps) {
             {/* Suspicious Keywords */}
             {result.top_contributing_tokens.length > 0 && (
               <div className="rounded-lg border border-border bg-background/40 p-5">
-                <p className="mb-3 flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wide text-foreground">
+                <p className="mb-3 flex items-center gap-2 text-xs font-semibold text-foreground">
                   <Sparkles className="h-3.5 w-3.5 text-primary" />
                   Signals detected
                 </p>

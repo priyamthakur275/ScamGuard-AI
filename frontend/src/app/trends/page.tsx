@@ -28,7 +28,7 @@ export default function TrendsPage() {
 
   return (
     <PublicShell>
-      <p className="font-mono text-xs uppercase tracking-[0.16em] text-primary">{t("td.kicker")}</p>
+      <p className="text-xs text-primary">{t("td.kicker")}</p>
       <h1 className="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">{t("td.title")}</h1>
       <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
         {t("td.sub")}
@@ -60,7 +60,7 @@ export default function TrendsPage() {
               [t("td.share"), `${Math.round(data.flagged_rate * 100)}%`],
             ].map(([label, value]) => (
               <div key={label} className="border border-border p-5">
-                <p className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground">{label}</p>
+                <p className="text-xs text-muted-foreground">{label}</p>
                 <p className="mt-2 text-3xl font-semibold tabular-nums">{value}</p>
               </div>
             ))}
