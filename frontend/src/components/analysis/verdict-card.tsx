@@ -1,9 +1,5 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { createCase } from "@/lib/api/cases";
-import { Alert } from "@/components/ui/alert";
 import { ThreatLevelBadge } from "./threat-level-badge";
 import { ShieldAlert, ShieldCheck, ThumbsDown, ThumbsUp, Sparkles, Activity } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,20 +42,9 @@ const containerVariants: Variants = {
 };
 
 export function VerdictCard({ result, onFeedback }: VerdictCardProps) {
-  const router = useRouter();
-  const [creating, setCreating] = useState(false);
-  const [caseError, setCaseError] = useState<string | null>(null);
   const isDemo = result.metadata?.is_demo === true;
   const severity = result.threat_level === "critical" ? "critical" : result.risk_level;
   const severityClass = { low: "text-risk-low", medium: "text-risk-medium", high: "text-risk-high", critical: "text-risk-critical" }[severity];
-  async function handleCreateCase() {
-    setCreating(true); setCaseError(null);
-    try {
-      const created = await createCase({ title: `${scamCategoryLabel(result.scam_category)} investigation`, severity, scan_ids: [result.id] });
-      router.push(`/cases/${created.id}`);
-    } catch { setCaseError("Could not create the case. Please try again."); }
-    finally { setCreating(false); }
-  }
   const isSafe = result.verdict === "legitimate";
   const maxWeight = Math.max(0, ...result.top_contributing_tokens.map((t) => t.weight));
   const hasExplainableData = Boolean(
@@ -133,13 +118,11 @@ export function VerdictCard({ result, onFeedback }: VerdictCardProps) {
             </div>
 
             {!isDemo && <div className="-mt-4 flex flex-wrap items-center gap-3 border-b border-border pb-6">
-              <Button onClick={handleCreateCase} isLoading={creating}>Create case</Button>
               <Button variant="outline" onClick={() => document.getElementById(`copilot-${result.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" })}>Ask ScamGuard</Button>
               <ReportDownloadMenu kind="scan" id={result.id} />
               {result.verdict !== "legitimate" && <ShareWarning result={result} />}
             </div>}
             {isDemo && result.verdict !== "legitimate" && <div className="-mt-4 border-b border-border pb-6"><ShareWarning result={result} /></div>}
-            {caseError && <Alert variant="error">{caseError}</Alert>}
             {result.verdict !== "legitimate" && <ReportScam result={result} />}
             {/* AI Explanation */}
             <AIExplanation
