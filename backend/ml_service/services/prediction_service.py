@@ -63,7 +63,11 @@ class PredictionService:
         # boosting -- it is never used to overwrite what the model itself
         # said. confidence is likewise computed from the model's real
         # probability, not from the risk engine's adjusted score.
-        confidence = self._confidence_calculator.calculate(raw_result.scam_probability)
+        # Confidence describes how sure the system is about the verdict it
+        # actually shows, so it follows the final fused score (a scam the
+        # model alone scored 0.2 must not show "90% confident" next to a
+        # Scam verdict).
+        confidence = self._confidence_calculator.calculate(threat.threat_score)
 
         top_tokens = self._explainer.explain(
             estimator=self._engine.estimator,

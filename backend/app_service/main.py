@@ -97,7 +97,16 @@ async def lifespan(app: FastAPI):
             import logging
             logging.getLogger("app_service.startup").warning("Demo account setup failed.", exc_info=True)
 
+    keep_alive_task = None
+    if settings.KEEPALIVE_ENABLED and settings.APP_ENV == "production" and settings.KEEPALIVE_URL:
+        import asyncio
+        from app_service.services.keep_alive import keep_alive_loop
+        keep_alive_task = asyncio.create_task(keep_alive_loop(settings.KEEPALIVE_URL, settings.KEEPALIVE_WINDOW_IST))
+
     yield
+
+    if keep_alive_task:
+        keep_alive_task.cancel()
 
 
 app = FastAPI(title=settings.APP_NAME, debug=settings.DEBUG, lifespan=lifespan)

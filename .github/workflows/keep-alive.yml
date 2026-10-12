@@ -9,9 +9,18 @@ name: Keep frontend and backend warm
 # This costs nothing extra: GitHub Actions on a public repo is free, and a
 # GET to /api/v1/health does no DB writes and no ML inference.
 
+# GitHub runs scheduled workflows on a best-effort basis (in practice every
+# few hours, not every 10 minutes), so this is only the *wake-up call*: once
+# the backend is up it keeps itself and the frontend awake from 08:00 to
+# 22:00 IST (app_service/services/keep_alive.py). Several morning entries
+# make it likely at least one fires near the start of the day.
 on:
   schedule:
     - cron: "*/10 * * * *"
+    - cron: "17 2 * * *"   # 07:47 IST
+    - cron: "37 2 * * *"   # 08:07 IST
+    - cron: "7 3 * * *"    # 08:37 IST
+    - cron: "47 3 * * *"   # 09:17 IST
   workflow_dispatch: {}
 
 jobs:

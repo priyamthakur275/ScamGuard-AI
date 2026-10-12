@@ -57,76 +57,142 @@ class ThreatAssessment:
     risk_level: str
     scam_category: str | None
     matched_signal_count: int
+    intents: tuple[str, ...] = ()
+
+
+# ---------------------------------------------------------------------------
+# Intent signals. Topic words ("bank", "OTP", "account") appear in genuine
+# messages just as often as in scams, so they no longer move the score on
+# their own. What separates a scam is what the message asks you to DO:
+# reveal a secret, pay to receive, act within minutes, keep it secret, open
+# a disguised link, move money. Each pattern below is a documented,
+# weighted piece of evidence; protective phrasing ("never share your OTP",
+# "no fee is required") counts as evidence the other way.
+# ---------------------------------------------------------------------------
+import math
+import re
+
+_SECRET = r"(otp|o\.t\.p|one[ -]?time[ -]?password|pin|cvv|password|passcode|verification code|security code|\d[ -]?digit code|code|card (number|details)|card ke peeche|net ?banking credentials|credentials|upi pin)"
+_NEG = r"(never|do not|don't|dont|not to|nahi|mat|no one|anyone)"
+
+_INTENTS: tuple[tuple[str, float, re.Pattern[str]], ...] = tuple(
+    (name, weight, re.compile(rx, re.I))
+    for name, weight, rx in [
+        ("asks_for_secret", 0.55, rf"\b(share|tell|send|give|provide|confirm|read out|reply with|enter|fill(?: in)?|submit|type|key in|login with|batao|batayiye|bhej|forward|replying with)\b[^.?!]{{0,40}}\b{_SECRET}\b"),
+        ("asks_for_secret", 0.55, rf"\b{_SECRET}\b[^.?!]{{0,30}}\b(batao|batayiye|bhej do|bhejo|share karo|send (it|me)|to (our|the) (executive|officer|agent))"),
+        ("remote_access_app", 0.6, r"\b(anydesk|any desk|teamviewer|quick ?support|rustdesk|screen[ -]?shar\w*)"),
+        ("pay_to_receive", 0.45, r"\b(registration|processing|joining|security|onboarding|clearance|delivery|redelivery|customs|exam|activation|gate pass)\s+(fee|charge|charges|deposit|amount|duty)\b"),
+        ("pay_to_receive", 0.45, r"\b(pay|deposit|recharge|transfer|bhej\w*)\b[^.?!]{0,50}\b(to|for|then)\s+(claim|receive|release|withdraw|unlock|activate|confirm|book|get)\b"),
+        ("pay_to_receive", 0.35, r"\bdeposit\b[^.?!]{0,40}\b(unlock|withdraw|bigger tasks|commission)"),
+        ("account_threat", 0.2, r"\b(block(ed)?|suspend(ed)?|freez\w*|frozen|deactivat\w*|disconnect\w*|be cut|cut today|band ho|kat jayega|lapse\w*|banned|on hold|locked|stopped|terminated|ends? in)\b"),
+        ("legal_threat", 0.35, r"\b(digital arrest|under arrest|avoid arrest|legal action|fir (is )?(registered|filed)|court case|warrant|money laundering|drug(s)? (parcel|case)|illegal (items|activity|messages))"),
+        ("deadline", 0.15, r"\b(today|tonight|immediately|right now|within \d+\s*(hours?|hrs?|minutes?|mins?)|in \d+\s*(hours?|hrs?|minutes?)|urgent\w*|turant|abhi|jaldi|final (notice|reminder)|last chance|expires? today|at midnight)\b"),
+        ("suspicious_link", 0.4, r"(bit\.ly|tinyurl|rb\.gy|t\.co/|is\.gd|cutt\.ly|\.(xyz|top|online|click|site|icu|buzz|live|rest|in\.net|tk|ml|ga|cf|gq|zip|work|loan|country|cam)\b|-(verify|kyc|update|refund|claim|billing|help)\w*\.(com|in|net|org))"),
+        ("link_with_action", 0.25, r"(https?://|www\.|\b(click|tap|open|visit)\b[^.?!]{0,20}\b(link|here)\b)[^.]{0,80}|\b(link|page|form)\b[^.?!]{0,40}\b(verify|update|claim|pay|renew|redeem|unlock|credentials|details)"),
+        ("move_money", 0.45, r"\b(transfer|send|bhej\w*)\b[^.?!]{0,40}\b(safe account|rbi account|this (account|upi|number)|to the officer|officer's account|my account|apne account)"),
+        ("move_money", 0.35, r"\b(transfer|send)\s+(rs\.?\s*)?[\d,]{3,}\b[^.?!]{0,30}\b(urgent\w*|immediately|now|account|upi)"),
+        ("too_good", 0.4, r"(double your money|guaranteed\s+\d+%|\d+\s*%\s*(daily|per day|weekly)|assured (daily )?(profit|returns?)|daily profit|lucky draw|lottery|you (have )?won|jeet\w*|mubarak ho|selected for (a )?(lucky|prize)|kbc|cashback of)"),
+        ("secrecy", 0.4, r"(do not|don't|dont) (tell|inform) (anyone|your family|anybody)|kisi ko (mat|na) bata|stay on (the )?(video )?call|do not disconnect|don't disconnect"),
+        ("task_scam", 0.4, r"\b(like|rate|review|subscribe)\w*\b[^.?!]{0,40}\b(earn|per like|per review|rupees per|rs\.?\s*\d+ per)|\bprepaid task\b|\btask (job|account)\b"),
+        ("mistaken_transfer", 0.45, r"(by mistake|galti se|wrong(ly)? (transfer|sent)|sent (you )?.{0,20}by mistake)[^.]{0,80}(return|wapas|approve|request|refund)"),
+        ("collect_request", 0.4, r"\b(accept|approve)\b[^.?!]{0,30}\b(collect )?request\b[^.?!]{0,40}\b(receive|money|back|cashback|refund)|enter (your )?(upi )?pin to receive"),
+        ("new_number_emergency", 0.4, r"(new number|lost my phone|phone (broke|is broken)|friend'?s (phone|number)|met with an accident|stuck at (the )?(airport|customs))"),
+        ("impersonation", 0.15, r"\b(rbi|reserve bank|cbi|cyber ?(crime|cell)|police|trai|telecom regulator|customs (officer|department)|narcotics|income tax department|ed officer|enforcement directorate|head office|kyc officer)\b"),
+        ("asks_card_details", 0.5, r"\b(card number|expiry|cvv|card details|bank account number)\b[^.?!]{0,40}\b(share|confirm|enter|send|provide|batayiye)|\b(share|confirm|enter|send|provide)\b[^.?!]{0,30}\b(card number|expiry|cvv|card details|bank account number)"),
+        ("kyc_update_demand", 0.35, r"\b(update|link|verify|complete|re-?kyc)\b[^.?!]{0,25}\b(kyc|pan|aadhaar)\b[^.?!]{0,60}\b(else|otherwise|or (your|it|the)|will be|to avoid|within|today|immediately|link|click)"),
+        ("verify_account_demand", 0.3, r"\b(verify|confirm|validate|reactivate|unlock|secure)\b[^.?!]{0,15}\byour (account|identity|details|wallet|card|profile)\b"),
+        ("deceptive_domain", 0.35, r"https?://[^/\s]*\b[a-z0-9]*[-.]?(verify|secure|login|signin|account|update|kyc|wallet|support|billing|refund)[-.][^/\s]*|https?://[^/\s]*(arnaz0n|amaz0n|paypa1|g00gle|faceb00k|micr0soft|app1e|netf1ix|sbi-?online-|hdfc-?bank-|icici-?bank-)"),
+        ("insecure_login_page", 0.2, r"http://[^\s]+/(login|signin|verify|account|secure|update|kyc|payment)\b"),
+        ("harassment", 0.4, r"send your (photos|pictures) to (all )?your contacts|morphed"),
+    ]
+)
+
+_PROTECTIVE: tuple[tuple[str, float, re.Pattern[str]], ...] = tuple(
+    (name, weight, re.compile(rx, re.I))
+    for name, weight, rx in [
+        ("warns_not_to_share", 0.6, rf"\b{_NEG}\b[^.?!]{{0,25}}\b(share|disclose|tell|give)\b|\bnever (asks?|call\w*)\b[^.?!]{{0,30}}\b{_SECRET}\b"),
+        ("official_channel", 0.35, r"\b(not (you|done by you)|if this was(n't| not) you)\b[^.?!]{0,40}\b(call|contact)\b[^.?!]{0,40}\b(official|helpline|back of your card|branch)\b|\b(official (app|website|portal|helpline))\b"),
+        ("no_fee", 0.4, r"\bno (fee|charges?|payment) (is )?(required|needed)|\bthere is no fee\b|\bfree of cost\b"),
+        ("status_update", 0.3, r"\b(has been|is|was) (successfully )?(credited|processed|delivered|confirmed|received|resolved|verified|generated|shipped|completed|booked|matured)\b|\bsuccessful(ly)?\b"),
+    ]
+)
+
+
+def _logit(p: float) -> float:
+    p = min(max(p, 1e-4), 1 - 1e-4)
+    return math.log(p / (1 - p))
 
 
 class ThreatScorer:
-    """Derives risk level and category from the model's probability plus
-    a transparent, rule-based signal count over the preprocessed tokens.
+    """Final risk engine: fuses the model's probability with intent
+    evidence in log-odds space, so the result behaves like a probability:
+
+        logit(final) = logit(model_p) + evidence_for - evidence_against
+
+    A message the model is unsure about (p = 0.3) but that asks for an OTP
+    and sets a deadline ends up near 0.9; a genuine "never share your OTP"
+    bank SMS the model mis-scored at 0.6 is pulled back below 0.3. The
+    model's own probability is still reported untouched alongside it.
     """
+
+    _GAIN = 5.0  # log-odds per unit of intent weight
+    _MODEL_LOGIT_CAP = 4.0  # TF-IDF models are overconfident at the extremes
 
     def __init__(self, config: ThreatScoreConfig | None = None):
         self._config = config or ThreatScoreConfig()
 
-    def assess(self, scam_probability: float, tokens: list[str], raw_text: str = "") -> ThreatAssessment:
-        token_set = set(tokens)
-        text_lower = raw_text.lower() if raw_text else " ".join(tokens).lower()
+    @staticmethod
+    def intents(raw_text: str) -> tuple[dict[str, float], dict[str, float]]:
+        text = " ".join(raw_text.split())
+        found: dict[str, float] = {}
+        for name, weight, rx in _INTENTS:
+            if rx.search(text):
+                found[name] = max(found.get(name, 0.0), weight)
+        protective: dict[str, float] = {}
+        for name, weight, rx in _PROTECTIVE:
+            if rx.search(text):
+                protective[name] = weight
+        # "Do not share your OTP" also matches the share-a-secret pattern;
+        # the warning wins when it is the only thing asking about secrets.
+        if "warns_not_to_share" in protective:
+            found.pop("asks_for_secret", None)
+        return found, protective
 
-        urgency_hits = len(token_set & _URGENCY_SIGNALS)
+    def assess(self, scam_probability: float, tokens: list[str], raw_text: str = "") -> ThreatAssessment:
+        text = raw_text or " ".join(tokens)
+        text_lower = text.lower()
+        token_set = set(tokens)
+
+        found, protective = self.intents(text)
+        evidence_for = sum(found.values())
+        # Weak context signals only count once a real intent is present.
+        if set(found) <= {"deadline", "impersonation", "account_threat", "link_with_action"}:
+            evidence_for *= 0.5
+        evidence_against = sum(protective.values()) if evidence_for < 0.5 else 0.5 * sum(protective.values())
+
+        model_logit = max(-self._MODEL_LOGIT_CAP, min(self._MODEL_LOGIT_CAP, _logit(scam_probability)))
+        logit = model_logit + self._GAIN * (evidence_for - evidence_against)
+        threat_score = 1 / (1 + math.exp(-logit))
+
         category_scores: dict[str, int] = {}
         for category, signals in _CATEGORY_SIGNALS.items():
-            hits = len(token_set & signals)
-            for sig in signals:
-                if sig in text_lower:
-                    hits += 1
+            hits = len(token_set & signals) + sum(1 for sig in signals if sig in text_lower)
             category_scores[category] = hits
-
-        total_category_hits = sum(category_scores.values())
         best_category, best_count = max(category_scores.items(), key=lambda item: item[1])
+        chosen_category = None
+        if threat_score >= 0.5:
+            if best_count > 0:
+                chosen_category = best_category
+            elif "suspicious_link" in found or "link_with_action" in found:
+                chosen_category = "phishing"
 
-        has_url = "http://" in text_lower or "https://" in text_lower or "__url__" in token_set or "bit.ly" in text_lower or "t.co" in text_lower or "tinyurl.com" in text_lower
-        has_crypto = "0x" in raw_text or "wallet" in text_lower or "usdt" in text_lower or "bitcoin" in text_lower or "btc" in text_lower
-        has_phone = any(c.isdigit() for c in raw_text) and ("whatsapp" in text_lower or "call" in text_lower or "+91" in raw_text or "contact" in text_lower)
-        has_urgent_action = urgency_hits > 0 and any(kw in text_lower for kw in ["account", "bank", "card", "login", "verify", "suspend", "block"])
-
-        is_definite_scam = (
-            (best_count >= 2)
-            or (best_count >= 1 and (urgency_hits > 0 or has_url or has_crypto or has_phone or has_urgent_action))
-            or (scam_probability >= 0.55)
-        )
-
-        # A category label is only meaningful once the model itself is
-        # reasonably confident the message is a scam at all -- keyword
-        # hits alone (e.g. "bank", "account" in an innocent low-probability
-        # message) must never fabricate a category the model didn't support.
-        category_eligible = scam_probability >= 0.5
-
-        if is_definite_scam:
-            # Boost confirmed scam patterns. This is a transparent,
-            # configurable risk-engine adjustment -- it produces
-            # threat_score, NOT a replacement for the model's own
-            # scam_probability, which callers must keep reporting
-            # untouched alongside this.
-            boosted = min(max(scam_probability + 0.35 + min(best_count * 0.05, 0.20), 0.72), 0.98)
-            if category_eligible:
-                chosen_category = best_category if best_count > 0 else ("phishing" if has_url else None)
-            else:
-                chosen_category = None
-            threat_score = min(boosted + (0.05 if urgency_hits > 0 else 0.0), 1.0)
-            risk_level = self._risk_level_for(threat_score)
-        else:
-            # No strong signal pattern either way (covers both the
-            # "clean innocent" and "borderline" cases): trust the model's
-            # own probability rather than arbitrarily deflating it, and
-            # let the configured risk-level thresholds decide the bucket.
-            chosen_category = best_category if (best_count > 0 and category_eligible) else None
-            threat_score = round(scam_probability, 4)
-            risk_level = self._risk_level_for(threat_score)
-
+        urgency_hits = len(token_set & _URGENCY_SIGNALS)
         return ThreatAssessment(
             threat_score=round(threat_score, 4),
-            risk_level=risk_level,
+            risk_level=self._risk_level_for(threat_score),
             scam_category=chosen_category,
-            matched_signal_count=urgency_hits + total_category_hits,
+            matched_signal_count=len(found) + urgency_hits,
+            intents=tuple(sorted(found)),
         )
 
     def _risk_level_for(self, threat_score: float) -> str:
