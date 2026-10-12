@@ -74,4 +74,4 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -f ../infra/docker/Dockerfile.app_service -t scamguard-app-service:ci .
+          docker build -f ../infra/docker/Dockerfile.app_service -t scamguard-app-service:ci ..

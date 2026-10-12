@@ -1,4 +1,4 @@
-name: Keep backend warm
+name: Keep frontend and backend warm
 
 # Render's free tier spins the app_service container down after 15 minutes
 # of inactivity, which is what causes the "Cloud backend is waking from
@@ -18,13 +18,14 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping health endpoint
+      - name: Ping frontend and backend
         run: |
-          set -e
-          url="https://scamguard-app-service.onrender.com/api/v1/health"
-          status=$(curl -s -o /tmp/health.json -w "%{http_code}" --max-time 60 "$url" || echo "000")
+          # One request through the live frontend's /backend-api proxy wakes
+          # both Render services (the Next.js frontend and the FastAPI backend).
+          url="https://scamguard-frontend-r6t7.onrender.com/backend-api/api/v1/health"
+          status=$(curl -s -o /tmp/health.json -w "%{http_code}" --max-time 90 "$url" || echo "000")
           echo "HTTP $status"
           cat /tmp/health.json 2>/dev/null || true
           if [ "$status" != "200" ]; then
-            echo "::warning::Health check did not return 200 (got $status). The backend may be down, not just cold."
+            echo "::warning::Health check through the frontend did not return 200 (got $status)."
           fi
