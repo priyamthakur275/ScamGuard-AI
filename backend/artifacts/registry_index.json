@@ -41,12 +41,36 @@
           "false_negatives": 7
         }
       },
-      "is_production": true,
+      "is_production": false,
       "trained_at": "2026-10-12T12:46:17.618610+00:00",
       "artifact_path": "artifacts/svm/v2/model.joblib",
       "vectorizer_path": "artifacts/svm/v2/vectorizer.joblib",
       "train_rows": 4154,
       "test_rows": 1039
+    },
+    {
+      "model_name": "svm",
+      "version": "v3",
+      "metrics": {
+        "accuracy": 0.9889064976228209,
+        "precision": 0.9702127659574468,
+        "recall": 0.9702127659574468,
+        "f1": 0.9702127659574468,
+        "roc_auc": 0.998305330543413,
+        "false_positive_rate": 0.006815968841285297,
+        "confusion_matrix": {
+          "true_positives": 228,
+          "true_negatives": 1020,
+          "false_positives": 7,
+          "false_negatives": 7
+        }
+      },
+      "is_production": true,
+      "trained_at": "2026-10-12T17:53:15.909002+00:00",
+      "artifact_path": "artifacts/svm/v3/model.joblib",
+      "vectorizer_path": "artifacts/svm/v3/vectorizer.joblib",
+      "train_rows": 5047,
+      "test_rows": 1262
     }
   ]
 }
