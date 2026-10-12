@@ -7,6 +7,7 @@ import { Lock, ScanSearch, ShieldAlert, Sparkles, Zap, ShieldCheck, CheckCircle2
 import { useAuth } from "@/lib/auth/auth-context";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { BackendWarmup } from "@/components/layout/backend-warmup";
 import { FullPageSpinner } from "@/components/ui/spinner";
 import { motion, Variants } from "framer-motion";
 import { Card } from "@/components/ui/card";
@@ -93,6 +94,7 @@ export default function HomePage() {
 
   return (
     <div className="flex min-h-screen flex-col">
+      <BackendWarmup />
       <header className="sticky top-0 z-50 flex h-[4.5rem] items-center justify-between border-b border-border bg-background/90 px-6 backdrop-blur-xl md:px-10">
         <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center border border-primary/30 bg-primary/10">
