@@ -12,6 +12,7 @@ from app_service.core.security import (
     hash_password,
     hash_token,
     verify_password,
+    password_needs_rehash,
 )
 from app_service.db.postgres.models import RefreshToken, User, UserRole
 from app_service.repositories.audit_repository import AuditRepository
@@ -68,6 +69,10 @@ class AuthService:
             raise UnauthorizedError("Invalid email or password")
         if not user.is_active:
             raise UnauthorizedError("This account has been deactivated")
+
+        if password_needs_rehash(user.password_hash):
+            user.password_hash = hash_password(password)
+            self.users.save(user)
 
         login_attempts.record_success(normalized_email)
         return user
