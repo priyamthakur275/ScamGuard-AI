@@ -134,3 +134,10 @@ export function riskDimensionColor(score: number): string {
   if (score > 0) return "bg-risk-low";
   return "bg-muted-foreground/20";
 }
+
+/** Registry versions are stored as "v1", "v2"; older entries may be bare
+ * numbers. Show exactly one leading "v" either way. */
+export function formatVersion(version: string | null | undefined): string {
+  if (!version) return "";
+  return /^v/i.test(version) ? version : `v${version}`;
+}

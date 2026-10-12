@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert } from "@/components/ui/alert";
-import { formatDate, formatPercent } from "@/lib/utils";
+import { formatDate, formatPercent, formatVersion } from "@/lib/utils";
 
 function MetricRow({ label, value }: { label: string; value: string }) {
   return (
@@ -74,7 +74,7 @@ export default function ModelEvaluationPage() {
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <h2 className="font-sans text-lg font-semibold text-foreground">
-                      {entry.model_name} <span className="text-muted-foreground">v{entry.version}</span>
+                      {entry.model_name} <span className="text-muted-foreground">{formatVersion(entry.version)}</span>
                     </h2>
                     <p className="font-mono text-xs text-muted-foreground">
                       Trained {formatDate(entry.trained_at)}

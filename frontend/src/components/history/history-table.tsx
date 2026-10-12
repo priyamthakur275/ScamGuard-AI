@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { RiskBadge } from "@/components/analysis/risk-badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { truncate, verdictLabel, formatDate, formatPercent, scamCategoryLabel } from "@/lib/utils";
+import { truncate, verdictLabel, formatDate, formatPercent, scamCategoryLabel, formatVersion } from "@/lib/utils";
 import { createCase } from "@/lib/api/cases";
 import { saveBlob } from "@/lib/api/client";
 import { useRouter } from "next/navigation";
@@ -318,7 +318,7 @@ export const HistoryTable = memo(function HistoryTable({ entries, onFeedback, on
                                       Threat score: <span className="text-foreground">{formatPercent(entry.threat_score)}</span>
                                     </span>
                                     <span className="flex items-center gap-1.5 bg-background/50 px-2 py-1 rounded-md border border-border/50">
-                                      Model: <span className="text-foreground">{entry.model_name} (v{entry.model_version})</span>
+                                      Model: <span className="text-foreground">{entry.model_name} ({formatVersion(entry.model_version)})</span>
                                     </span>
                                   </div>
 
