@@ -27,6 +27,9 @@ import type { AnalysisResult, UrlIntelligence, EmailForensics, VoiceEvidenceSign
 import { motion, Variants } from "framer-motion";
 import { ReportDownloadMenu } from "@/components/analysis/report-download-menu";
 import { ShareWarning } from "@/components/analysis/share-warning";
+import { ReportScam } from "@/components/analysis/report-scam";
+import { ChatPanel } from "@/components/analysis/chat-panel";
+import { CommunityReports } from "@/components/analysis/community-reports";
 
 interface VerdictCardProps {
   result: AnalysisResult;
@@ -131,12 +134,13 @@ export function VerdictCard({ result, onFeedback }: VerdictCardProps) {
 
             {!isDemo && <div className="-mt-4 flex flex-wrap items-center gap-3 border-b border-border pb-6">
               <Button onClick={handleCreateCase} isLoading={creating}>Create case</Button>
-              <Button variant="outline" onClick={() => document.getElementById(`copilot-${result.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" })}>Ask Copilot</Button>
+              <Button variant="outline" onClick={() => document.getElementById(`copilot-${result.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" })}>Ask ScamGuard</Button>
               <ReportDownloadMenu kind="scan" id={result.id} />
               {result.verdict !== "legitimate" && <ShareWarning result={result} />}
             </div>}
             {isDemo && result.verdict !== "legitimate" && <div className="-mt-4 border-b border-border pb-6"><ShareWarning result={result} /></div>}
             {caseError && <Alert variant="error">{caseError}</Alert>}
+            {result.verdict !== "legitimate" && <ReportScam result={result} />}
             {/* AI Explanation */}
             <AIExplanation
               explanation={result.ai_explanation}
@@ -147,6 +151,10 @@ export function VerdictCard({ result, onFeedback }: VerdictCardProps) {
             <div className="evidence-grid">
             {/* Risk Breakdown */}
             {hasExplainableData && <RiskBreakdown breakdown={result.risk_breakdown} />}
+
+            <ChatPanel chat={(result.metadata?.chat as { incoming?: string[]; outgoing?: string[]; header?: string | null } | undefined) ?? null} />
+
+            <CommunityReports result={result} />
 
             {/* Entity Highlights */}
             <EntityHighlights entities={result.highlighted_entities} />

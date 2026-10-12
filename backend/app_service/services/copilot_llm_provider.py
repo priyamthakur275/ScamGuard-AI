@@ -38,7 +38,105 @@ class CopilotLlmProvider(ABC):
         return a fabricated answer."""
 
 
-_PROVIDERS: dict[str, type[CopilotLlmProvider]] = {}
+SYSTEM_PROMPT = (
+    "You are ScamGuard's assistant for people in India who received a suspicious message. "
+    "Answer ONLY from the scan evidence provided; if the evidence doesn't cover the question, say so. "
+    "Use simple, calm language, at most 120 words. Reply in the same language as the question "
+    "(English, Hindi or Hinglish). Never ask the user for OTPs, PINs, passwords or card details. "
+    "When money was lost, tell them to call 1930 and report at cybercrime.gov.in; for unwanted scam "
+    "messages without loss, Chakshu (sancharsaathi.gov.in/sfc)."
+)
+
+
+def _user_prompt(question: str, grounding_context: str) -> str:
+    return f"Scan evidence:\n{grounding_context}\n\nUser question: {question}"
+
+
+def _http_client():
+    import httpx
+
+    return httpx.Client(timeout=20.0)
+
+
+class GeminiProvider(CopilotLlmProvider):
+    """Google Gemini (has a free tier). COPILOT_LLM_PROVIDER=gemini."""
+
+    default_model = "gemini-2.5-flash"
+
+    def answer(self, question: str, grounding_context: str) -> str:
+        settings = get_settings()
+        model = settings.COPILOT_LLM_MODEL or self.default_model
+        with _http_client() as client:
+            resp = client.post(
+                f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
+                headers={"x-goog-api-key": settings.COPILOT_LLM_API_KEY},
+                json={
+                    "system_instruction": {"parts": [{"text": SYSTEM_PROMPT}]},
+                    "contents": [{"role": "user", "parts": [{"text": _user_prompt(question, grounding_context)}]}],
+                    "generationConfig": {"maxOutputTokens": 400, "temperature": 0.2},
+                },
+            )
+            resp.raise_for_status()
+            parts = resp.json()["candidates"][0]["content"]["parts"]
+            return "".join(p.get("text", "") for p in parts).strip()
+
+
+class AnthropicProvider(CopilotLlmProvider):
+    """Anthropic API. COPILOT_LLM_PROVIDER=anthropic; set COPILOT_LLM_MODEL."""
+
+    default_model = ""
+
+    def answer(self, question: str, grounding_context: str) -> str:
+        settings = get_settings()
+        with _http_client() as client:
+            resp = client.post(
+                "https://api.anthropic.com/v1/messages",
+                headers={
+                    "x-api-key": settings.COPILOT_LLM_API_KEY,
+                    "anthropic-version": "2023-06-01",
+                    "content-type": "application/json",
+                },
+                json={
+                    "model": settings.COPILOT_LLM_MODEL or self.default_model,
+                    "max_tokens": 400,
+                    "system": SYSTEM_PROMPT,
+                    "messages": [{"role": "user", "content": _user_prompt(question, grounding_context)}],
+                },
+            )
+            resp.raise_for_status()
+            return "".join(b.get("text", "") for b in resp.json()["content"] if b.get("type") == "text").strip()
+
+
+class OpenAIProvider(CopilotLlmProvider):
+    """OpenAI-compatible chat completions. COPILOT_LLM_PROVIDER=openai."""
+
+    default_model = "gpt-4o-mini"
+
+    def answer(self, question: str, grounding_context: str) -> str:
+        settings = get_settings()
+        with _http_client() as client:
+            resp = client.post(
+                "https://api.openai.com/v1/chat/completions",
+                headers={"Authorization": f"Bearer {settings.COPILOT_LLM_API_KEY}"},
+                json={
+                    "model": settings.COPILOT_LLM_MODEL or self.default_model,
+                    "max_tokens": 400,
+                    "temperature": 0.2,
+                    "messages": [
+                        {"role": "system", "content": SYSTEM_PROMPT},
+                        {"role": "user", "content": _user_prompt(question, grounding_context)},
+                    ],
+                },
+            )
+            resp.raise_for_status()
+            return resp.json()["choices"][0]["message"]["content"].strip()
+
+
+_PROVIDERS: dict[str, type[CopilotLlmProvider]] = {
+    "gemini": GeminiProvider,
+    "anthropic": AnthropicProvider,
+    "openai": OpenAIProvider,
+}
 
 
 def get_llm_answer(question: str, grounding_context: str) -> str:
@@ -51,7 +149,7 @@ def get_llm_answer(question: str, grounding_context: str) -> str:
             "evidence-grounded assistant instead."
         )
 
-    provider_cls = _PROVIDERS.get(provider_name)
+    provider_cls = _PROVIDERS.get(provider_name.strip().lower())
     if provider_cls is None:
         raise CopilotLlmUnavailableError(
             f"COPILOT_LLM_PROVIDER is set to '{provider_name}', which is not a "
