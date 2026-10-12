@@ -9,7 +9,18 @@ from passlib.context import CryptContext
 from app_service.core.config import get_settings
 
 settings = get_settings()
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# bcrypt cost 10 (OWASP's recommended minimum). The library default of 12
+# costs ~4x more CPU per login; on a small shared cloud instance that alone
+# took several seconds and made sign-in look like the backend was down.
+# Older cost-12 hashes still verify, and are re-hashed at cost 10 on the
+# next successful login (see password_needs_rehash).
+BCRYPT_ROUNDS = 10
+pwd_context = CryptContext(
+    schemes=["bcrypt"],
+    deprecated="auto",
+    bcrypt__default_rounds=BCRYPT_ROUNDS,
+    bcrypt__max_rounds=BCRYPT_ROUNDS,
+)
 
 
 class TokenError(Exception):
@@ -22,6 +33,11 @@ def hash_password(password: str) -> str:
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
+
+
+def password_needs_rehash(hashed_password: str) -> bool:
+    """True for hashes made with different settings (e.g. older cost-12 hashes)."""
+    return pwd_context.needs_update(hashed_password)
 
 
 def create_access_token(subject: str, role: str, expires_delta: timedelta | None = None) -> str:

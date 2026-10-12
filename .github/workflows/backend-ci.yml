@@ -52,6 +52,11 @@ jobs:
           cache: "pip"
           cache-dependency-path: backend/requirements.txt
 
+      - name: Install OCR and QR system packages
+        # The image-upload tests run real OCR. The production image installs
+        # these too (infra/docker/Dockerfile.app_service).
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends tesseract-ocr libzbar0
+
       - name: Install dependencies
         run: pip install -r requirements.txt
 
