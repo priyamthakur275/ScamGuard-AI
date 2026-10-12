@@ -50,7 +50,7 @@ export function inputTypeLabel(inputType: string | null | undefined): string {
     TEXT: "Text",
     URL: "URL",
     EMAIL: "Email",
-    IMAGE: "Image / OCR",
+    IMAGE: "Screenshot / image",
     PDF: "PDF",
     QR: "QR Code",
     CAMERA: "Camera",

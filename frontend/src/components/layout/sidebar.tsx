@@ -13,8 +13,7 @@ import {
   Settings,
   ShieldAlert,
   Sparkles,
-  X,
-} from "lucide-react";
+  X, TrendingUp, GraduationCap } from "lucide-react";
 import { useDialogFocus } from "@/hooks/use-dialog-focus";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth/auth-context";
@@ -69,6 +68,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     { href: "/history", label: "History", icon: History },
     { href: "/cases", label: "Cases", icon: FolderKanban },
     { href: "/analytics", label: "Analytics", icon: BarChart3 },
+    { href: "/trends", label: "Scam Trends", icon: TrendingUp },
+    { href: "/trainer", label: "Scam Trainer", icon: GraduationCap },
     { href: "/settings", label: "Settings", icon: Settings },
     ...(user?.role === "admin" ? [{ href: "/admin", label: "Admin Console", icon: ShieldAlert }] : []),
   ];

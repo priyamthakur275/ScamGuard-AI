@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { InstallAppButton } from "@/components/layout/install-app-button";
+import { LanguageToggle } from "@/components/layout/language-toggle";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Lock, ScanSearch, ShieldAlert, Sparkles, Zap, ShieldCheck, CheckCircle2, ArrowRight, Mail, FolderKanban, MessageCircleQuestion, FlaskConical, FileOutput } from "lucide-react";
@@ -104,6 +106,10 @@ export default function HomePage() {
           <div><span className="text-lg font-semibold tracking-tight">ScamGuard</span><span className="ml-2 hidden font-mono text-[10px] uppercase tracking-[0.16em] text-primary sm:inline">Threat intelligence</span></div>
         </div>
         <div className="flex items-center gap-4">
+          <InstallAppButton />
+          <LanguageToggle />
+          <Link href="/trends" className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground md:inline">Scam trends</Link>
+          <Link href="/trainer" className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground md:inline">Trainer</Link>
           <ThemeToggle />
           <Link href="/login" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
             Sign in
@@ -247,6 +253,9 @@ export default function HomePage() {
             AI-powered scam detection & threat intelligence.
           </p>
           <div className="flex gap-4">
+            <Link href="/trends" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Scam trends</Link>
+            <Link href="/trainer" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Scam trainer</Link>
+            <Link href="/extension" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Browser extension</Link>
             <Link href="/register" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Create account</Link>
             <Link href="/login" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Sign in</Link>
           </div>

@@ -2,7 +2,7 @@ import enum
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Enum, Float, ForeignKey, Integer, JSON, String, func
+from sqlalchemy import Boolean, DateTime, Enum, Float, ForeignKey, Integer, JSON, String, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app_service.db.base import Base
@@ -279,3 +279,21 @@ class CaseTimelineEntry(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     case: Mapped["Case"] = relationship(back_populates="timeline_entries")
+
+
+class CommunityReport(Base):
+    """A signed-in user's report that a phone number, link domain, UPI ID or
+    email address is used for scams. One row per (indicator, reporter), so a
+    single person can never inflate a count."""
+
+    __tablename__ = "community_reports"
+    __table_args__ = (UniqueConstraint("indicator_type", "indicator_value", "reporter_id", name="uq_community_report"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(GUID(), primary_key=True, default=uuid.uuid4)
+    indicator_type: Mapped[str] = mapped_column(String(16), nullable=False)
+    indicator_value: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    reporter_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    category: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), index=True)

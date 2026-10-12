@@ -158,7 +158,33 @@ class MessageService:
                 "The scam-detection model is temporarily unavailable. Please try again shortly."
             )
 
+        data, metadata = self._apply_community_reports(data, metadata)
         return data, text, metadata
+
+    def _apply_community_reports(self, data: dict, metadata: dict) -> tuple[dict, dict]:
+        """Adds community report counts for the scan's numbers/links/UPI IDs.
+        Two or more independent reporters raise the final score (never the
+        model's own probability): 1 - (1 - score) * (1 - min(0.15 * n, 0.6))."""
+        try:
+            from app_service.services.community import reports_for_entities
+            community = reports_for_entities(self.db, data.get("highlighted_entities"))
+        except Exception:
+            logger.warning("Community report lookup failed", exc_info=True)
+            return data, metadata
+        if not community:
+            return data, metadata
+        metadata = {**metadata, "community_reports": community}
+        strongest = max(c["report_count"] for c in community)
+        if strongest >= 2:
+            boost = min(0.15 * strongest, 0.6)
+            score = 1 - (1 - float(data["threat_score"])) * (1 - boost)
+            data = {**data, "threat_score": round(score, 4)}
+            data["risk_level"] = "high" if score >= 0.7 else "medium" if score >= 0.4 else "low"
+            if score >= 0.5 and str(data.get("verdict")).lower() == "legitimate":
+                data["verdict"] = "scam"
+            note = f"Reported as a scam by {strongest} ScamGuard users. Do not respond or pay."
+            data["recommended_actions"] = [note, *(data.get("recommended_actions") or [])]
+        return data, metadata
 
     def analyze(self, user_id: uuid.UUID | None, text: str, input_type: str = "TEXT", metadata: dict | None = None) -> AnalysisResult:
         data, text, metadata = self._run_pipeline(text, input_type, metadata)
