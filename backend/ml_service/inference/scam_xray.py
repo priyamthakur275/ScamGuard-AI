@@ -42,6 +42,7 @@ INTENT_INFO: dict[str, tuple[str, str, str]] = {
     "page_collects_secrets": ("cashout", "Page collects passwords/OTP", "The linked page has a form for sensitive details."),
     "page_posts_elsewhere": ("cashout", "Data sent to another site", "The form secretly submits to a different website."),
     "page_impersonates_brand": ("cashout", "Fake brand page", "The page shows a brand's name on a domain that isn't theirs."),
+    "new_domain": ("cashout", "Brand-new website", "The site was registered recently; scam sites rarely live long."),
     "harassment": ("pressure", "Blackmail threat", "Threats to share your photos are extortion; report it, don't pay."),
 }
 

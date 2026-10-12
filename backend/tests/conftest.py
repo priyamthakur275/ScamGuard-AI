@@ -148,3 +148,13 @@ def regular_user(db_session: Session) -> User:
     db_session.commit()
     db_session.refresh(user)
     return user
+
+
+@pytest.fixture(autouse=True)
+def _no_live_rdap(monkeypatch, request):
+    """Domain-age lookups hit the public RDAP service; keep tests offline
+    unless a test opts in with @pytest.mark.live_rdap."""
+    if request.node.get_closest_marker("live_rdap"):
+        return
+    from app_service.services import domain_trust
+    monkeypatch.setattr(domain_trust, "lookup_domain_age", lambda *a, **k: None)

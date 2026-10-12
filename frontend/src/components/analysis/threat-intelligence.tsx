@@ -39,8 +39,10 @@ export function ThreatIntelligence({ urlIntelligence }: ThreatIntelligenceProps)
   const hasRedirectChain = (urlIntelligence.redirect_chain?.length ?? 0) > 0;
   const hasResolvedIps = (urlIntelligence.resolved_ips?.length ?? 0) > 0;
   const page = urlIntelligence.page_inspection;
+  const trust = urlIntelligence.trust;
+  const age = urlIntelligence.domain_age;
 
-  if (!hasEvidence && !hasRedirectChain && !hasResolvedIps && !page) return null;
+  if (!hasEvidence && !hasRedirectChain && !hasResolvedIps && !page && !trust) return null;
 
   return (
     <div className="border border-border p-5">
@@ -48,6 +50,47 @@ export function ThreatIntelligence({ urlIntelligence }: ThreatIntelligenceProps)
         <ShieldQuestion className="h-3.5 w-3.5 text-primary" />
         URL intelligence signals
       </p>
+
+      {trust && (
+        <div className="mb-4 rounded-xl border border-border bg-background/50 p-4">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium">Website trust score</p>
+              <p className="text-xs text-muted-foreground">
+                {age
+                  ? `${urlIntelligence.registrable_domain} registered on ${age.registered_on} (${age.age_days} days ago)${age.registrar ? ` via ${age.registrar}` : ""}`
+                  : `${urlIntelligence.registrable_domain} · registration date not available`}
+              </p>
+            </div>
+            <p
+              className={`font-display text-3xl font-bold tabular-nums ${
+                trust.band === "trustworthy" ? "text-risk-low" : trust.band === "caution" ? "text-risk-medium" : "text-destructive"
+              }`}
+            >
+              {trust.score}
+              <span className="text-base text-muted-foreground">/100</span>
+            </p>
+          </div>
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted" aria-hidden="true">
+            <div
+              className={`h-full rounded-full ${
+                trust.band === "trustworthy" ? "bg-risk-low" : trust.band === "caution" ? "bg-risk-medium" : "bg-destructive"
+              }`}
+              style={{ width: `${trust.score}%` }}
+            />
+          </div>
+          <ul className="mt-3 grid gap-1 text-sm sm:grid-cols-2">
+            {trust.factors.map((f) => (
+              <li key={f.label} className="flex items-baseline gap-2">
+                <span className={`w-9 shrink-0 text-right text-xs tabular-nums ${f.impact > 0 ? "text-risk-low" : f.impact < 0 ? "text-destructive" : "text-muted-foreground"}`}>
+                  {f.impact > 0 ? `+${f.impact}` : f.impact === 0 ? "·" : f.impact}
+                </span>
+                <span>{f.label}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {hasEvidence && (
         <ul className="mb-3 flex flex-col gap-2">
