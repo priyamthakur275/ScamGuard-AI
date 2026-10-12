@@ -9,7 +9,21 @@ import { NextResponse, type NextRequest } from "next/server";
 // effect has a chance to run, for the common case (no session at all).
 const AUTH_PAGES = ["/login", "/register"];
 
+/** Requests to the backend go through the /backend-api rewrite, so the
+ * backend sees this Next.js server as the caller. Pass the browser's own
+ * IP along explicitly so the backend's rate limits apply per visitor,
+ * not to everyone sharing this one server. */
+function forwardClientIp(request: NextRequest) {
+  const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  const clientIp = forwarded || request.headers.get("x-real-ip") || request.ip || "";
+  const headers = new Headers(request.headers);
+  if (clientIp) headers.set("x-scamguard-client-ip", clientIp);
+  return NextResponse.next({ request: { headers } });
+}
+
 export function middleware(request: NextRequest) {
+  if (request.nextUrl.pathname.startsWith("/backend-api/")) return forwardClientIp(request);
+
   const hasSessionCookie = request.cookies.has("has_session");
   const { pathname } = request.nextUrl;
 
@@ -27,5 +41,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/analyze/:path*", "/history/:path*", "/analytics/:path*", "/settings/:path*", "/admin/:path*", "/cases/:path*", "/demo/:path*", "/login", "/register"],
+  matcher: ["/backend-api/:path*", "/dashboard/:path*", "/analyze/:path*", "/history/:path*", "/analytics/:path*", "/settings/:path*", "/admin/:path*", "/cases/:path*", "/demo/:path*", "/login", "/register"],
 };

@@ -18,6 +18,10 @@ def get_client_ip(request: Request) -> str:
     all three of those proxies) instead, falling back to the connection
     address only if it's absent (e.g. direct/local development traffic).
     """
+    # Set by the frontend's middleware from the browser's own address.
+    client_ip = request.headers.get("x-scamguard-client-ip")
+    if client_ip:
+        return client_ip.strip()[:64]
     forwarded_for = request.headers.get("x-forwarded-for")
     if forwarded_for:
         return forwarded_for.split(",")[0].strip()

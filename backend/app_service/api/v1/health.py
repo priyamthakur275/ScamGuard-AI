@@ -5,6 +5,8 @@ import httpx
 from app_service.core.config import get_settings
 
 settings = get_settings()
+from app_service.core.rate_limit import limiter
+
 router = APIRouter(tags=["system"])
 
 
@@ -18,11 +20,13 @@ async def _wake_ml_service():
 
 
 @router.get("/health")
+@limiter.exempt
 def health(background_tasks: BackgroundTasks) -> dict:
     background_tasks.add_task(_wake_ml_service)
     return {"status": "ok"}
 
 
 @router.get("/ready")
+@limiter.exempt
 def ready() -> dict:
     return {"status": "ready"}

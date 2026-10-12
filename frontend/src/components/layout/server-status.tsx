@@ -19,12 +19,21 @@ export function ServerStatus() {
   useEffect(() => {
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout>;
+    function schedule() {
+      if (cancelled) return;
+      if (document.visibilityState === "hidden") {
+        document.addEventListener("visibilitychange", schedule, { once: true });
+        return;
+      }
+      void poll();
+    }
     async function poll() {
       const ok = await checkHealth();
       if (cancelled) return;
       setStatus(ok ? "online" : "waking");
-      // Re-check quickly while waking, then once a minute.
-      timer = setTimeout(poll, ok ? 60000 : 5000);
+      // Gentle polling: 2 min when healthy, 10 s while waking, and paused
+      // while the tab is hidden, so open tabs never flood the backend.
+      timer = setTimeout(schedule, ok ? 120000 : 10000);
     }
     poll();
     return () => {
