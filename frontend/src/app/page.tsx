@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { BackendWarmup } from "@/components/layout/backend-warmup";
+import { QuickCheck } from "@/components/landing/quick-check";
 import { FullPageSpinner } from "@/components/ui/spinner";
 import { motion, Variants } from "framer-motion";
 import { Card } from "@/components/ui/card";
@@ -163,6 +164,8 @@ export default function HomePage() {
             <p className="mt-4 border-t border-border pt-4 text-xs text-muted-foreground">One investigation workspace. Evidence behind every verdict.</p>
           </div>
         </section>
+
+        <QuickCheck />
 
         {/* Feature Section */}
         <section className="border-t border-border bg-card/30 px-6 py-20">

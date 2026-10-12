@@ -24,6 +24,7 @@ interface AuthContextValue {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (payload: LoginPayload) => Promise<void>;
+  demoLogin: () => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -82,6 +83,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const demoLogin = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const tokens = await authApi.demoLogin();
+      setTokens(tokens);
+      const currentUser = await authApi.getCurrentUser();
+      setUser(currentUser);
+      setCachedUser(currentUser);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   const register = useCallback(async (payload: RegisterPayload) => {
     setIsLoading(true);
     try {
@@ -108,6 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading,
     isAuthenticated: user !== null,
     login,
+    demoLogin,
     register,
     logout,
     refreshUser,

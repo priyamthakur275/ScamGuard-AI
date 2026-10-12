@@ -24,3 +24,7 @@ export function logout(refreshToken: string): Promise<void> {
 export function getCurrentUser(): Promise<User> {
   return apiRequest<User>("/users/me", { method: "GET" });
 }
+
+export function demoLogin(): Promise<TokenPair> {
+  return apiRequest<TokenPair>("/auth/demo-login", { method: "POST", auth: false });
+}

@@ -154,7 +154,7 @@ class ExplanationGenerator:
                 "No significant scam or phishing indicators were detected. The message exhibits standard, genuine communication patterns and is safe to interact with.",
             )
             
-        executive_summary = f"The input exhibits characteristics of a {scam_category} scam." if scam_category else f"The input has been classified as {verdict}."
+        executive_summary = f"The input exhibits characteristics of a {scam_category.replace('_', ' ')} scam." if scam_category else f"The input has been classified as {verdict}."
             
         metadata_context = ""
         if input_type == "URL":

@@ -85,6 +85,18 @@ async def lifespan(app: FastAPI):
             exc_info=True,
         )
 
+    # Make sure the shared demo account exists and has sample scans, so a
+    # reviewer never lands on an empty dashboard. Never fatal.
+    if settings.DEMO_ACCOUNT_ENABLED:
+        try:
+            from app_service.db.session import SessionLocal
+            from app_service.services.demo_account import ensure_demo_account
+            with SessionLocal() as demo_db:
+                ensure_demo_account(demo_db)
+        except Exception:
+            import logging
+            logging.getLogger("app_service.startup").warning("Demo account setup failed.", exc_info=True)
+
     yield
 
 

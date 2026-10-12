@@ -103,6 +103,7 @@ export interface UrlIntelligence {
   evidence: UrlIntelligenceEvidence[];
   redirect_count?: number;
   redirect_chain?: Array<{ url: string; status_code: number }>;
+  final_url?: string | null;
   resolved_ips?: string[];
   tls?: { subject_cn: string | null; issuer_cn: string | null; not_after: string | null; is_expired: boolean | null } | null;
 }

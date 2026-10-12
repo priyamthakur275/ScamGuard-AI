@@ -14,7 +14,7 @@ import { CaptchaField } from "@/components/auth/captcha-field";
 import { RefreshCw } from "lucide-react";
 
 export function LoginForm() {
-  const { login } = useAuth();
+  const { login, demoLogin } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -48,6 +48,21 @@ export function LoginForm() {
     }
     return () => clearInterval(interval);
   }, [isSubmitting]);
+
+  const [isDemoLoading, setIsDemoLoading] = useState(false);
+
+  async function handleDemo() {
+    setFormError(null);
+    setIsDemoLoading(true);
+    try {
+      await demoLogin();
+      router.push("/dashboard");
+    } catch (error) {
+      setFormError(error instanceof ApiError ? error.message : "Couldn't open the demo account. Try again.");
+    } finally {
+      setIsDemoLoading(false);
+    }
+  }
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -146,8 +161,12 @@ export function LoginForm() {
               ? "Signing in..."
               : "Sign in"}
         </Button>
-
-
+        <Button type="button" variant="outline" className="w-full" size="lg" onClick={handleDemo} isLoading={isDemoLoading} disabled={isSubmitting}>
+          Try the demo account
+        </Button>
+        <p className="text-center text-[11px] text-muted-foreground">
+          Opens a shared account with sample scans already analysed. No sign-up needed.
+        </p>
       </div>
 
       {isWakingServer && (

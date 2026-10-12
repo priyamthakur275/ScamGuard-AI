@@ -6,6 +6,9 @@ os.environ.setdefault("SECRET_KEY", "test-only-secret-key-do-not-use-in-producti
 os.environ.setdefault("DATABASE_URL", "sqlite:///:memory:")
 os.environ.setdefault("APP_ENV", "test")
 os.environ.setdefault("DEBUG", "true")
+# The shared demo account is seeded at startup in real deployments; tests
+# that need it enable it explicitly (see test_demo_account.py).
+os.environ.setdefault("DEMO_ACCOUNT_ENABLED", "false")
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402

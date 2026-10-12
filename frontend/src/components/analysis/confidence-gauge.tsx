@@ -60,11 +60,12 @@ export function ConfidenceGauge({ value, size = 120 }: ConfidenceGaugeProps) {
             transition={{ duration: reducedMotion ? 0 : 0.6, ease: "easeOut" }}
           />
         </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <motion.span className="text-2xl font-bold text-foreground">
-            {rounded}
-          </motion.span>
-          <span className="text-2xl font-bold text-foreground absolute ml-12">%</span>
+        <div className="absolute inset-0 flex items-center justify-center">
+          {/* Number and % share one baseline so 1-, 2- and 3-digit values never overlap. */}
+          <span className="flex items-baseline font-bold tabular-nums text-foreground">
+            <motion.span className="text-2xl">{rounded}</motion.span>
+            <span className="ml-0.5 text-base">%</span>
+          </span>
         </div>
       </div>
       <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Confidence</span>

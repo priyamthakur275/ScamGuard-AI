@@ -23,3 +23,26 @@ export function scanFile(file: File | null, text: string | null, inputType: stri
   return apiRequest<AnalysisResult>("/messages/scan", { method: "POST", body });
 }
 export { ApiError };
+
+export interface PhoneLookupScan {
+  id: string;
+  verdict: string;
+  threat_level: string | null;
+  scam_category: string | null;
+  created_at: string | null;
+  preview: string;
+}
+
+export interface PhoneLookupResult {
+  number: string;
+  is_valid_indian_mobile: boolean;
+  seen_count: number;
+  flagged_count: number;
+  first_seen: string | null;
+  last_seen: string | null;
+  scans: PhoneLookupScan[];
+}
+
+export function lookupPhone(number: string): Promise<PhoneLookupResult> {
+  return apiRequest<PhoneLookupResult>(`/messages/lookup/phone?number=${encodeURIComponent(number)}`, { method: "GET" });
+}

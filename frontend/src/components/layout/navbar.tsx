@@ -3,6 +3,7 @@
 import { Menu, ShieldAlert } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { ServerStatus } from "@/components/layout/server-status";
 import { Button } from "@/components/ui/button";
 import { usePathname } from "next/navigation";
 
@@ -37,6 +38,7 @@ export function Navbar({ onMenuClick }: NavbarProps) {
       </div>
 
       <div className="flex items-center gap-3">
+        <ServerStatus />
         <ThemeToggle />
         {user && (
           <div className="hidden items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 font-mono text-xs sm:flex">

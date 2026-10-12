@@ -75,7 +75,18 @@ export function ThreatIntelligence({ urlIntelligence }: ThreatIntelligenceProps)
                 <span className="text-muted-foreground">({hop.status_code})</span>
               </span>
             ))}
+            {urlIntelligence.final_url && (
+              <span className="flex items-center gap-1.5">
+                <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                <strong>{hostOf(urlIntelligence.final_url)}</strong>
+              </span>
+            )}
           </div>
+          {urlIntelligence.final_url && (
+            <p className="mt-1.5 break-all text-xs text-muted-foreground">
+              Final destination: <span className="font-mono text-foreground">{urlIntelligence.final_url}</span>
+            </p>
+          )}
         </div>
       )}
 
