@@ -83,11 +83,14 @@ class TestDatasetLimitationNote:
         assert note is not None
         assert "not recorded" in note.lower()
 
-    def test_real_registry_entry_exposes_its_actual_small_dataset_limitation(self):
+    def test_real_registry_entries_carry_a_note_exactly_when_their_dataset_is_small(self):
         evaluations = get_model_evaluations()
-        production_entries = [e for e in evaluations if e.is_production]
-        assert len(production_entries) >= 1
-        for entry in production_entries:
-            if entry.dataset_size > 0:
-                assert entry.dataset_size < 200
+        assert any(e.is_production for e in evaluations)
+        for entry in evaluations:
+            if entry.dataset_size == 0:
+                continue
+            if entry.dataset_size < 200:
                 assert entry.dataset_limitation_note is not None
+                assert str(entry.dataset_size) in entry.dataset_limitation_note
+            else:
+                assert entry.dataset_limitation_note is None

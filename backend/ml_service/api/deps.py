@@ -20,11 +20,10 @@ from ml_service.inference.inference_engine import InferenceEngine, InferenceEngi
 from ml_service.inference.threat_scorer import ThreatScorer
 from ml_service.services.prediction_service import PredictionService
 
-settings = get_settings()
-
-
 def get_model_registry() -> ModelRegistry:
-    return ModelRegistry(root_dir=settings.ARTIFACTS_DIR)
+    # Settings are read at call time (get_settings is cached), not captured
+    # at import time, so a changed ARTIFACTS_DIR is always honoured.
+    return ModelRegistry(root_dir=get_settings().ARTIFACTS_DIR)
 
 
 def get_preprocessor() -> TextPreprocessingPipeline:
@@ -40,7 +39,7 @@ def build_inference_engine() -> InferenceEngine:
     return InferenceEngine(
         registry=get_model_registry(),
         preprocessor=get_preprocessor(),
-        model_name=settings.PRODUCTION_MODEL_NAME,
+        model_name=get_settings().PRODUCTION_MODEL_NAME,
     )
 
 

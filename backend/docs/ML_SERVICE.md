@@ -161,7 +161,7 @@ much higher.)
 ```bash
 cd backend
 export ARTIFACTS_DIR=artifacts
-export PRODUCTION_MODEL_NAME=naive_bayes   # must match a promoted model_name
+export PRODUCTION_MODEL_NAME=svm           # must match a promoted model_name
 uvicorn ml_service.main:app --port 8002
 ```
 
