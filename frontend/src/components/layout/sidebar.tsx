@@ -3,17 +3,7 @@
 import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  BarChart3,
-  FolderKanban,
-  History,
-  LayoutDashboard,
-  LogOut,
-  ScanSearch,
-  Settings,
-  ShieldAlert,
-  Sparkles,
-  X, TrendingUp, GraduationCap } from "lucide-react";
+import { BarChart3, History, LayoutDashboard, LogOut, ScanSearch, Settings, ShieldAlert, X, TrendingUp, GraduationCap } from "lucide-react";
 import { useDialogFocus } from "@/hooks/use-dialog-focus";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth/auth-context";
@@ -64,9 +54,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const navItems = [
     { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
     { href: "/analyze", label: "Investigate", icon: ScanSearch },
-    { href: "/demo", label: "Demo Mode", icon: Sparkles },
     { href: "/history", label: "History", icon: History },
-    { href: "/cases", label: "Cases", icon: FolderKanban },
     { href: "/analytics", label: "Analytics", icon: BarChart3 },
     { href: "/trends", label: "Scam Trends", icon: TrendingUp },
     { href: "/trainer", label: "Scam Trainer", icon: GraduationCap },
