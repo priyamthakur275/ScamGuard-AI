@@ -117,13 +117,13 @@ export function VerdictCard({ result, onFeedback }: VerdictCardProps) {
                   <div className="mt-3"><ThreatLevelBadge level={result.threat_level || result.risk_level} /></div>
                   <p className="mt-1.5 flex items-center gap-1.5 font-mono text-xs text-muted-foreground">
                     <Activity className="h-3.5 w-3.5" />
-                    {formatPercent(result.scam_probability)} scam probability
+                    {formatPercent(result.threat_score)} scam likelihood · ML model {formatPercent(result.scam_probability)}
                   </p>
                 </div>
               </div>
 
               <div className="flex flex-wrap items-center gap-6 sm:pt-1">
-                <div className={`border-l border-current pl-5 ${severityClass}`}><p className="font-mono text-xs uppercase tracking-wider">Threat score</p><p className="mt-1 text-4xl font-semibold tracking-tight">{Math.round(result.threat_score * 100)}<span className="text-base text-muted-foreground"> / 100</span></p><p className="mt-1 text-xs text-muted-foreground">Calculated from observed signals</p></div>
+                <div className={`border-l border-current pl-5 ${severityClass}`}><p className="font-mono text-xs uppercase tracking-wider">Threat score</p><p className="mt-1 text-4xl font-semibold tracking-tight">{Math.round(result.threat_score * 100)}<span className="text-base text-muted-foreground"> / 100</span></p><p className="mt-1 text-xs text-muted-foreground">ML model + scam-intent signals</p></div>
                 <ConfidenceGauge value={result.confidence_score} />
 
               </div>

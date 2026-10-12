@@ -30,7 +30,7 @@ export function ScanSummary({ result }: ScanSummaryProps) {
       <div className="flex-1">
         <p className="text-lg font-bold">{status.label}</p>
         <p className="text-sm opacity-80">
-          {formatPercent(result.scam_probability)} scam probability
+          {formatPercent(result.threat_score)} scam likelihood
           {result.scam_category ? ` · ${scamCategoryLabel(result.scam_category)}` : ""}
         </p>
       </div>
