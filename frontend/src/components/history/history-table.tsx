@@ -1,15 +1,13 @@
 "use client";
 
 import { Fragment, useState, memo, useMemo, useCallback, useRef } from "react";
-import { FolderPlus, ChevronDown, ChevronUp, History as HistoryIcon, ThumbsDown, ThumbsUp, Search, FileText, Link as LinkIcon, Mail, Image as ImageIcon, File as FileIcon, QrCode, Download, Trash2, Mic } from "lucide-react";
+import { ChevronDown, ChevronUp, History as HistoryIcon, ThumbsDown, ThumbsUp, Search, FileText, Link as LinkIcon, Mail, Image as ImageIcon, File as FileIcon, QrCode, Download, Trash2, Mic } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { RiskBadge } from "@/components/analysis/risk-badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { truncate, verdictLabel, formatDate, formatPercent, scamCategoryLabel, formatVersion } from "@/lib/utils";
-import { createCase } from "@/lib/api/cases";
 import { saveBlob } from "@/lib/api/client";
-import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -43,7 +41,6 @@ function getInputIcon(type?: string | null) {
 }
 
 export const HistoryTable = memo(function HistoryTable({ entries, onFeedback, onDelete }: HistoryTableProps) {
-  const router = useRouter();
   const { toast } = useToast();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -51,18 +48,6 @@ export const HistoryTable = memo(function HistoryTable({ entries, onFeedback, on
   const [filterRiskLevel, setFilterRiskLevel] = useState("all");
   const searchInputRef = useRef<HTMLInputElement>(null);
   const modKey = useModKeyLabel();
-
-  async function handleAddToCase(entryId: string, text: string) {
-    try {
-      const created = await createCase({
-        title: truncate(text, 60) || "New case",
-        scan_ids: [entryId],
-      });
-      router.push(`/cases/${created.id}`);
-    } catch {
-      toast({ title: "Could not create a case. Please try again.", variant: "error" });
-    }
-  }
 
   useKeyboardShortcuts({
     "mod+k": (e) => {
@@ -230,19 +215,6 @@ export const HistoryTable = memo(function HistoryTable({ entries, onFeedback, on
                       <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatDate(entry.created_at)}</td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-1 opacity-100 transition-opacity">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 rounded-full"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleAddToCase(entry.id, entry.text);
-                            }}
-                            aria-label="Add to case"
-                            title="Create an investigation case from this scan"
-                          >
-                            <FolderPlus className="h-4 w-4" />
-                          </Button>
                           {onDelete && (
                             <Button
                               variant="ghost"

@@ -2,8 +2,7 @@
 
 The account is created on startup (and again on demand if it was removed)
 and filled with a handful of sample scans run through the *real* analysis
-pipeline, plus one investigation case, so the dashboard, history, cases and
-analytics pages are never empty in a demo. Nothing here fabricates a
+pipeline, so the dashboard, history and analytics pages are never empty in a demo. Nothing here fabricates a
 result: every stored verdict is produced by MessageService.analyze.
 """
 import logging
@@ -15,8 +14,6 @@ from sqlalchemy.orm import Session
 from app_service.core.config import get_settings
 from app_service.core.security import hash_password
 from app_service.db.postgres.models import Message, User, UserRole
-from app_service.schemas.case import CaseCreate, CaseNoteCreate
-from app_service.services.case_service import CaseService
 from app_service.services.extraction import ExtractionService
 from app_service.services.message_service import MessageService
 
@@ -71,25 +68,10 @@ def ensure_demo_account(db: Session) -> User:
 
 def _seed(db: Session, user: User) -> None:
     messages = MessageService(db)
-    first_scam_id = None
     for input_type, raw in _SAMPLE_SCANS:
         try:
             text, metadata = ExtractionService.extract(None, raw, input_type)
-            result = messages.analyze(user.id, text, input_type, metadata)
-            if first_scam_id is None and result.verdict != "legitimate":
-                first_scam_id = result.id
+            messages.analyze(user.id, text, input_type, metadata)
         except Exception:
             logger.warning("Demo sample scan failed; continuing with the rest.", exc_info=True)
 
-    if first_scam_id is not None:
-        cases = CaseService(db)
-        case = cases.create(
-            user.id,
-            CaseCreate(
-                title="Fake SBI KYC SMS",
-                description="Message asked to update KYC through a lookalike link and share an OTP.",
-                severity="critical",
-                scan_ids=[first_scam_id],
-            ),
-        )
-        cases.add_note(case.id, user.id, CaseNoteCreate(content="Called SBI's official number; they confirmed this SMS did not come from the bank."))
