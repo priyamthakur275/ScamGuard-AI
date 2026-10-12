@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { Providers } from "./providers";
+import { ServiceWorkerRegister } from "@/components/layout/sw-register";
 
 // Type system: Plex Sans carries general UI text; its mono sibling is
 // reserved for system/meta chrome (ids, timestamps, scores, badges).
@@ -34,7 +35,13 @@ export const metadata: Metadata = {
   },
   description:
     "Detect phishing, OTP scams, and fraudulent messages in real time using AI-powered NLP and machine learning.",
+  manifest: "/manifest.webmanifest",
+  applicationName: "ScamGuard",
+  appleWebApp: { capable: true, title: "ScamGuard", statusBarStyle: "black-translucent" },
+  icons: { icon: "/icons/icon-192.png", apple: "/icons/apple-touch-icon.png" },
 };
+
+export const viewport: Viewport = { themeColor: "#0d1117" };
 
 // Runs before React hydrates, so the correct theme class is present on
 // first paint -- prevents a flash of the wrong theme on page load.
@@ -61,6 +68,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={`min-h-screen ${plexSans.variable} ${plexMono.variable} font-sans antialiased`}>
         <Providers>{children}</Providers>
+        <ServiceWorkerRegister />
       </body>
     </html>
   );

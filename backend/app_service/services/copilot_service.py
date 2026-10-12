@@ -17,10 +17,21 @@ from app_service.schemas.message import AnalysisResult
 from ml_common.preprocessing.display import display_token
 
 _INTENT_KEYWORDS: dict[str, tuple[str, ...]] = {
-    "why_flagged": ("why", "flagged", "why was this", "why is this"),
+    # Checked first: someone who already acted needs damage control, not an explanation.
+    "already_acted": ("already paid", "i paid", "i have paid", "sent money", "transferred", "shared otp", "shared the otp",
+                      "gave otp", "gave the otp", "told the otp", "i clicked", "clicked the link", "installed", "anydesk",
+                      "lost money", "money deducted", "paise chale", "paise kat", "otp de diya", "otp bata diya",
+                      "pay kar diya", "click kar diya", "bhej diya"),
+    "report": ("report", "complain", "complaint", "police", "1930", "chakshu", "cyber cell", "shikayat"),
+    "call_back": ("call back", "callback", "call them", "should i call", "should i reply", "reply to", "respond",
+                  "call karu", "call karun", "reply karu"),
+    "is_scam": ("is this a scam", "is it a scam", "is this real", "is it real", "is it safe", "is this safe", "genuine",
+                "legit", "real or fake", "fake hai", "scam hai", "fraud hai", "safe hai", "asli", "nakli"),
+    "why_flagged": ("why", "flagged", "why was this", "why is this", "kyun", "kyu "),
     "evidence": ("evidence", "what evidence", "caused the risk", "why risky", "risk factors"),
     "attacker_request": ("asking for", "attacker want", "what do they want", "requesting", "want from me"),
-    "recommended_action": ("what should i do", "what do i do", "recommend", "advice", "next steps"),
+    "recommended_action": ("what should i do", "what do i do", "recommend", "advice", "next steps", "kya karu",
+                           "kya karun", "kya karna", "help me"),
     "suspicious_indicators": ("indicator", "suspicious", "signals", "red flag", "what's suspicious", "whats suspicious"),
 }
 
@@ -158,9 +169,72 @@ def _answer_suspicious_indicators(scan: AnalysisResult) -> CopilotAnswer:
     return CopilotAnswer("\n".join(parts), ("evidence", "highlighted_entities"), "deterministic", "suspicious_indicators")
 
 
+def _is_flagged(scan: AnalysisResult) -> bool:
+    return str(getattr(scan.verdict, "value", scan.verdict)).lower() != "legitimate"
+
+
+def _answer_already_acted(scan: AnalysisResult) -> CopilotAnswer:
+    steps = [
+        "Call 1930 (National Cyber Crime Helpline) right now. Reporting within the first hour gives the best chance of freezing the money.",
+        "Call your bank using the number on the back of your card, not a number from the message, and block your card / UPI.",
+        "If you shared an OTP or PIN or installed AnyDesk/TeamViewer: uninstall the app, change your UPI PIN and net-banking password, and log out of other devices.",
+        "File a complaint at cybercrime.gov.in with screenshots, the sender's number, UTR/transaction IDs and the time.",
+        "Do not pay anyone who calls offering to 'recover' the money; that is a second scam.",
+    ]
+    if not _is_flagged(scan):
+        steps.insert(0, "ScamGuard did not flag this message, but if money left your account unexpectedly, treat it as fraud:")
+    text = "Act quickly:\n" + "\n".join(f"{i + 1}. {s}" for i, s in enumerate(steps))
+    return CopilotAnswer(text, ("india_cybercrime_guidance",), "deterministic", "already_acted")
+
+
+def _answer_report(scan: AnalysisResult) -> CopilotAnswer:
+    text = (
+        "Where to report in India:\n"
+        "- Lost money: call 1930 immediately, then file at cybercrime.gov.in.\n"
+        "- No money lost: report the number/message on Chakshu (sancharsaathi.gov.in/sfc) so it can be blocked.\n"
+        "- Also tap 'Warn others' on this scan so other ScamGuard users see the number flagged.\n"
+        "Use 'Complaint details, ready to paste' above to copy the message, numbers and links in one go."
+    )
+    return CopilotAnswer(text, ("india_reporting_channels",), "deterministic", "report")
+
+
+def _answer_call_back(scan: AnalysisResult) -> CopilotAnswer:
+    if _is_flagged(scan):
+        text = (
+            f"No. This message scored {scan.threat_score:.0%} scam likelihood. Replying or calling back tells the "
+            "scammer your number is active and starts the pressure tactics. If it claims to be your bank or a "
+            "company, contact them yourself using the number on their official website or the back of your card."
+        )
+    else:
+        text = (
+            "This message was not flagged, but if you are unsure, contact the sender through a number you already "
+            "know (official website, saved contact), not one given in the message."
+        )
+    return CopilotAnswer(text, ("verdict",), "deterministic", "call_back")
+
+
+def _answer_is_scam(scan: AnalysisResult) -> CopilotAnswer:
+    if _is_flagged(scan):
+        base = f"Yes, treat it as a scam: {scan.threat_score:.0%} scam likelihood"
+        base += f" ({scan.scam_category.replace('_', ' ')})." if scan.scam_category else "."
+        reasons = [reason for _, reason in _all_evidence_signals(scan)][:3]
+        if reasons:
+            base += " Main reasons: " + "; ".join(reasons)
+        return CopilotAnswer(base, ("verdict", "evidence"), "deterministic", "is_scam")
+    return CopilotAnswer(
+        f"It looks legitimate ({scan.threat_score:.0%} scam likelihood). Still, never share an OTP, PIN or card "
+        "details, and verify any payment request through an official channel.",
+        ("verdict",), "deterministic", "is_scam",
+    )
+
+
 def answer_question(question: str, scan: AnalysisResult) -> CopilotAnswer:
     intent = classify_intent(question)
     handlers = {
+        "already_acted": _answer_already_acted,
+        "report": _answer_report,
+        "call_back": _answer_call_back,
+        "is_scam": _answer_is_scam,
         "why_flagged": _answer_why_flagged,
         "evidence": _answer_evidence,
         "attacker_request": _answer_attacker_request,
@@ -169,10 +243,9 @@ def answer_question(question: str, scan: AnalysisResult) -> CopilotAnswer:
     }
     if intent not in handlers:
         return CopilotAnswer(
-            "I can only answer specific questions about this scan's evidence right now, such as "
-            "'why was this flagged', 'what evidence caused the risk', 'what is the attacker asking "
-            "for', 'what should I do', or 'which indicators are suspicious'. I couldn't match your "
-            "question to one of those.",
+            "I couldn't match your question to one I can answer from this scan's evidence. Try, for example: 'is this a scam?', 'why was this flagged?', "
+            "'what is the attacker asking for?', 'should I call back?', 'I already paid, what now?', "
+            "'how do I report it?'. Hindi works too: 'kya ye scam hai?', 'ab kya karu?'.",
             (), "deterministic", "unknown",
         )
     return handlers[intent](scan)
@@ -222,4 +295,10 @@ def get_answer(question: str, scan: AnalysisResult) -> CopilotAnswer:
         llm_text = get_llm_answer(question, grounding_context)
         return CopilotAnswer(llm_text, ("llm_grounded_context",), "llm", classify_intent(question))
     except CopilotLlmUnavailableError:
+        return answer_question(question, scan)
+    except Exception:
+        # A provider outage must never break the panel; the evidence-grounded
+        # engine always has an answer.
+        import logging
+        logging.getLogger(__name__).warning("Copilot LLM provider failed; using deterministic answer", exc_info=True)
         return answer_question(question, scan)
