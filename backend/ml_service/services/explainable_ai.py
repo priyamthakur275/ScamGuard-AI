@@ -1,6 +1,9 @@
 import re
 import dataclasses
 
+from ml_common.preprocessing.display import display_token as _display_token
+
+
 class ThreatLevelClassifier:
     def classify(self, threat_score: float, verdict: str = "scam") -> str:
         if verdict == "legitimate":
@@ -171,7 +174,7 @@ class ExplanationGenerator:
             technical_explanation += f"It exhibits characteristics consistent with {scam_category} patterns. "
             
         if top_tokens:
-            technical_explanation += f"Key suspicious indicators include: {', '.join(top_tokens[:3])}. "
+            technical_explanation += f"Key suspicious indicators include: {', '.join(_display_token(t) for t in top_tokens[:3])}. "
             
         entity_count = sum(len(v) for v in entities.values())
         if entity_count > 0:

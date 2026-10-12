@@ -14,6 +14,7 @@ rather than inventing something plausible-sounding.
 from dataclasses import dataclass
 
 from app_service.schemas.message import AnalysisResult
+from ml_common.preprocessing.display import display_token
 
 _INTENT_KEYWORDS: dict[str, tuple[str, ...]] = {
     "why_flagged": ("why", "flagged", "why was this", "why is this"),
@@ -87,7 +88,7 @@ def _answer_why_flagged(scan: AnalysisResult) -> CopilotAnswer:
     ]
     top_tokens = scan.top_contributing_tokens[:3]
     if top_tokens:
-        token_list = ", ".join(f"'{t.token}'" for t in top_tokens)
+        token_list = ", ".join(f"'{display_token(t.token)}'" for t in top_tokens)
         parts.append(f"The model's top contributing words were: {token_list}.")
 
     signals = _all_evidence_signals(scan)
@@ -193,7 +194,7 @@ def _build_grounding_context(scan: AnalysisResult) -> str:
         f"Category: {scan.scam_category or 'uncategorized'}",
     ]
     if scan.top_contributing_tokens:
-        lines.append("Top contributing tokens: " + ", ".join(t.token for t in scan.top_contributing_tokens[:5]))
+        lines.append("Top contributing tokens: " + ", ".join(display_token(t.token) for t in scan.top_contributing_tokens[:5]))
     signals = _all_evidence_signals(scan)
     if signals:
         lines.append("Evidence signals:")
