@@ -17,12 +17,36 @@
           "false_negatives": 0
         }
       },
-      "is_production": true,
+      "is_production": false,
       "trained_at": "2026-09-22T15:22:01.087631+00:00",
       "artifact_path": "artifacts/naive_bayes/v1/model.joblib",
       "vectorizer_path": "artifacts/naive_bayes/v1/vectorizer.joblib",
       "train_rows": 19,
       "test_rows": 5
+    },
+    {
+      "model_name": "svm",
+      "version": "v2",
+      "metrics": {
+        "accuracy": 0.987487969201155,
+        "precision": 0.9545454545454546,
+        "recall": 0.9473684210526315,
+        "f1": 0.9509433962264151,
+        "roc_auc": 0.9979003800892962,
+        "false_positive_rate": 0.006622516556291391,
+        "confusion_matrix": {
+          "true_positives": 126,
+          "true_negatives": 900,
+          "false_positives": 6,
+          "false_negatives": 7
+        }
+      },
+      "is_production": true,
+      "trained_at": "2026-10-12T12:46:17.618610+00:00",
+      "artifact_path": "artifacts/svm/v2/model.joblib",
+      "vectorizer_path": "artifacts/svm/v2/vectorizer.joblib",
+      "train_rows": 4154,
+      "test_rows": 1039
     }
   ]
 }
