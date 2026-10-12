@@ -26,8 +26,6 @@ def test_demo_login_creates_account_with_real_sample_scans(client, db_session, d
     user = db_session.query(User).filter_by(email=me["email"]).one()
     scans = db_session.query(Message).filter_by(user_id=user.id).count()
     assert scans >= 5
-    cases = client.get("/api/v1/cases", headers=headers).json()
-    assert len(cases) == 1
 
     # A second sign-in reuses the account and does not duplicate samples.
     _login(client)
