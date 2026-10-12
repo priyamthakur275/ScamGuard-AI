@@ -106,6 +106,7 @@ _INTENTS: tuple[tuple[str, float, re.Pattern[str]], ...] = tuple(
         ("page_collects_secrets", 0.55, r"page inspection: the page collects [^.]*(password|otp|pin|cvv|card number)"),
         ("page_posts_elsewhere", 0.35, r"page inspection: form submits to another site"),
         ("page_impersonates_brand", 0.45, r"page inspection: impersonates "),
+        ("new_domain", 0.35, r"domain was registered \d+ days ago"),
         ("harassment", 0.4, r"send your (photos|pictures) to (all )?your contacts|morphed"),
     ]
 )

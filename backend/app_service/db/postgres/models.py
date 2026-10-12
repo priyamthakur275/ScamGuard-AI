@@ -297,3 +297,24 @@ class CommunityReport(Base):
     )
     category: Mapped[str | None] = mapped_column(String(64), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), index=True)
+
+
+class GuardianLink(Base):
+    """A person (protected) asks a family member (guardian) to watch out
+    for them. Pending until the guardian accepts; while active the guardian
+    sees the protected person's high-risk scans from that point on."""
+
+    __tablename__ = "guardian_links"
+    __table_args__ = (UniqueConstraint("protected_id", "guardian_email", name="uq_guardian_link"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(GUID(), primary_key=True, default=uuid.uuid4)
+    protected_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    guardian_email: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    guardian_id: Mapped[uuid.UUID | None] = mapped_column(
+        GUID(), ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+    status: Mapped[str] = mapped_column(String(16), nullable=False, default="pending")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    responded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
