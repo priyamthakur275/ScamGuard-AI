@@ -17,14 +17,14 @@ export function CorrelationPanel({ correlation }: CorrelationPanelProps) {
 
   return (
     <div className="border border-border p-5">
-      <p className="mb-3 flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wide text-foreground">
+      <p className="mb-3 flex items-center gap-2 text-xs font-semibold text-foreground">
         <GitCompare className="h-3.5 w-3.5 text-primary" />
         Correlation with your past scans
       </p>
       <ul className="flex flex-col gap-2">
         {correlation.map((signal, i) => (
           <li key={i} className="flex items-start gap-2 text-sm">
-            <span className="mt-0.5 shrink-0 font-mono text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <span className="mt-0.5 shrink-0 text-xs font-semibold text-muted-foreground">
               [{SEVERITY_LABEL[signal.severity] ?? signal.severity}]
             </span>
             <span className="text-muted-foreground">{signal.reason}</span>

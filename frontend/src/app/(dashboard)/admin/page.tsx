@@ -85,7 +85,7 @@ export default function AdminDashboard() {
             <h2 className="text-xl font-bold tracking-tight mb-1">Administrator Privileges Required</h2>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-md">
               Your account (<span className="font-semibold text-foreground">{user?.email}</span>) is registered with the role{" "}
-              <span className="inline-flex px-2 py-0.5 rounded text-xs font-mono font-semibold bg-muted uppercase">
+              <span className="inline-flex px-2 py-0.5 rounded text-xs font-semibold bg-muted">
                 {user?.role || "USER"}
               </span>.
             </p>
@@ -125,14 +125,14 @@ export default function AdminDashboard() {
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href="/admin/model-evaluation"
-            className="flex items-center gap-2 border border-border px-3 py-2 font-mono text-xs uppercase tracking-wide text-foreground transition-colors hover:bg-muted"
+            className="flex items-center gap-2 border border-border px-3 py-2 text-xs text-foreground transition-colors hover:bg-muted"
           >
             <Gauge className="h-4 w-4" />
             Model evaluation
           </Link>
           <Link
             href="/admin/robustness-test"
-            className="flex items-center gap-2 border border-border px-3 py-2 font-mono text-xs uppercase tracking-wide text-foreground transition-colors hover:bg-muted"
+            className="flex items-center gap-2 border border-border px-3 py-2 text-xs text-foreground transition-colors hover:bg-muted"
           >
             <FlaskConical className="h-4 w-4" />
             Robustness test
@@ -146,7 +146,7 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         <motion.div variants={itemVariants} className="bg-card border border-border rounded-xl p-5">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Total Users</span>
+            <span className="text-xs font-medium text-muted-foreground">Total Users</span>
             <Users className="w-4 h-4 text-blue-500" />
           </div>
           <p className="text-2xl font-bold mt-2 text-foreground">{totalUsers}</p>
@@ -155,7 +155,7 @@ export default function AdminDashboard() {
 
         <motion.div variants={itemVariants} className="bg-card border border-border rounded-xl p-5">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Total Messages Scanned</span>
+            <span className="text-xs font-medium text-muted-foreground">Total Messages Scanned</span>
             <Activity className="w-4 h-4 text-primary" />
           </div>
           <p className="text-2xl font-bold mt-2 text-foreground">{totalScans}</p>
@@ -164,7 +164,7 @@ export default function AdminDashboard() {
 
         <motion.div variants={itemVariants} className="bg-card border border-border rounded-xl p-5">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">High Risk Threats</span>
+            <span className="text-xs font-medium text-muted-foreground">High Risk Threats</span>
             <ShieldAlert className="w-4 h-4 text-red-500" />
           </div>
           <p className="text-2xl font-bold mt-2 text-red-500">{highThreatScans}</p>
@@ -173,7 +173,7 @@ export default function AdminDashboard() {
 
         <motion.div variants={itemVariants} className="bg-card border border-border rounded-xl p-5">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Medium Suspicious</span>
+            <span className="text-xs font-medium text-muted-foreground">Medium Suspicious</span>
             <ShieldCheck className="w-4 h-4 text-amber-500" />
           </div>
           <p className="text-2xl font-bold mt-2 text-amber-500">{mediumThreatScans}</p>
@@ -222,9 +222,7 @@ export default function AdminDashboard() {
                     </td>
                     <td className="px-6 py-4">
                       <span
-                        className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider ${
-                          u.role === "admin" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-                        }`}
+                        className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold ${ u.role === "admin" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground" }`}
                       >
                         {u.role}
                       </span>

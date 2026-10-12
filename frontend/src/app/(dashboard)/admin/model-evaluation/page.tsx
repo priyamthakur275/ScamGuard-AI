@@ -14,7 +14,7 @@ import { formatDate, formatPercent, formatVersion } from "@/lib/utils";
 function MetricRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="sg-page flex flex-col gap-1">
-      <span className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground">{label}</span>
+      <span className="text-xs text-muted-foreground">{label}</span>
       <span className="font-sans text-xl font-semibold text-foreground">{value}</span>
     </div>
   );
@@ -102,25 +102,25 @@ export default function ModelEvaluationPage() {
                 </div>
 
                 <div>
-                  <p className="mb-2 font-mono text-[11px] font-semibold uppercase tracking-wide text-foreground">
+                  <p className="mb-2 text-xs font-semibold text-foreground">
                     Confusion matrix (on the {entry.test_rows}-row test split)
                   </p>
                   <table className="w-full max-w-md border border-border text-sm">
                     <thead>
                       <tr className="border-b border-border">
-                        <th className="p-2 text-left font-mono text-[11px] uppercase text-muted-foreground"></th>
-                        <th className="p-2 text-left font-mono text-[11px] uppercase text-muted-foreground">Predicted scam</th>
-                        <th className="p-2 text-left font-mono text-[11px] uppercase text-muted-foreground">Predicted legitimate</th>
+                        <th className="p-2 text-left text-xs text-muted-foreground"></th>
+                        <th className="p-2 text-left text-xs text-muted-foreground">Predicted scam</th>
+                        <th className="p-2 text-left text-xs text-muted-foreground">Predicted legitimate</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr className="border-b border-border">
-                        <td className="p-2 font-mono text-[11px] uppercase text-muted-foreground">Actual scam</td>
+                        <td className="p-2 text-xs text-muted-foreground">Actual scam</td>
                         <td className="p-2 font-sans text-foreground">{entry.confusion_matrix.true_positives} (TP)</td>
                         <td className="p-2 font-sans text-foreground">{entry.confusion_matrix.false_negatives} (FN)</td>
                       </tr>
                       <tr>
-                        <td className="p-2 font-mono text-[11px] uppercase text-muted-foreground">Actual legitimate</td>
+                        <td className="p-2 text-xs text-muted-foreground">Actual legitimate</td>
                         <td className="p-2 font-sans text-foreground">{entry.confusion_matrix.false_positives} (FP)</td>
                         <td className="p-2 font-sans text-foreground">{entry.confusion_matrix.true_negatives} (TN)</td>
                       </tr>
