@@ -258,6 +258,7 @@ class ExtractionService:
             fetch_error = None
             resolved_ips: list[str] = []
             redirect_chain: list[dict] = []
+            final_url: str | None = None
             tls_info: dict | None = None
 
             try:
@@ -270,6 +271,9 @@ class ExtractionService:
                 except Exception:
                     page_text = resp.text[:2000]
                 redirect_count = len(resp.history)
+                # resp.history holds only the hops before the final response, so
+                # the page the link really lands on must be recorded separately.
+                final_url = str(resp.url)
                 if intel.scheme == "https":
                     # Best-effort, isolated -- see _get_tls_certificate_info's
                     # docstring for why this can never break the main fetch
@@ -307,6 +311,7 @@ class ExtractionService:
                     **intel.to_dict(),
                     "redirect_count": redirect_count,
                     "redirect_chain": redirect_chain,
+                    "final_url": final_url,
                     "resolved_ips": resolved_ips,
                     "tls": tls_info,
                 },

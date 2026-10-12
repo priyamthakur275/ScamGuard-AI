@@ -26,6 +26,7 @@ import { formatPercent, scamCategoryLabel, verdictLabel, inputTypeLabel } from "
 import type { AnalysisResult, UrlIntelligence, EmailForensics, VoiceEvidenceSignal, CorrelationSignal } from "@/types";
 import { motion, Variants } from "framer-motion";
 import { ReportDownloadMenu } from "@/components/analysis/report-download-menu";
+import { ShareWarning } from "@/components/analysis/share-warning";
 
 interface VerdictCardProps {
   result: AnalysisResult;
@@ -132,7 +133,9 @@ export function VerdictCard({ result, onFeedback }: VerdictCardProps) {
               <Button onClick={handleCreateCase} isLoading={creating}>Create case</Button>
               <Button variant="outline" onClick={() => document.getElementById(`copilot-${result.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" })}>Ask Copilot</Button>
               <ReportDownloadMenu kind="scan" id={result.id} />
+              {result.verdict !== "legitimate" && <ShareWarning result={result} />}
             </div>}
+            {isDemo && result.verdict !== "legitimate" && <div className="-mt-4 border-b border-border pb-6"><ShareWarning result={result} /></div>}
             {caseError && <Alert variant="error">{caseError}</Alert>}
             {/* AI Explanation */}
             <AIExplanation

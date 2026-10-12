@@ -63,6 +63,20 @@ def get_history(
     return service.list_history(current_user.id, skip=skip, limit=limit)
 
 
+@router.get("/lookup/phone")
+@limiter.limit("30/minute")
+def lookup_phone_number(
+    request: Request,
+    number: str = Query(..., min_length=6, max_length=20),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> dict:
+    """How often this number appeared in the current user's own scans."""
+    from app_service.services.phone_lookup import lookup_phone
+
+    return lookup_phone(db, current_user.id, number)
+
+
 @router.patch("/{prediction_id}/feedback", response_model=AnalysisResult)
 @limiter.limit("30/minute")
 def submit_feedback(
