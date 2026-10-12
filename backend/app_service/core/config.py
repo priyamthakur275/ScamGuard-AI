@@ -28,6 +28,12 @@ class Settings(BaseSettings):
 
     # App
     APP_NAME: str = "Scam Detection Application Service"
+
+    # Public demo account (one-click "Try the demo account" on the sign-in
+    # page). Its password is random and never used; access is only through
+    # POST /auth/demo-login, and profile/password/delete actions are blocked.
+    DEMO_ACCOUNT_ENABLED: bool = True
+    DEMO_ACCOUNT_EMAIL: str = "demo@scamguard.app"
     APP_ENV: str = "development"
     # SECURITY: defaults to False deliberately. Starlette's debug mode can
     # surface internal tracebacks for errors that occur outside our own

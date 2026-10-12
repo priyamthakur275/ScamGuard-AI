@@ -24,6 +24,14 @@ from app_service.services.user_service import UserService
 router = APIRouter(prefix="/users", tags=["users"])
 
 
+def _block_demo(user: User, action: str) -> None:
+    from app_service.core.exceptions import ForbiddenError
+    from app_service.services.demo_account import is_demo_user
+
+    if is_demo_user(user):
+        raise ForbiddenError(f"The shared demo account can't {action}. Create your own account to do this.")
+
+
 @router.get("/me", response_model=UserRead)
 @limiter.limit("60/minute")
 def read_current_user(request: Request, current_user: User = Depends(get_current_user)) -> UserRead:
@@ -39,6 +47,7 @@ def update_current_user(
     current_user: User = Depends(get_current_user)
 ) -> UserRead:
     if payload.full_name is not None:
+        _block_demo(current_user, "change its name")
         current_user.full_name = payload.full_name
     if payload.preferences is not None:
         current_user.preferences = payload.preferences
@@ -58,6 +67,7 @@ def update_password(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    _block_demo(current_user, "change its password")
     if not verify_password(payload.current_password, current_user.password_hash):
         raise UnauthorizedError("Incorrect current password")
     current_user.password_hash = hash_password(payload.new_password)
@@ -70,6 +80,7 @@ def delete_current_user(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    _block_demo(current_user, "be deleted")
     service = UserService(db)
     service.users.delete(current_user)
 
@@ -122,6 +133,7 @@ def upload_avatar(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    _block_demo(current_user, "change its picture")
     upload_dir = Path("uploads/avatars")
     upload_dir.mkdir(parents=True, exist_ok=True)
     

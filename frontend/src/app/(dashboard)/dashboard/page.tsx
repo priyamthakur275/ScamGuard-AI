@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert } from "@/components/ui/alert";
 import { formatDate, formatPercent, truncate, verdictLabel } from "@/lib/utils";
 import type { AnalysisResult } from "@/types";
+import { PhoneLookup } from "@/components/dashboard/phone-lookup";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -90,7 +91,10 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.8fr)]">
         <Card className="console-panel min-w-0"><CardHeader className="flex-row items-center justify-between"><div><p className="console-kicker mb-2">Latest investigations</p><CardTitle>Recent scans</CardTitle></div><Link href="/history" className="text-xs font-medium text-primary hover:underline">View history</Link></CardHeader><CardContent>{recentEntries.length === 0 ? <EmptyState icon={ScanSearch} title="No activity yet" description="Analyze your first message to see results here." actionHref="/analyze" actionLabel="Analyze a message" /> : <ul className="divide-y divide-border">{recentEntries.map((entry) => <li key={entry.id} className="flex items-center justify-between gap-3 py-3"><div className="min-w-0 flex-1"><p className="truncate text-sm text-foreground">{truncate(entry.text, 70)}</p><p className="mt-1 font-mono text-xs text-muted-foreground">{verdictLabel(entry.verdict)} · {formatDate(entry.created_at)}</p></div><ThreatBadge threatLevel={entry.threat_level} riskLevel={entry.risk_level} /></li>)}</ul>}</CardContent></Card>
-        <Card className="console-panel min-w-0"><CardHeader><p className="console-kicker mb-2">Observed more than once</p><CardTitle>Recurring indicators</CardTitle></CardHeader><CardContent>{recurringIndicators.length === 0 ? <p className="text-sm leading-6 text-muted-foreground">No recurring indicators have been observed in your scan history yet.</p> : <div className="space-y-3">{recurringIndicators.map(([indicator, count]) => <div key={indicator} className="flex items-center justify-between gap-3 rounded-sm border border-border bg-muted/30 px-3 py-2"><span className="truncate font-mono text-xs">{indicator}</span><span className="shrink-0 text-xs text-primary">{count} scans</span></div>)}</div>}</CardContent></Card>
+        <div className="flex min-w-0 flex-col gap-5">
+          <Card className="console-panel min-w-0"><CardHeader><p className="console-kicker mb-2">Observed more than once</p><CardTitle>Recurring indicators</CardTitle></CardHeader><CardContent>{recurringIndicators.length === 0 ? <p className="text-sm leading-6 text-muted-foreground">No recurring indicators have been observed in your scan history yet.</p> : <div className="space-y-3">{recurringIndicators.map(([indicator, count]) => <div key={indicator} className="flex items-center justify-between gap-3 rounded-sm border border-border bg-muted/30 px-3 py-2"><span className="truncate font-mono text-xs">{indicator}</span><span className="shrink-0 text-xs text-primary">{count} scans</span></div>)}</div>}</CardContent></Card>
+          <PhoneLookup />
+        </div>
       </div>
     </div>
   );
