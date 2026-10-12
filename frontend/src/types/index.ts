@@ -104,6 +104,8 @@ export interface UrlIntelligence {
   redirect_count?: number;
   redirect_chain?: Array<{ url: string; status_code: number }>;
   final_url?: string | null;
+  domain_age?: { registered_on: string; age_days: number; registrar: string | null } | null;
+  trust?: { score: number; band: "trustworthy" | "caution" | "untrustworthy"; factors: { label: string; impact: number }[] } | null;
   page_inspection?: {
     final_host: string;
     title: string;

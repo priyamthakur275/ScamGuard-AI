@@ -4,29 +4,35 @@ ScamGuard is a full-stack, production-grade cybersecurity intelligence platform 
 
 ---
 
-## 🌐 Deployment status
+## 🌐 Live demo
 
-This repository has previously been connected to Vercel (frontend) and Render (backend), with URLs referenced in earlier project history. **This document does not claim those deployments are currently live or up to date with this code** — no deployment was performed or re-verified as part of producing this codebase, and no URL here should be treated as a working, current link. To confirm whether a live instance exists and matches this code, check your own Vercel/Render dashboards directly.
+**https://scamguard-frontend-r6t7.onrender.com** — use **"Try the demo account"** on the sign-in page, or paste a message into the quick check on the home page (no account needed).
 
-Per `render.yaml`, only a single backend service (`app_service`) is defined for cloud deployment — there is **no separate `ml_service` deployed to Render**; ML inference runs in-process inside `app_service` in that configuration (see Architecture below). A standalone `ml_service` container is only part of the local/self-hosted `docker-compose` setup.
+Hosted on Render's free tier (frontend + `app_service` + PostgreSQL). The backend keeps both services awake 08:00–22:00 IST (`app_service/services/keep_alive.py`); outside that window the first request can take up to a minute while the server wakes. ML inference runs in-process inside `app_service`; a separate `ml_service` container exists only in the local `docker-compose` setup.
 
 ---
 
-## 🎯 Key Capabilities & Production Features
+## 🎯 What ScamGuard does
 
-- **Real-Time Detection**: Classifies messages as legitimate or scam with high-confidence probability scores using scikit-learn models on TF-IDF features (Linear SVM in production, selected by F1 from Naive Bayes, Logistic Regression, Random Forest and SVM).
-- **Explainable AI (XAI)**: Identifies top contributing tokens/keywords, threat scores, risk dimensions (urgency, financial risk, credential theft, etc.), and suggested next steps.
-- **Multi-Channel Scanners**: Supports raw text, URLs, emails (.eml/text), screenshot/image OCR, document PDFs, and QR codes.
-- **Live Camera / Optical Scanner**: In-browser device camera viewfinder for real-time capture of printed phishing letters, SMS on secondary phones, or physical QR codes.
-- **Enterprise Authentication**: Secure user registration, login, JWT access/refresh token rotation, bcrypt password hashing, and Role-Based Access Control (RBAC).
-- **Comprehensive Settings Suite**:
-  - **Profile Management**: Update display name, view role, and switch themes.
-  - **Account Security**: Change password with live strength validation (8+ chars, uppercase, digit) and show/hide toggles.
-  - **Detection Preferences**: Auto-save toggles, default input channels, and visual warning alerts.
-  - **Privacy & Data Controls**: One-click JSON data export (GDPR-compliant) and irreversible history purging.
-  - **Danger Zone**: Secure account deletion requiring strict typed confirmation (DELETE).
-- **Scan History & Analytics**: Filterable history, CSV report generation, accuracy feedback loops, and live statistical distribution charts.
-- **System Administration**: Live cluster telemetry from PostgreSQL, verified user directory, and threat volume tracking.
+**Check anything** — SMS/WhatsApp text, links, emails, screenshots (WhatsApp chat-aware OCR, dark mode supported), PDFs, QR codes and voice calls (live captions or private on-device Whisper transcription, Hindi→English).
+
+**Explain the verdict**
+- **Scam X-Ray** — highlights the exact trap phrases in the message and maps them onto the four stages of a scam: hook, pressure, the ask, cash-out.
+- **Scam likelihood** — an SVM model (v3, trained on the SMS Spam Collection + a documented Indian scam supplement) fused with an intent-based risk engine; the model's own probability is always shown alongside. Unseen-set accuracy: 87.5% (see `backend/ml_training/datasets/README.md`).
+- **Website trust score** — domain age from RDAP, HTTPS, link signals and a live inspection of the page (password/OTP/card forms, forms posting elsewhere, brand impersonation).
+- **Ask ScamGuard** — answers "is this a scam?", "I already paid, what now?", "how do I report it?" (English/Hindi), optionally backed by Gemini/Claude/OpenAI via env vars.
+
+**Act on it**
+- One-tap reporting to **Chakshu** (Sanchar Saathi) or **1930 / cybercrime.gov.in**, with a ready-to-paste complaint.
+- **Community reports** for numbers, link domains, UPI IDs and emails (one vote per user; 2+ reports raise the score).
+- **Family guardian** — link a family member; with consent on both sides they see your high-risk scans and can call before money is sent.
+- Share a warning on WhatsApp; export PDF/CSV/JSON reports.
+
+**Learn and reach people**
+- **Scam Awareness Trainer** — spot-the-scam rounds with red-flag lessons.
+- **Public scam trends** (anonymous aggregates), **English/Hindi interface**, installable **PWA with Android share target**, and a **Chrome/Edge/Brave extension** (`browser-extension/`).
+
+**Platform** — JWT auth with refresh rotation, bcrypt, self-hosted CAPTCHA, per-visitor rate limits, SSRF-safe URL fetching, CSP, admin model evaluation and robustness testing, 560+ automated tests.
 
 ---
 
@@ -195,21 +201,12 @@ ScamGuard-AI/
 - **File uploads (image/PDF/QR/email) are capped at 8 MB** server-side, independent of any reverse proxy in front of the service, to prevent memory exhaustion during OCR/PDF parsing.
 - **No fabricated ML fallback**: if neither the remote ML microservice nor the in-process model can produce a real prediction, the API returns a `503 MODEL_UNAVAILABLE` error. There is no keyword-heuristic tier that manufactures a plausible-looking probability, confidence score, or model name when the real model is unavailable.
 
-### Known limitations / not yet implemented
+### Known limitations
 
-The codebase does not currently include: a real third-party CAPTCHA integration (self-hosted only, see below), live SPF/DKIM/DMARC re-verification (email auth status is parsed from the message's own `Authentication-Results` header only, never independently verified via DNS), an LLM-backed Copilot (deterministic evidence-grounded answers only -- see below), TLS certificate reuse for URL scans (a second, separate TLS handshake is made to read cert metadata), Redis/shared-state for CAPTCHA or login-attempt tracking (in-process only, single-instance), and case-level Copilot (Copilot answers about a single scan, not an aggregated case). These are documented gaps, not silently-broken features.
-
-### Feature summary (what's actually implemented and tested)
-
-- **Multimodal scanning**: text, URL, email, image/OCR, PDF, QR, live camera, and voice (browser Web Speech API for live transcription; server-side audio-file transcription is a pluggable, currently-unconfigured provider interface -- see `app_service/services/voice_transcription.py`)
-- **English/Hindi/Hinglish preprocessing**: real Indian scam-concept detection (OTP, UPI, KYC, bank, etc.) across scripts, plus a documented heuristic (not ML-based) language detector (`ml_common/preprocessing/multilingual.py`)
-- **Investigation/Case mode**: user-isolated cases linking real scans, a real action-driven timeline, entity aggregation from real linked-scan data (`app_service/services/case_service.py`)
-- **Exportable reports**: JSON/CSV/PDF for both individual scans and cases, all built from one shared, real data source so formats can't drift out of sync (`app_service/services/report_builder.py`)
-- **Demo Mode**: 6 representative examples run through the exact real pipeline (never persisted to real history) -- see `app_service/services/demo_service.py`
-- **Admin Model Evaluation**: real accuracy/precision/recall/F1/confusion-matrix/dataset-size, read from the actual model registry, with an honest small-dataset limitation note
-- **Robustness testing**: real base messages + 7 controlled text transforms (case, whitespace, punctuation, spelling, symbol insertion, homoglyph domains, URL obfuscation) run through the real pipeline, admin-only, never tuned to flatter the model
-- **ScamGuard Copilot**: 5 question types answered by reading directly from a scan's own real evidence fields -- no free-text generation, no LLM configured by default (`app_service/services/copilot_service.py`)
-- **Correlation**: recurring domains/entities/brands/categories detected against the *same user's own* past scans only -- never external threat intelligence
+- Scans happen when a user submits something; there is no automatic SMS or call interception (that would need a native Android app).
+- Domain age depends on the public RDAP service; if it is unreachable the trust score says "registration date not available".
+- The Indian scam supplement is curated by the team, not field-collected; accuracy is reported on separately written hold-out sets.
+- No real third-party CAPTCHA, no independent SPF/DKIM/DMARC DNS verification, and CAPTCHA/login-attempt state is in-process (single instance).
 
 ### CAPTCHA / abuse protection (added)
 

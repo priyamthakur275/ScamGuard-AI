@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, History, LayoutDashboard, LogOut, ScanSearch, Settings, ShieldAlert, X, TrendingUp, GraduationCap } from "lucide-react";
+import { BarChart3, History, LayoutDashboard, LogOut, ScanSearch, Settings, ShieldAlert, X, TrendingUp, GraduationCap, HeartHandshake } from "lucide-react";
 import { useDialogFocus } from "@/hooks/use-dialog-focus";
 import { cn } from "@/lib/utils";
+import { familySummary } from "@/lib/api/family";
 import { useAuth } from "@/lib/auth/auth-context";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
@@ -51,11 +52,27 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     };
   }, [isOpen, onClose]);
 
+  const [familyCount, setFamilyCount] = useState(0);
+  useEffect(() => {
+    let live = true;
+    const tick = () =>
+      familySummary()
+        .then((r) => live && setFamilyCount(r.pending_invitations + r.recent_alerts))
+        .catch(() => undefined);
+    void tick();
+    const t = setInterval(tick, 120000);
+    return () => {
+      live = false;
+      clearInterval(t);
+    };
+  }, []);
+
   const navItems = [
     { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
     { href: "/analyze", label: "Investigate", icon: ScanSearch },
     { href: "/history", label: "History", icon: History },
     { href: "/analytics", label: "Analytics", icon: BarChart3 },
+    { href: "/family", label: "Family", icon: HeartHandshake },
     { href: "/trends", label: "Scam Trends", icon: TrendingUp },
     { href: "/trainer", label: "Scam Trainer", icon: GraduationCap },
     { href: "/settings", label: "Settings", icon: Settings },
@@ -120,6 +137,11 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 {isActive && <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-primary" />}
                 <Icon className="h-4 w-4" aria-hidden="true" />
                 {label}
+                {href === "/family" && familyCount > 0 && (
+                  <span className="ml-auto rounded-full bg-destructive px-1.5 text-xs font-semibold text-destructive-foreground" aria-label={`${familyCount} new`}>
+                    {familyCount}
+                  </span>
+                )}
               </Link>
             );
           })}
