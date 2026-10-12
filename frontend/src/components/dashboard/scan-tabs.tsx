@@ -102,7 +102,6 @@ export function ScanTabs({ onScan, isScanning = false }: ScanTabsProps) {
         ) : isVoiceTab ? (
           <VoiceScanner
             onSubmitTranscript={(transcript) => onScan([transcript], [], "voice")}
-            onSubmitAudioFile={(file) => onScan([], [file], "voice")}
             isScanning={isScanning}
           />
         ) : isFileTab ? (

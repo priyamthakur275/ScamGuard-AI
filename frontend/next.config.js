@@ -8,11 +8,13 @@ const THEME_SCRIPT_CSP_HASH = "sha256-VlNa/BXw4f7LgPFa9vvDvmiArIAuuCZ5o0j3Waqm/J
 
 const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
+  "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'",
+  "worker-src 'self' blob:",
+  "media-src 'self' blob:",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data:",
   "font-src 'self'",
-  "connect-src 'self' https://scamguard-ai-ecnj.onrender.com https://*.onrender.com http://localhost:8000 http://127.0.0.1:8000",
+  "connect-src 'self' https://scamguard-ai-ecnj.onrender.com https://*.onrender.com http://localhost:8000 http://127.0.0.1:8000 https://huggingface.co https://*.huggingface.co https://*.hf.co",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
