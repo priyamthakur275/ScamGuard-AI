@@ -3,7 +3,7 @@ services:
     name: scamguard-app-service
     env: docker
     dockerfilePath: infra/docker/Dockerfile.app_service
-    dockerContext: backend
+    dockerContext: .
     plan: free
     envVars:
       - key: PORT
