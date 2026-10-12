@@ -38,8 +38,9 @@ export function ThreatIntelligence({ urlIntelligence }: ThreatIntelligenceProps)
   const hasEvidence = urlIntelligence.evidence.length > 0;
   const hasRedirectChain = (urlIntelligence.redirect_chain?.length ?? 0) > 0;
   const hasResolvedIps = (urlIntelligence.resolved_ips?.length ?? 0) > 0;
+  const page = urlIntelligence.page_inspection;
 
-  if (!hasEvidence && !hasRedirectChain && !hasResolvedIps) return null;
+  if (!hasEvidence && !hasRedirectChain && !hasResolvedIps && !page) return null;
 
   return (
     <div className="border border-border p-5">
@@ -86,6 +87,26 @@ export function ThreatIntelligence({ urlIntelligence }: ThreatIntelligenceProps)
             <p className="mt-1.5 break-all text-xs text-muted-foreground">
               Final destination: <span className="font-mono text-foreground">{urlIntelligence.final_url}</span>
             </p>
+          )}
+        </div>
+      )}
+
+      {page && (
+        <div className="mb-3 border-t border-border pt-3">
+          <p className="mb-1.5 font-mono text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            Live page inspection{page.title ? ` · “${page.title}”` : ""}
+          </p>
+          {page.findings.length === 0 ? (
+            <p className="text-sm text-muted-foreground">The page does not ask for passwords, OTPs or card details.</p>
+          ) : (
+            <ul className="flex flex-col gap-1.5">
+              {page.findings.map((f) => (
+                <li key={f.code} className="flex items-start gap-2 text-sm">
+                  <span className="mt-0.5 shrink-0 font-mono text-[10px] font-semibold uppercase tracking-wide text-destructive">[{f.severity}]</span>
+                  <span>{f.reason}</span>
+                </li>
+              ))}
+            </ul>
           )}
         </div>
       )}
