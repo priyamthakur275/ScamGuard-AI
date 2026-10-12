@@ -53,7 +53,7 @@ export function CopilotPanel({ predictionId }: CopilotPanelProps) {
 
   return (
     <div className="copilot-panel border border-border p-5 sm:p-6">
-      <p className="mb-3 flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wide text-foreground">
+      <p className="mb-3 flex items-center gap-2 text-xs font-semibold text-foreground">
         <MessageCircleQuestion className="h-3.5 w-3.5 text-primary" />
         Ask ScamGuard
       </p>
@@ -80,7 +80,7 @@ export function CopilotPanel({ predictionId }: CopilotPanelProps) {
             <div key={i} className="copilot-turn flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
               <p className="text-sm font-semibold text-foreground">{turn.question}</p>
               <p className="whitespace-pre-line text-sm leading-7 text-muted-foreground">{turn.answer.answer}</p>
-              <p className="font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 Source: {turn.answer.source === "deterministic" ? "ScamGuard evidence engine" : "AI model, grounded in this scan's evidence"}
               </p>
             </div>

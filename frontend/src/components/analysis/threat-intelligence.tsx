@@ -44,7 +44,7 @@ export function ThreatIntelligence({ urlIntelligence }: ThreatIntelligenceProps)
 
   return (
     <div className="border border-border p-5">
-      <p className="mb-3 flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wide text-foreground">
+      <p className="mb-3 flex items-center gap-2 text-xs font-semibold text-foreground">
         <ShieldQuestion className="h-3.5 w-3.5 text-primary" />
         URL intelligence signals
       </p>
@@ -53,7 +53,7 @@ export function ThreatIntelligence({ urlIntelligence }: ThreatIntelligenceProps)
         <ul className="mb-3 flex flex-col gap-2">
           {urlIntelligence.evidence.map((signal) => (
             <li key={signal.code} className="flex items-start gap-2 text-sm">
-              <span className="mt-0.5 shrink-0 font-mono text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+              <span className="mt-0.5 shrink-0 text-xs font-semibold text-muted-foreground">
                 [{SEVERITY_LABEL[signal.severity] ?? signal.severity}]
               </span>
               <span className="text-muted-foreground">{signal.reason}</span>
@@ -64,7 +64,7 @@ export function ThreatIntelligence({ urlIntelligence }: ThreatIntelligenceProps)
 
       {hasRedirectChain && (
         <div className="mb-3">
-          <p className="mb-1.5 font-mono text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <p className="mb-1.5 text-xs font-semibold text-muted-foreground">
             Redirect chain (actually followed)
           </p>
           <div className="flex flex-wrap items-center gap-1.5 font-mono text-xs text-foreground">
@@ -93,7 +93,7 @@ export function ThreatIntelligence({ urlIntelligence }: ThreatIntelligenceProps)
 
       {page && (
         <div className="mb-3 border-t border-border pt-3">
-          <p className="mb-1.5 font-mono text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <p className="mb-1.5 text-xs font-semibold text-muted-foreground">
             Live page inspection{page.title ? ` · “${page.title}”` : ""}
           </p>
           {page.findings.length === 0 ? (
@@ -102,7 +102,7 @@ export function ThreatIntelligence({ urlIntelligence }: ThreatIntelligenceProps)
             <ul className="flex flex-col gap-1.5">
               {page.findings.map((f) => (
                 <li key={f.code} className="flex items-start gap-2 text-sm">
-                  <span className="mt-0.5 shrink-0 font-mono text-[10px] font-semibold uppercase tracking-wide text-destructive">[{f.severity}]</span>
+                  <span className="mt-0.5 shrink-0 text-xs font-semibold text-destructive">[{f.severity}]</span>
                   <span>{f.reason}</span>
                 </li>
               ))}

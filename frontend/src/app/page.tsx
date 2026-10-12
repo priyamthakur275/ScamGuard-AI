@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { InstallAppButton } from "@/components/layout/install-app-button";
+import { HeroXray } from "@/components/landing/hero-xray";
 import { LanguageToggle } from "@/components/layout/language-toggle";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -98,7 +99,7 @@ export default function HomePage() {
           <div className="flex h-8 w-8 items-center justify-center border border-primary/30 bg-primary/10">
             <ShieldAlert className="h-5 w-5 text-primary" />
           </div>
-          <div><span className="text-lg font-semibold tracking-tight">ScamGuard</span><span className="ml-2 hidden font-mono text-[10px] uppercase tracking-[0.16em] text-primary sm:inline">Threat intelligence</span></div>
+          <div><span className="text-lg font-semibold tracking-tight">ScamGuard</span></div>
         </div>
         <div className="flex items-center gap-4">
           <InstallAppButton />
@@ -115,55 +116,44 @@ export default function HomePage() {
         </div>
       </header>
 
-      <main className="flex-1 overflow-hidden">
+      <main className="relative isolate flex-1 overflow-hidden">
+        <div aria-hidden="true" className="hero-glow" />
         {/* Hero Section */}
-        <section className="relative mx-auto grid max-w-6xl items-center gap-14 px-6 py-20 lg:grid-cols-[1.15fr_1fr] lg:py-28">
+        <section className="relative mx-auto grid max-w-6xl items-center gap-14 px-6 py-16 lg:grid-cols-[1.1fr_1fr] lg:py-24">
           <motion.div
             className="flex flex-col items-start text-left"
             initial={false}
             animate="visible"
             variants={containerVariants}
           >
-            <motion.div variants={itemVariants} className="console-kicker mb-6 inline-flex items-center gap-2">
-              <Zap className="h-3.5 w-3.5" />
-              AI-powered scam detection & threat intelligence
-            </motion.div>
-
             <motion.h1
               variants={itemVariants}
-              className="mb-8 max-w-5xl text-5xl font-semibold leading-[1.05] tracking-[-0.045em] sm:text-6xl xl:text-7xl"
+              className="mb-6 max-w-3xl font-display text-5xl font-extrabold leading-[1.02] tracking-[-0.04em] sm:text-6xl xl:text-[4.6rem]"
             >
-              A suspicious message.<br />
-              <span className="text-muted-foreground">A clearer decision.</span>
+              Forward the message. We&apos;ll show you the trap.
             </motion.h1>
 
             <motion.p
               variants={itemVariants}
-              className="mb-10 max-w-xl text-lg leading-relaxed text-muted-foreground"
+              className="mb-9 max-w-xl text-lg leading-relaxed text-muted-foreground"
             >
-              Investigate suspicious messages, links, and documents. Follow the evidence from first signal to a decision you can explain.
+              ScamGuard reads SMS, WhatsApp chats, links, emails, screenshots and calls, and points to the exact words
+              that make them a scam — in English or Hindi.
             </motion.p>
 
-            <motion.div variants={itemVariants} className="flex w-full flex-col gap-4 sm:w-auto sm:flex-row">
-              <Button size="lg" className="h-14 px-8 text-base" onClick={() => router.push("/register")}>
-                Start investigating
-                <ArrowRight className="ml-2 h-5 w-5" />
+            <motion.div variants={itemVariants} className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+              <Button size="lg" className="h-14 px-8 text-base" onClick={() => document.getElementById("quick-check")?.scrollIntoView({ behavior: "smooth" })}>
+                Check a message now
               </Button>
-              <Button size="lg" variant="outline" className="h-14 px-8 text-base" onClick={() => router.push("/login")}>
-                Sign in
+              <Button size="lg" variant="outline" className="h-14 px-8 text-base" onClick={() => router.push("/register")}>
+                Create free account
               </Button>
             </motion.div>
+            <motion.p variants={itemVariants} className="mt-5 text-sm text-muted-foreground">
+              No sign-up needed for a quick check. Nothing you paste is stored.
+            </motion.p>
           </motion.div>
-          <div className="landing-workflow rounded-lg border border-border bg-card p-6 shadow-sm md:p-8">
-            <div className="flex items-center justify-between border-b border-border pb-5"><span className="console-kicker">The investigation workflow</span><ScanSearch className="h-5 w-5 text-primary" /></div>
-            <div className="mt-6 flex flex-wrap gap-2">{["Message", "URL", "Email", "Image", "PDF", "QR", "Voice"].map(label => <span key={label} className="rounded-md border border-border bg-muted/50 px-3 py-2 font-mono text-xs">{label}</span>)}</div>
-            <ol className="mt-7 space-y-0">{[
-              ["01", "Gather the evidence", "Extract text and identify relevant entities."],
-              ["02", "Understand the risk", "Review model signals and available intelligence."],
-              ["03", "Take the next step", "Open a case, ask Copilot, or export a report."],
-            ].map(([number, title, detail]) => <li key={number} className="flex gap-4 border-b border-border py-5 last:border-0"><span className="font-mono text-xs text-primary">{number}</span><div><h2 className="text-sm font-semibold">{title}</h2><p className="mt-1 text-sm leading-6 text-muted-foreground">{detail}</p></div></li>)}</ol>
-            <p className="mt-4 border-t border-border pt-4 text-xs text-muted-foreground">One investigation workspace. Evidence behind every verdict.</p>
-          </div>
+          <HeroXray />
         </section>
 
         <QuickCheck />
@@ -172,7 +162,7 @@ export default function HomePage() {
         <section className="border-t border-border bg-card/30 px-6 py-20">
           <div className="mx-auto max-w-6xl">
             <div className="mb-16 max-w-2xl">
-              <p className="mb-2 font-mono text-xs uppercase tracking-wide text-muted-foreground">How it works</p>
+              <p className="mb-2 text-xs text-muted-foreground">How it works</p>
               <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
                 A single surface for the whole investigation
               </h2>
@@ -210,7 +200,7 @@ export default function HomePage() {
             transition={{ duration: 0.4 }}
           >
             <div className="space-y-6">
-              <div className="inline-flex items-center gap-2 rounded-sm border border-[hsl(var(--risk-low))]/30 bg-[hsl(var(--risk-low))]/10 px-3 py-1 font-mono text-xs uppercase tracking-wide text-[hsl(var(--risk-low))]">
+              <div className="inline-flex items-center gap-2 rounded-sm border border-[hsl(var(--risk-low))]/30 bg-[hsl(var(--risk-low))]/10 px-3 py-1 text-xs text-[hsl(var(--risk-low))]">
                 <ShieldCheck className="h-3.5 w-3.5" />
                 Security
               </div>

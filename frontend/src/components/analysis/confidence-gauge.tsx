@@ -68,7 +68,7 @@ export function ConfidenceGauge({ value, size = 120 }: ConfidenceGaugeProps) {
           </span>
         </div>
       </div>
-      <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Confidence</span>
+      <span className="text-xs font-medium text-muted-foreground">Confidence</span>
     </div>
   );
 }

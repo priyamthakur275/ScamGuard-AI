@@ -44,7 +44,6 @@ export function PhoneLookup() {
   return (
     <Card className="console-panel min-w-0">
       <CardHeader>
-        <p className="console-kicker mb-2">Number check</p>
         <CardTitle>Have I seen this number?</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
