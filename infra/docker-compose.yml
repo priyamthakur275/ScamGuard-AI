@@ -64,7 +64,7 @@ services:
       APP_ENV: production
       DEBUG: "false"
       ARTIFACTS_DIR: /app/artifacts
-      PRODUCTION_MODEL_NAME: ${PRODUCTION_MODEL_NAME:-naive_bayes}
+      PRODUCTION_MODEL_NAME: ${PRODUCTION_MODEL_NAME:-svm}
       RATE_LIMIT_DEFAULT: 200/minute
       RATE_LIMIT_PREDICT: 60/minute
       LOG_LEVEL: INFO
