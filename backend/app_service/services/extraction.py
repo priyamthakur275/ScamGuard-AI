@@ -306,6 +306,11 @@ class ExtractionService:
             if page_report:
                 from app_service.services.page_inspection import evidence_lines
                 intel_lines = [*intel_lines, *evidence_lines(page_report)]
+            from app_service.services.domain_trust import evidence_line, lookup_domain_age, trust_score
+            domain_age = None if intel.is_ip_literal else lookup_domain_age(intel.registrable_domain)
+            age_line = evidence_line(domain_age)
+            if age_line:
+                intel_lines = [*intel_lines, age_line]
             evidence_block = ("\nObserved URL signals:\n" + "\n".join(intel_lines)) if intel_lines else ""
 
             if page_text:
@@ -324,8 +329,10 @@ class ExtractionService:
                     "resolved_ips": resolved_ips,
                     "tls": tls_info,
                     "page_inspection": page_report,
+                    "domain_age": domain_age,
                 },
             }
+            metadata["url_intelligence"]["trust"] = trust_score(metadata["url_intelligence"], domain_age, page_report)
             if fetch_error:
                 metadata["fetch_status"] = "direct_url_analysis"
 
