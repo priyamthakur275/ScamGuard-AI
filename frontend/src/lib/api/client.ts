@@ -71,7 +71,12 @@ function refreshOnce(): Promise<TokenPair | null> {
   return refreshPromise;
 }
 
+const MAX_RETRIES = 3;
+
 async function parseErrorBody(response: Response): Promise<ApiErrorBody> {
+  if (response.status === 429) {
+    return { error_code: "RATE_LIMIT_EXCEEDED", message: "The server is handling a lot of requests right now. Please wait a few seconds and try again." };
+  }
   try {
     const data = await response.json();
     if (data && typeof data.message === "string") {
@@ -132,9 +137,25 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     });
   };
 
+  // Transient upstream rejections (rate limit at Render's edge or ours,
+  // 502/503 while a free instance restarts) are retried with backoff so a
+  // single blip never surfaces as a failed sign-in or scan. A 429/502/503
+  // means the request was never processed, so retrying is safe for any
+  // method; 504 may have been processed, so it is retried for GET only.
+  const fetchWithRetry = async (urlBase: string): Promise<Response> => {
+    for (let attempt = 0; ; attempt++) {
+      const res = await doFetch(urlBase);
+      const retryable = res.status === 429 || res.status === 502 || res.status === 503 || (res.status === 504 && method === "GET");
+      if (!retryable || attempt >= MAX_RETRIES) return res;
+      const retryAfter = Number(res.headers.get("retry-after"));
+      const delay = Number.isFinite(retryAfter) && retryAfter > 0 ? Math.min(retryAfter * 1000, 8000) : 800 * 2 ** attempt;
+      await new Promise((r) => setTimeout(r, delay + Math.random() * 300));
+    }
+  };
+
   let response: Response | undefined;
   try {
-    response = await doFetch(baseUrl);
+    response = await fetchWithRetry(baseUrl);
   } catch (error) {
     mapFetchError(error);
   }
@@ -150,7 +171,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     const refreshed = await refreshOnce();
     if (refreshed) {
       try {
-        response = await doFetch(baseUrl);
+        response = await fetchWithRetry(baseUrl);
       } catch (error) {
         mapFetchError(error);
       }

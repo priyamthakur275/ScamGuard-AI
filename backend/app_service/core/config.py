@@ -115,7 +115,9 @@ class Settings(BaseSettings):
     CORS_ORIGINS: str = "http://localhost:3000,https://frontend-psi-ebon-83.vercel.app"
 
     # Rate limiting
-    RATE_LIMIT_DEFAULT: str = "100/minute"
+    # Per visitor IP. A whole classroom/office can share one public IP
+    # (NAT), so limits are sized for a room of people, not one person.
+    RATE_LIMIT_DEFAULT: str = "300/minute"
     RATE_LIMIT_AUTH: str = "10/minute"
 
     # ---- Logging ----
