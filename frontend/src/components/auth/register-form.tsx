@@ -69,10 +69,11 @@ export function RegisterForm() {
     setIsSubmitting(true);
     setIsWakingServer(false);
 
-    // Show server wake-up notice if request takes > 2.5s
+    // Only show the wake-up notice when the request is genuinely slow (a cold
+    // start after the free server has been idle), not on a normal sign-in.
     const wakeTimer = setTimeout(() => {
       setIsWakingServer(true);
-    }, 2500);
+    }, 8000);
 
     try {
       await register({
@@ -169,7 +170,7 @@ export function RegisterForm() {
             Waiting for the server — {secondsElapsed}s elapsed
           </p>
           <p className="mt-1 text-[11px] text-muted-foreground">
-            The request is still in progress. Wait for confirmation before trying again.
+            The server is starting up after being idle. The first request can take up to a minute; please wait for confirmation before trying again.
           </p>
         </div>
       )}

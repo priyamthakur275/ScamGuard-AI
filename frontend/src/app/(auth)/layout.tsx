@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { ShieldAlert } from "lucide-react";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { BackendWarmup } from "@/components/layout/backend-warmup";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="grid min-h-screen lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+      <BackendWarmup />
       {/* Left: the "signal console" -- dark, monospace, a single scanning
           waveform as the one deliberate moment of motion on this screen. */}
       <div className="auth-blueprint relative hidden overflow-hidden border-r border-border bg-[#101216] px-12 py-10 text-slate-100 lg:flex lg:flex-col lg:justify-between">

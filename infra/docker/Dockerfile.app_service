@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
-# Build context: backend/
-# Build with:  docker build -f infra/docker/Dockerfile.app_service -t scamguard-app-service backend
+# Build context: repository root (paths below start with backend/)
+# Build with:  docker build -f infra/docker/Dockerfile.app_service -t scamguard-app-service .
 
 FROM python:3.12-slim AS builder
 
