@@ -228,8 +228,10 @@ URL analysis now computes real, deterministic signals from the URL string itself
 
 ---
 
-## 👤 Author & Project Maintainer
+## 👤 Author & Project Team
 
-- **Project Lead & Author**: **Prerana P Jois** ([@PreranaPJois-123](https://github.com/PreranaPJois-123))
-- **Repository**: [https://github.com/PreranaPJois-123/ScamGuard-AI](https://github.com/PreranaPJois-123/ScamGuard-AI)
-- **Project**: ScamGuard AI — AI-Powered Online Scam & Fraud Detection System
+- **Project Lead & Author**: **Priyam Thakur** (1BM23CS252) ([@priyamthakur275](https://github.com/priyamthakur275))
+- **Team Members**: Bhavya Goyal (1BM23CS063), Samir Chaudhary (1BM23CS294), Sana Subodh (1BM23CS296)
+- **Guide**: Dr. Kayarvizhy N, Professor, Department of CSE, B.M.S. College of Engineering, Bengaluru
+- **Repository**: [https://github.com/priyamthakur275/ScamGuard-AI](https://github.com/priyamthakur275/ScamGuard-AI)
+- **Project**: ScamGuard AI — AI-Powered Online Scam & Fraud Detection System (Major Project, B.E. Computer Science and Engineering)
