@@ -98,6 +98,7 @@ class Settings(BaseSettings):
     # external LLM. See copilot_llm_provider.py.
     COPILOT_LLM_PROVIDER: str | None = None
     COPILOT_LLM_API_KEY: str | None = None
+    COPILOT_LLM_MODEL: str | None = None  # optional override of the provider's default model
 
     # CORS
     #

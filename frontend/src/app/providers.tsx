@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/lib/theme/theme-context";
 import { ToastProvider } from "@/hooks/use-toast";
 import { MotionConfig } from "framer-motion";
 import { Toaster } from "@/components/ui/toaster";
+import { LanguageProvider } from "@/lib/i18n/language-context";
 
 export function Providers({ children }: { children: ReactNode }) {
   useEffect(() => {
@@ -14,13 +15,13 @@ export function Providers({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <MotionConfig reducedMotion="user"><ThemeProvider>
+    <MotionConfig reducedMotion="user"><ThemeProvider><LanguageProvider>
       <ToastProvider>
         <AuthProvider>
           {children}
           <Toaster />
         </AuthProvider>
       </ToastProvider>
-    </ThemeProvider></MotionConfig>
+    </LanguageProvider></ThemeProvider></MotionConfig>
   );
 }

@@ -260,6 +260,7 @@ class ExtractionService:
             redirect_chain: list[dict] = []
             final_url: str | None = None
             tls_info: dict | None = None
+            page_report: dict | None = None
 
             try:
                 resp, resolved_ips, redirect_chain = _fetch_url_safely(target_url)
@@ -268,6 +269,11 @@ class ExtractionService:
                     soup = BeautifulSoup(resp.text, "html.parser")
                     title = soup.title.string.strip() if soup.title and soup.title.string else ""
                     page_text = soup.get_text(separator=" ", strip=True)
+                    try:
+                        from app_service.services.page_inspection import inspect_page
+                        page_report = inspect_page(soup, str(resp.url))
+                    except Exception:
+                        page_report = None
                 except Exception:
                     page_text = resp.text[:2000]
                 redirect_count = len(resp.history)
@@ -297,6 +303,9 @@ class ExtractionService:
                 fetch_error = str(exc)
                 redirect_count = 0
 
+            if page_report:
+                from app_service.services.page_inspection import evidence_lines
+                intel_lines = [*intel_lines, *evidence_lines(page_report)]
             evidence_block = ("\nObserved URL signals:\n" + "\n".join(intel_lines)) if intel_lines else ""
 
             if page_text:
@@ -314,6 +323,7 @@ class ExtractionService:
                     "final_url": final_url,
                     "resolved_ips": resolved_ips,
                     "tls": tls_info,
+                    "page_inspection": page_report,
                 },
             }
             if fetch_error:
@@ -414,11 +424,13 @@ class ExtractionService:
                 if getattr(settings, "TESSERACT_CMD", None):
                     pytesseract.pytesseract.tesseract_cmd = settings.TESSERACT_CMD
 
+                from app_service.services.chat_ocr import read_screenshot
+
                 img = Image.open(io.BytesIO(content))
-                extracted_text = pytesseract.image_to_string(img, timeout=20)
-                if not extracted_text or not extracted_text.strip():
+                ocr = read_screenshot(img)
+                if not ocr.text:
                     raise ValueError("No readable text was found in this image. Use a clearer image or the QR tab for QR codes.")
-                return extracted_text[:MAX_EXTRACTED_LENGTH].strip(), {"ocr_detected": True}
+                return ocr.text[:MAX_EXTRACTED_LENGTH].strip(), ocr.metadata()
             except Exception as e:
                 if "tesseract" in str(e).lower() or "not installed" in str(e).lower():
                     raise ValueError("OCR is unavailable. Install Tesseract on the server or paste the image text for analysis.") from e

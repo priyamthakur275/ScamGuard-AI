@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { Phone } from "lucide-react";
 import { lookupPhone, type PhoneLookupResult } from "@/lib/api/messages";
+import { lookupIndicator } from "@/lib/api/community";
 import { ApiError } from "@/lib/api/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,7 @@ import { formatDate, truncate, verdictLabel } from "@/lib/utils";
 export function PhoneLookup() {
   const [number, setNumber] = useState("");
   const [result, setResult] = useState<PhoneLookupResult | null>(null);
+  const [crowd, setCrowd] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -25,7 +27,12 @@ export function PhoneLookup() {
     setError(null);
     setLoading(true);
     try {
-      setResult(await lookupPhone(number));
+      const [own, community] = await Promise.all([
+        lookupPhone(number),
+        lookupIndicator("phone", number).catch(() => null),
+      ]);
+      setResult(own);
+      setCrowd(community ? community.report_count : null);
     } catch (e) {
       setResult(null);
       setError(e instanceof ApiError ? e.message : "Lookup failed. Try again.");
@@ -64,6 +71,11 @@ export function PhoneLookup() {
                 </span>
               )}
             </p>
+            {crowd !== null && (
+              <p className={crowd > 0 ? "font-medium text-destructive" : "text-muted-foreground"}>
+                {crowd > 0 ? `Reported as a scam by ${crowd} ScamGuard ${crowd === 1 ? "user" : "users"}.` : "No community reports for this number."}
+              </p>
+            )}
             {!result.is_valid_indian_mobile && (
               <p className="text-xs text-amber-600 dark:text-amber-400">Not a standard 10-digit Indian mobile number.</p>
             )}
@@ -79,7 +91,7 @@ export function PhoneLookup() {
                 ))}
               </ul>
             )}
-            <p className="text-[11px] text-muted-foreground">Searches only your own saved scans; no external phone database is used.</p>
+            <p className="text-[11px] text-muted-foreground">Your own scans plus anonymous ScamGuard community reports; no external phone database is used.</p>
           </div>
         )}
       </CardContent>

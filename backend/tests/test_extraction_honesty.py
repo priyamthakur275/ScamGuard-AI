@@ -22,7 +22,7 @@ def test_empty_ocr_does_not_produce_a_prediction_payload():
 
 
 def test_missing_ocr_does_not_analyze_a_filename():
-    with patch('pytesseract.image_to_string', side_effect=RuntimeError('tesseract not installed')):
+    with patch('pytesseract.image_to_data', side_effect=RuntimeError('tesseract not installed')):
         with pytest.raises(ValueError, match='OCR is unavailable'):
             ExtractionService.extract(image_upload(), None, 'IMAGE')
 

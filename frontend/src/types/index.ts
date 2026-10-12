@@ -104,6 +104,14 @@ export interface UrlIntelligence {
   redirect_count?: number;
   redirect_chain?: Array<{ url: string; status_code: number }>;
   final_url?: string | null;
+  page_inspection?: {
+    final_host: string;
+    title: string;
+    sensitive_fields: string[];
+    form_posts_to: string[];
+    impersonated_brand: string | null;
+    findings: { code: string; severity: string; reason: string }[];
+  } | null;
   resolved_ips?: string[];
   tls?: { subject_cn: string | null; issuer_cn: string | null; not_after: string | null; is_expired: boolean | null } | null;
 }

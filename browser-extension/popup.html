@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>ScamGuard</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <header><img src="icons/icon-32.png" alt="" width="20" height="20" /><strong>ScamGuard</strong></header>
+  <label for="msg">Paste a suspicious message or link</label>
+  <textarea id="msg" maxlength="2000" placeholder="e.g. Your SBI KYC has expired, update at…"></textarea>
+  <button id="check">Check message</button>
+  <section id="result" hidden></section>
+  <p class="foot">Lost money? Call <strong>1930</strong> · <a id="site" href="#" target="_blank">Open ScamGuard</a></p>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

@@ -11,11 +11,13 @@ interface CopilotPanelProps {
 }
 
 const QUICK_QUESTIONS = [
+  "Is this a scam?",
   "Why was this flagged?",
-  "What evidence caused the risk?",
   "What is the attacker asking for?",
-  "What should I do?",
-  "Which indicators are suspicious?",
+  "Should I call back?",
+  "I already paid / shared OTP — what now?",
+  "How do I report it?",
+  "Ab kya karu?",
 ];
 
 interface ConversationTurn {
@@ -53,7 +55,7 @@ export function CopilotPanel({ predictionId }: CopilotPanelProps) {
     <div className="copilot-panel border border-border p-5 sm:p-6">
       <p className="mb-3 flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wide text-foreground">
         <MessageCircleQuestion className="h-3.5 w-3.5 text-primary" />
-        Copilot
+        Ask ScamGuard
       </p>
       <p className="mb-3 text-xs text-muted-foreground">Answers are grounded in this scan&apos;s saved evidence.</p>
 
@@ -79,7 +81,7 @@ export function CopilotPanel({ predictionId }: CopilotPanelProps) {
               <p className="text-sm font-semibold text-foreground">{turn.question}</p>
               <p className="whitespace-pre-line text-sm leading-7 text-muted-foreground">{turn.answer.answer}</p>
               <p className="font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
-                Source: {turn.answer.source === "deterministic" ? "Evidence template (no LLM configured)" : "LLM"}
+                Source: {turn.answer.source === "deterministic" ? "ScamGuard evidence engine" : "AI model, grounded in this scan's evidence"}
               </p>
             </div>
           ))}

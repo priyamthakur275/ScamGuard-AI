@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { ScanSearch, ShieldAlert, ShieldCheck } from "lucide-react";
 import { quickCheck } from "@/lib/api/public";
@@ -9,21 +9,32 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { ShareWarning, displayToken } from "@/components/analysis/share-warning";
 import { cn, scamCategoryLabel } from "@/lib/utils";
 import type { AnalysisResult } from "@/types";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 const SAMPLE =
   "URGENT: Your SBI account will be blocked today. Update KYC immediately at http://sbi-kyc-verify.xyz and share the OTP sent to your phone.";
 
 /** No-login check on the landing page. Hits /public/quick-check, which
  * runs the same model + threat scorer but stores nothing. */
-export function QuickCheck() {
-  const [text, setText] = useState("");
+interface QuickCheckProps {
+  /** Pre-filled text, e.g. a message shared from WhatsApp into the installed app. */
+  initialText?: string;
+  /** Run the check immediately when initialText is present. */
+  autoRun?: boolean;
+  heading?: string;
+}
+
+export function QuickCheck({ initialText = "", autoRun = false, heading }: QuickCheckProps = {}) {
+  const { t } = useLanguage();
+  const [text, setText] = useState(initialText);
+  const autoRan = useRef(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function run(value: string) {
     if (value.trim().length < 3) {
-      setError("Paste a message of at least a few characters.");
+      setError(t("qc.short"));
       return;
     }
     setLoading(true);
@@ -34,13 +45,21 @@ export function QuickCheck() {
       setResult(null);
       setError(
         err instanceof ApiError && err.status === 429
-          ? "Too many quick checks. Sign in for unlimited scans, or try again in a minute."
-          : "Could not reach the server. It may be waking up; try again in a few seconds.",
+          ? t("qc.busy")
+          : t("qc.down"),
       );
     } finally {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    if (autoRun && initialText.trim().length >= 3 && !autoRan.current) {
+      autoRan.current = true;
+      void run(initialText);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoRun, initialText]);
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -52,9 +71,9 @@ export function QuickCheck() {
   return (
     <section id="quick-check" className="border-t border-border px-6 py-16">
       <div className="mx-auto max-w-3xl">
-        <h2 className="text-2xl font-bold tracking-tight text-foreground">Got a suspicious message? Paste it here.</h2>
+        <h2 className="text-2xl font-bold tracking-tight text-foreground">{heading ?? t("qc.heading")}</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Quick check, no account needed. Nothing you paste here is saved.
+          {t("qc.sub")}
         </p>
 
         <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-3">
@@ -64,13 +83,13 @@ export function QuickCheck() {
             maxLength={2000}
             rows={4}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Paste an SMS, WhatsApp message or email text..."
+            placeholder={t("qc.placeholder")}
             className="w-full resize-y border border-border bg-background p-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
           />
           <div className="flex flex-wrap items-center gap-3">
             <Button type="submit" disabled={loading}>
               <ScanSearch className="mr-2 h-4 w-4" />
-              {loading ? "Checking..." : "Check message"}
+              {loading ? t("qc.checking") : t("qc.check")}
             </Button>
             <button
               type="button"
@@ -80,7 +99,7 @@ export function QuickCheck() {
                 void run(SAMPLE);
               }}
             >
-              Try a sample scam
+              {t("qc.sample")}
             </button>
             <span className="ml-auto font-mono text-[11px] text-muted-foreground">{text.length}/2000</span>
           </div>
@@ -102,23 +121,29 @@ export function QuickCheck() {
                 <ShieldCheck className="h-5 w-5 text-emerald-600" />
               )}
               <p className="text-lg font-semibold text-foreground">
-                {isScam ? `Likely scam · ${scamCategoryLabel(result.scam_category)}` : "Looks legitimate"}
+                {isScam ? `${t("qc.scam")} · ${scamCategoryLabel(result.scam_category)}` : t("qc.safe")}
               </p>
             </div>
             <p className="mt-1 font-mono text-xs text-muted-foreground">
-              Threat score {Math.round(result.threat_score * 100)}% · model probability{" "}
+              {Math.round(result.threat_score * 100)}% {t("qc.likelihood")} · {t("qc.model")}{" "}
               {Math.round(result.scam_probability * 100)}%
             </p>
 
             {result.top_contributing_tokens?.length > 0 && (
               <p className="mt-3 text-sm text-muted-foreground">
-                Signals:{" "}
+                {t("qc.signals")}:{" "}
                 {result.top_contributing_tokens
                   .slice(0, 5)
                   .map((t) => displayToken(t.token))
                   .join(", ")}
               </p>
             )}
+
+            {((result.metadata?.community_reports as { display: string; report_count: number }[] | undefined) ?? []).map((c) => (
+              <p key={c.display} className="mt-2 text-sm font-medium text-destructive">
+                {c.display}: {t("qc.reported")} {c.report_count} {t("qc.users")}
+              </p>
+            ))}
 
             {isScam && (result.recommended_actions?.length ?? 0) > 0 && (
               <ul className="mt-3 list-disc pl-5 text-sm text-foreground">
@@ -131,7 +156,7 @@ export function QuickCheck() {
             <div className="mt-4 flex flex-wrap items-center gap-3">
               {isScam && <ShareWarning result={result} />}
               <Link href="/register" className={buttonVariants({ variant: "primary" })}>
-                Get the full analysis
+                {t("qc.full")}
               </Link>
             </div>
           </div>

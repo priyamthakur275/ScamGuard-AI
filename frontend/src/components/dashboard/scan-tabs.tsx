@@ -21,7 +21,7 @@ const TABS = [
   { id: "text", label: "Text", icon: FileText, type: "text" },
   { id: "url", label: "URL", icon: LinkIcon, type: "url" },
   { id: "email", label: "Email", icon: Mail, type: "email" },
-  { id: "image", label: "Image / OCR", icon: ImageIcon, type: "image" },
+  { id: "image", label: "Screenshot", icon: ImageIcon, type: "image" },
   { id: "camera", label: "Live Camera", icon: Camera, type: "camera" },
   { id: "voice", label: "Voice Call", icon: Mic, type: "voice" },
   { id: "pdf", label: "PDF", icon: File, type: "pdf" },

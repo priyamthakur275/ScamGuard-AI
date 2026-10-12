@@ -103,6 +103,9 @@ _INTENTS: tuple[tuple[str, float, re.Pattern[str]], ...] = tuple(
         ("verify_account_demand", 0.3, r"\b(verify|confirm|validate|reactivate|unlock|secure)\b[^.?!]{0,15}\byour (account|identity|details|wallet|card|profile)\b"),
         ("deceptive_domain", 0.35, r"https?://[^/\s]*\b[a-z0-9]*[-.]?(verify|secure|login|signin|account|update|kyc|wallet|support|billing|refund)[-.][^/\s]*|https?://[^/\s]*(arnaz0n|amaz0n|paypa1|g00gle|faceb00k|micr0soft|app1e|netf1ix|sbi-?online-|hdfc-?bank-|icici-?bank-)"),
         ("insecure_login_page", 0.2, r"http://[^\s]+/(login|signin|verify|account|secure|update|kyc|payment)\b"),
+        ("page_collects_secrets", 0.55, r"page inspection: the page collects [^.]*(password|otp|pin|cvv|card number)"),
+        ("page_posts_elsewhere", 0.35, r"page inspection: form submits to another site"),
+        ("page_impersonates_brand", 0.45, r"page inspection: impersonates "),
         ("harassment", 0.4, r"send your (photos|pictures) to (all )?your contacts|morphed"),
     ]
 )

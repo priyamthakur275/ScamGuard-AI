@@ -35,3 +35,15 @@ def test_phone_lookup_counts_only_own_scans(client):
 
 def test_phone_lookup_requires_login(client):
     assert client.get("/api/v1/messages/lookup/phone", params={"number": "9876543210"}).status_code == 401
+
+
+def test_public_trends_aggregates_without_personal_data(client):
+    from app_service.api.v1 import public
+    public._TRENDS_CACHE.clear()
+    r = client.get("/api/v1/public/trends?days=7")
+    assert r.status_code == 200
+    body = r.json()
+    assert set(body) >= {"total_scans", "flagged_scans", "top_categories", "channels", "daily"}
+    assert len(body["daily"]) == 7
+    for item in body["top_categories"]:
+        assert set(item) == {"category", "count"}  # aggregates only, never message content
