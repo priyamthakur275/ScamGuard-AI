@@ -14,7 +14,7 @@ Per `render.yaml`, only a single backend service (`app_service`) is defined for 
 
 ## 🎯 Key Capabilities & Production Features
 
-- **Real-Time Detection**: Classifies messages as legitimate or scam with high-confidence probability scores using scikit-learn models (Naive Bayes & TF-IDF).
+- **Real-Time Detection**: Classifies messages as legitimate or scam with high-confidence probability scores using scikit-learn models on TF-IDF features (Linear SVM in production, selected by F1 from Naive Bayes, Logistic Regression, Random Forest and SVM).
 - **Explainable AI (XAI)**: Identifies top contributing tokens/keywords, threat scores, risk dimensions (urgency, financial risk, credential theft, etc.), and suggested next steps.
 - **Multi-Channel Scanners**: Supports raw text, URLs, emails (.eml/text), screenshot/image OCR, document PDFs, and QR codes.
 - **Live Camera / Optical Scanner**: In-browser device camera viewfinder for real-time capture of printed phishing letters, SMS on secondary phones, or physical QR codes.
@@ -38,7 +38,7 @@ graph TD
     Frontend -->|Same-Origin /backend-api Rewrite| AppService[FastAPI App Service - Port 8000]
     AppService -->|SQLAlchemy / Alembic| DB[(PostgreSQL / SQLite)]
     AppService -->|In-process, same container| MLEngine[ML Inference Engine]
-    MLEngine -->|Joblib Serialization| ModelRegistry[(Trained ML Artifacts - Naive Bayes / TF-IDF)]
+    MLEngine -->|Joblib Serialization| ModelRegistry[(Trained ML Artifacts - SVM / TF-IDF)]
 ```
 
 > **Note on the deployed topology:** the codebase supports running ML
@@ -224,7 +224,7 @@ URL analysis now computes real, deterministic signals from the URL string itself
 
 ### Model evaluation (extended)
 
-`ModelEvaluator` (`ml_training/evaluation/evaluator.py`) computes real accuracy/precision/recall/F1/ROC-AUC/false-positive-rate via scikit-learn on an actual train/test split, plus the raw confusion matrix counts (TP/TN/FP/FN). No metric here is invented; numbers reflect whatever the currently-trained model actually scores on its evaluation split. **The production model is trained on a genuinely small sample dataset (24 rows total)** -- the admin Model Evaluation view surfaces this explicitly rather than presenting the metrics as production-scale benchmarks.
+`ModelEvaluator` (`ml_training/evaluation/evaluator.py`) computes real accuracy/precision/recall/F1/ROC-AUC/false-positive-rate via scikit-learn on an actual train/test split, plus the raw confusion matrix counts (TP/TN/FP/FN). The production model (`svm` v2) is trained on the public SMS Spam Collection from Kaggle plus 24 project samples (5,193 unique messages, 80/20 split). On the 1,039-message test split it scores accuracy 0.987, precision 0.955, recall 0.947, F1 0.951, ROC-AUC 0.998 and false-positive rate 0.007. See `backend/ml_training/datasets/README.md` for the dataset source and the exact training command. The dataset is English SMS from the UK and does not contain Indian UPI, job or investment scams, so the rule-based threat scorer remains important for those.
 
 ---
 

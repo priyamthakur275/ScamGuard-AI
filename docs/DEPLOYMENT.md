@@ -55,7 +55,7 @@ Either way, deploy `ml_service` the same way as `app_service`:
    | Key | Value |
    |---|---|
    | `ARTIFACTS_DIR` | `/app/artifacts` |
-   | `PRODUCTION_MODEL_NAME` | The `model_name` your training run promoted, e.g. `naive_bayes` |
+   | `PRODUCTION_MODEL_NAME` | The `model_name` your training run promoted, e.g. `svm` |
    | `RATE_LIMIT_DEFAULT` | `200/minute` |
    | `RATE_LIMIT_PREDICT` | `60/minute` |
    | `LOG_LEVEL` | `INFO` |
