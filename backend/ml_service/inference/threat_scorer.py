@@ -29,7 +29,7 @@ _CATEGORY_SIGNALS: dict[str, frozenset[str]] = {
     "upi_scam": frozenset({"upi", "gpay", "phonepe", "paytm", "scan", "qr", "collect", "request"}),
     "banking_fraud": frozenset({"bank", "account", "payment", "transaction", "fund", "loan", "credit", "debit"}),
     "identity_theft": frozenset({"aadhaar", "pan", "kyc", "identity", "verification", "document", "ssn", "passport"}),
-    "romance_scam": frozenset({"love", "dear", "darling", "heart", "relationship", "lonely", "marry", "beautiful"}),
+    "romance_scam": frozenset({"love", "darling", "heart", "relationship", "lonely", "marry", "beautiful"}),
     "crypto_scam": frozenset({"crypto", "bitcoin", "ethereum", "wallet", "blockchain", "token", "nft", "mining"}),
     "fake_delivery": frozenset({"delivery", "package", "shipment", "tracking", "parcel", "courier", "order", "dispatch"}),
     "subscription_scam": frozenset({"subscription", "renew", "expire", "membership", "cancel", "auto", "charge", "billing"}),
