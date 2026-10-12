@@ -1,5 +1,11 @@
 import type { FeatureContribution } from "@/types";
 
+// "__url__" and "__num__" are the preprocessor's placeholders for any link
+// or number; show them as plain words.
+function displayToken(token: string): string {
+  return token.replace(/__url__/g, "link").replace(/__num__/g, "number");
+}
+
 export function TokenChip({
   contribution,
   maxWeight,
@@ -17,7 +23,7 @@ export function TokenChip({
       }}
       title={`Contribution weight: ${contribution.weight.toFixed(4)}`}
     >
-      {contribution.token.replace(/^__|__$/g, "")}
+      {displayToken(contribution.token)}
     </span>
   );
 }
