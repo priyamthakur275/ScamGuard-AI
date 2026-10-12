@@ -25,7 +25,7 @@ export function SimilarPatterns({ patterns, category }: SimilarPatternsProps) {
     <div className="border border-border">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex w-full items-center justify-between px-4 py-3 text-left font-mono text-xs uppercase tracking-wide text-foreground transition-colors hover:bg-muted"
+        className="flex w-full items-center justify-between px-4 py-3 text-left text-xs text-foreground transition-colors hover:bg-muted"
         type="button"
       >
         <span className="flex items-center gap-2">

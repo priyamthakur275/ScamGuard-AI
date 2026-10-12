@@ -10,6 +10,7 @@ import { ShareWarning, displayToken } from "@/components/analysis/share-warning"
 import { cn, scamCategoryLabel } from "@/lib/utils";
 import type { AnalysisResult } from "@/types";
 import { useLanguage } from "@/lib/i18n/language-context";
+import { ScamXray, type XrayData } from "@/components/analysis/scam-xray";
 
 const SAMPLE =
   "URGENT: Your SBI account will be blocked today. Update KYC immediately at http://sbi-kyc-verify.xyz and share the OTP sent to your phone.";
@@ -138,6 +139,10 @@ export function QuickCheck({ initialText = "", autoRun = false, heading }: Quick
                   .join(", ")}
               </p>
             )}
+
+            <div className="mt-4">
+              <ScamXray compact xray={(result.metadata?.xray as XrayData | undefined) ?? null} />
+            </div>
 
             {((result.metadata?.community_reports as { display: string; report_count: number }[] | undefined) ?? []).map((c) => (
               <p key={c.display} className="mt-2 text-sm font-medium text-destructive">
