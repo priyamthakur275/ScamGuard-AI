@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { FileText, Link as LinkIcon, Mail, Image as ImageIcon, File, QrCode, Camera, Mic } from "lucide-react";
+import { FileText, Link as LinkIcon, Mail, Image as ImageIcon, File, QrCode, Mic } from "lucide-react";
 import { FileUploadZone } from "./file-upload-zone";
-import { CameraScanner } from "./camera-scanner";
 import { VoiceScanner } from "./voice-scanner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,7 +21,6 @@ const TABS = [
   { id: "url", label: "URL", icon: LinkIcon, type: "url" },
   { id: "email", label: "Email", icon: Mail, type: "email" },
   { id: "image", label: "Screenshot", icon: ImageIcon, type: "image" },
-  { id: "camera", label: "Live Camera", icon: Camera, type: "camera" },
   { id: "voice", label: "Voice Call", icon: Mic, type: "voice" },
   { id: "pdf", label: "PDF", icon: File, type: "pdf" },
   { id: "qr", label: "QR Code", icon: QrCode, type: "qr" },
@@ -40,7 +38,6 @@ export function ScanTabs({ onScan, isScanning = false }: ScanTabsProps) {
   const modKey = useModKeyLabel();
 
   const isFileTab = ["image", "pdf", "qr"].includes(activeTab);
-  const isCameraTab = activeTab === "camera";
   const isVoiceTab = activeTab === "voice";
 
   const handleScan = () => {
@@ -49,7 +46,7 @@ export function ScanTabs({ onScan, isScanning = false }: ScanTabsProps) {
       if (selectedFiles.length > 0) {
         onScan([], selectedFiles, activeTab);
       }
-    } else if (!isCameraTab && !isVoiceTab) {
+    } else if (!isVoiceTab) {
       if (textValue.trim()) {
         onScan([textValue.trim()], [], activeTab);
       }
@@ -94,12 +91,7 @@ export function ScanTabs({ onScan, isScanning = false }: ScanTabsProps) {
       </div></div>
 
       <div className="p-4 md:p-7">
-        {isCameraTab ? (
-          <CameraScanner
-            onCapture={(file) => onScan([], [file], "image")}
-            isScanning={isScanning}
-          />
-        ) : isVoiceTab ? (
+        {isVoiceTab ? (
           <VoiceScanner
             onSubmitTranscript={(transcript) => onScan([transcript], [], "voice")}
             isScanning={isScanning}
@@ -132,7 +124,7 @@ export function ScanTabs({ onScan, isScanning = false }: ScanTabsProps) {
           </div>
         )}
 
-        {!isCameraTab && !isVoiceTab && (
+        {!isVoiceTab && (
           <div className="mt-5 flex justify-end border-t border-border pt-5">
             <Button
               onClick={handleScan}

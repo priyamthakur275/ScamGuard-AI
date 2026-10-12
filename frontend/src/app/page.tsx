@@ -5,7 +5,7 @@ import { InstallAppButton } from "@/components/layout/install-app-button";
 import { LanguageToggle } from "@/components/layout/language-toggle";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, ScanSearch, ShieldAlert, Sparkles, Zap, ShieldCheck, CheckCircle2, ArrowRight, Mail, FolderKanban, MessageCircleQuestion, FlaskConical, FileOutput } from "lucide-react";
+import { Lock, ScanSearch, ShieldAlert, Sparkles, Zap, ShieldCheck, CheckCircle2, ArrowRight, Mail, MessageCircleQuestion, FlaskConical, FileOutput } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
@@ -19,7 +19,7 @@ const FEATURES = [
   {
     icon: ScanSearch,
     title: "Multimodal Scanning",
-    description: "Analyze text, URLs, email, images/OCR, PDFs, QR codes, live camera, and voice through one unified pipeline.",
+    description: "Analyze text, URLs, email, images/OCR, PDFs, QR codes, screenshots and voice through one unified pipeline.",
   },
   {
     icon: Sparkles,
@@ -40,11 +40,6 @@ const FEATURES = [
     icon: ShieldAlert,
     title: "Entity & Threat Correlation",
     description: "Connect recurring phone numbers, domains, payment identifiers, and other entities across your saved scans.",
-  },
-  {
-    icon: FolderKanban,
-    title: "Investigation Cases",
-    description: "Group related scans into a case with a real action-driven timeline, notes, and aggregated evidence.",
   },
   {
     icon: MessageCircleQuestion,
