@@ -18,6 +18,17 @@ const plexSans = localFont({
   variable: "--font-sans",
   display: "swap",
 });
+const bricolage = localFont({
+  src: [
+    { path: "./fonts/bricolage-grotesque-latin-500-normal.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/bricolage-grotesque-latin-600-normal.woff2", weight: "600", style: "normal" },
+    { path: "./fonts/bricolage-grotesque-latin-700-normal.woff2", weight: "700", style: "normal" },
+    { path: "./fonts/bricolage-grotesque-latin-800-normal.woff2", weight: "800", style: "normal" },
+  ],
+  variable: "--font-display",
+  display: "swap",
+});
+
 const plexMono = localFont({
   src: [
     { path: "./fonts/ibm-plex-mono-latin-400-normal.woff2", weight: "400", style: "normal" },
@@ -66,7 +77,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
-      <body className={`min-h-screen ${plexSans.variable} ${plexMono.variable} font-sans antialiased`}>
+      <body className={`min-h-screen ${plexSans.variable} ${plexMono.variable} ${bricolage.variable} font-sans antialiased`}>
         <Providers>{children}</Providers>
         <ServiceWorkerRegister />
       </body>

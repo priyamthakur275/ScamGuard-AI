@@ -50,7 +50,7 @@ export function CaptchaField({ answer, onAnswerChange, onTokenChange, error, dis
 
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="font-mono text-xs font-medium uppercase tracking-wide text-muted-foreground">
+      <label className="text-xs font-medium text-muted-foreground">
         Verification
       </label>
       <div className="flex items-center gap-2">

@@ -171,7 +171,7 @@ export const HistoryTable = memo(function HistoryTable({ entries, onFeedback, on
 
       <div className="custom-scrollbar relative max-h-[700px] overflow-x-auto overflow-y-auto border border-border">
         <table className="w-full text-left text-sm whitespace-nowrap">
-          <thead className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl text-xs uppercase text-muted-foreground shadow-sm after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-border/50">
+          <thead className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl text-xs text-muted-foreground shadow-sm after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-border/50">
             <tr>
               <th className="px-4 py-3 font-semibold tracking-wider">Type</th>
               <th className="px-4 py-3 font-semibold tracking-wider w-full">Message</th>

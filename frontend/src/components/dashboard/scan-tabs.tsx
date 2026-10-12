@@ -62,7 +62,7 @@ export function ScanTabs({ onScan, isScanning = false }: ScanTabsProps) {
 
   return (
     <div className="scanner-panel w-full overflow-hidden rounded-lg border border-border bg-card">
-      <div className="border-b border-border bg-muted/30 px-3 pt-4 pb-2"><p className="console-kicker px-2 pb-3">Investigation input</p><div className="scanner-tabs">
+      <div className="border-b border-border bg-muted/30 px-3 pt-4 pb-2"><div className="scanner-tabs">
         {TABS.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;

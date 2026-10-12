@@ -26,7 +26,7 @@ export default function GlobalError({
           </div>
 
           <div className="max-w-md space-y-2">
-            <p className="font-mono text-xs uppercase tracking-[0.14em] text-muted-foreground">Error</p>
+            <p className="text-xs text-muted-foreground">Error</p>
             <h1 className="font-sans text-3xl font-semibold tracking-tight">Something went wrong</h1>
             <p className="text-sm text-muted-foreground">
               An unexpected error occurred. You can try again, or head back to the dashboard.

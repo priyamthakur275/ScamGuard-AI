@@ -46,7 +46,7 @@ export function CommunityReports({ result }: { result: AnalysisResult }) {
 
   return (
     <div className="border border-border p-5">
-      <p className="mb-3 flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-wide text-foreground">
+      <p className="mb-3 flex items-center gap-2 text-xs font-semibold text-foreground">
         <Users className="h-3.5 w-3.5 text-primary" />
         Community reports
       </p>
