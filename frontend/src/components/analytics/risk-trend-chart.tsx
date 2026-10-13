@@ -13,13 +13,13 @@ export function RiskTrendChart({ entries }: { entries: AnalysisResult[] }) {
     .slice(-30)
     .map((entry, index) => ({
       index: index + 1,
-      probability: Math.round(entry.scam_probability * 100),
+      probability: Math.round(entry.threat_score * 100),
     }));
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Scam probability, last {data.length} scans</CardTitle>
+        <CardTitle>Scam likelihood, last {data.length} scans</CardTitle>
       </CardHeader>
       <CardContent className="h-64">
         <ResponsiveContainer width="100%" height="100%">
@@ -34,7 +34,7 @@ export function RiskTrendChart({ entries }: { entries: AnalysisResult[] }) {
               className="text-muted-foreground"
             />
             <Tooltip
-              formatter={(value: number) => [`${value}%`, "Scam probability"]}
+              formatter={(value: number) => [`${value}%`, "Scam likelihood"]}
               labelFormatter={(label) => `Scan ${label}`}
               contentStyle={{
                 backgroundColor: "hsl(var(--card))",

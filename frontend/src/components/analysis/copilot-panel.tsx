@@ -93,7 +93,7 @@ export function CopilotPanel({ predictionId }: CopilotPanelProps) {
       <div className="flex gap-2 border-t border-border pt-4" aria-busy={isAsking}>
         <div className="min-w-0 flex-1">
         <Input
-          aria-label="Ask Copilot a question"
+          aria-label="Ask ScamGuard a question"
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && ask(question)}
