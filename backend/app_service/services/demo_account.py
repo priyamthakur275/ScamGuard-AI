@@ -67,28 +67,41 @@ def ensure_demo_account(db: Session) -> User:
 
 
 def seed_sample_scans(db: Session) -> int:
-    """Add the 15 sample scans to the demo account's history once.
+    """Add the 15 sample scans to the demo account and to each account in
+    SAMPLE_SCAN_EMAILS, once.
 
     Each case runs through the real pipeline (extraction, model, intent
-    engine) and is skipped if the demo history already holds the same text,
-    so restarts never duplicate it. Returns how many were added.
+    engine). A case is skipped if that history already holds it (stored text
+    starts with the same extracted text), so restarts never duplicate it.
+    Accounts that do not exist yet are skipped. Returns how many were added.
     """
     from app_service.services.sample_scans import CASES, extract_case
 
-    user = ensure_demo_account(db)
-    existing = set(db.scalars(select(Message.text).where(Message.user_id == user.id)).all())
-    messages = MessageService(db)
-    added = 0
+    users = [ensure_demo_account(db)]
+    for email in (e.strip().lower() for e in get_settings().SAMPLE_SCAN_EMAILS.split(",")):
+        if email:
+            u = db.scalar(select(User).where(func.lower(User.email) == email))
+            if u is not None:
+                users.append(u)
+    extracted = []
     for case in CASES:
         try:
-            text, metadata = extract_case(case)
-            if text in existing:
-                continue
-            messages.analyze(user.id, text, case.input_type, {**(metadata or {}), "sample_case": case.id})
-            existing.add(text)
-            added += 1
+            extracted.append((case, *extract_case(case)))
         except Exception:
-            logger.warning("Sample scan %s could not be added to the demo history.", case.id, exc_info=True)
+            logger.warning("Sample scan %s could not be extracted.", case.id, exc_info=True)
+    messages = MessageService(db)
+    added = 0
+    for user in users:
+        existing = list(db.scalars(select(Message.text).where(Message.user_id == user.id)).all())
+        for case, text, metadata in extracted:
+            if any(e.startswith(text[:300]) for e in existing):
+                continue
+            try:
+                messages.analyze(user.id, text, case.input_type, {**(metadata or {}), "sample_case": case.id})
+                existing.append(text)
+                added += 1
+            except Exception:
+                logger.warning("Sample scan %s could not be added for a user.", case.id, exc_info=True)
     return added
 
 
