@@ -145,9 +145,9 @@ function CitationCard({ c, active, onSelect }: { c: Citation; active: boolean; o
   );
 }
 
-export function CitationGrid({ citations, compact = false }: { citations: Citation[]; compact?: boolean }) {
+export function CitationGrid({ citations, compact = false }: { citations?: Citation[] | null; compact?: boolean }) {
   const [active, setActive] = useState<string | null>(null);
-  if (!citations.length) return null;
+  if (!citations?.length) return null;
   return (
     <div className={cn("grid gap-2", compact ? "grid-cols-1" : "sm:grid-cols-2 lg:grid-cols-3")}>
       {citations.map((c) => (
@@ -158,8 +158,13 @@ export function CitationGrid({ citations, compact = false }: { citations: Citati
 }
 
 /** Full verdict layout: gauge, badges, tactics and the retrieved citations. */
-export function RagVerdict({ verdict, compact = false }: { verdict: CragVerdict; compact?: boolean }) {
+export function RagVerdict({ verdict, compact = false }: { verdict: CragVerdict | null | undefined; compact?: boolean }) {
+  if (!verdict) return null;
   const Icon = verdict.is_scam ? ShieldAlert : ShieldCheck;
+  const tactics = verdict.matched_tactics ?? [];
+  const citations = verdict.citation_links ?? [];
+  const genuine = verdict.genuine_matches ?? [];
+  const notes = verdict.notes ?? [];
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-4">
@@ -171,9 +176,13 @@ export function RagVerdict({ verdict, compact = false }: { verdict: CragVerdict;
           </p>
           <div className="flex flex-wrap gap-1.5">
             <RiskTierBadge tier={verdict.risk_tier} />
-            <span className="inline-flex items-center rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-foreground">
-              {GRADE_LABEL[verdict.retrieval_grade]}
-            </span>
+            {verdict.is_scam || verdict.retrieval_grade === "CORRECT" ? (
+              <span className="inline-flex items-center rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-foreground">
+                {GRADE_LABEL[verdict.retrieval_grade]}
+              </span>
+            ) : genuine.length > 0 ? (
+              <span className="inline-flex items-center rounded-full border border-risk-low/40 px-2.5 py-0.5 text-xs text-risk-low">Genuine format</span>
+            ) : null}
             {verdict.emerging_threat && (
               <span className="inline-flex items-center gap-1 rounded-full border border-risk-medium/40 bg-risk-medium/15 px-2.5 py-0.5 text-xs font-semibold text-risk-medium">
                 <AlertTriangle className="h-3 w-3" /> Emerging threat
@@ -188,11 +197,11 @@ export function RagVerdict({ verdict, compact = false }: { verdict: CragVerdict;
         </div>
       </div>
 
-      {verdict.matched_tactics.length > 0 && (
+      {tactics.length > 0 && (
         <div>
           <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">Tactics found</p>
           <ul className="flex flex-wrap gap-1.5">
-            {verdict.matched_tactics.map((t) => (
+            {tactics.map((t) => (
               <li key={t.id} title={t.evidence ? `"${t.evidence}"` : undefined} className="rounded-md border border-border bg-muted/40 px-2 py-1 text-xs">
                 {t.label}
               </li>
@@ -201,16 +210,30 @@ export function RagVerdict({ verdict, compact = false }: { verdict: CragVerdict;
         </div>
       )}
 
-      {verdict.citation_links.length > 0 && (
+      {citations.length > 0 && (
         <div>
           <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">Similar known scams</p>
-          <CitationGrid compact={compact} citations={compact ? verdict.citation_links.slice(0, 2) : verdict.citation_links} />
+          <CitationGrid compact={compact} citations={compact ? citations.slice(0, 2) : citations} />
         </div>
       )}
 
-      {verdict.notes.length > 0 && (
+      {genuine.length > 0 && (
+        <div>
+          <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">Matches a genuine message format</p>
+          <ul className="space-y-1.5">
+            {genuine.map((g) => (
+              <li key={g.kb_id} className="flex items-center justify-between gap-3 rounded-lg border border-risk-low/30 bg-risk-low/5 px-3 py-2 text-sm">
+                <span className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 shrink-0 text-risk-low" />{g.title}</span>
+                <span className="font-mono text-xs text-muted-foreground">{Math.round((g.relevance ?? 0) * 100)}%</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {notes.length > 0 && (
         <ul className="space-y-1 text-xs text-muted-foreground">
-          {verdict.notes.map((n) => (
+          {notes.map((n) => (
             <li key={n}>{n}</li>
           ))}
         </ul>

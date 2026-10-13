@@ -69,6 +69,7 @@ class MatchedTactic(BaseModel):
 
 class Citation(BaseModel):
     kb_id: str
+    kind: Literal["scam", "genuine"] = "scam"
     title: str
     scam_type: str
     source_name: str
@@ -87,6 +88,7 @@ class CragVerdict(BaseModel):
     risk_tier: RiskTier
     matched_tactics: list[MatchedTactic]
     citation_links: list[Citation]
+    genuine_matches: list[Citation] = Field(default_factory=list)
     fraud_index: int = Field(ge=0, le=100)
     model_probability: int = Field(ge=0, le=100)
     scam_type: str | None
@@ -148,7 +150,7 @@ def grade_retrieval(results: list[RetrievedEntry]) -> tuple[RetrievalGrade, floa
 def _citation(r: RetrievedEntry) -> Citation:
     e = r.entry
     return Citation(
-        kb_id=e.id, title=e.title, scam_type=e.scam_type, source_name=e.source_name, url=e.source_url,
+        kb_id=e.id, kind=e.kind, title=e.title, scam_type=e.scam_type, source_name=e.source_name, url=e.source_url,
         relevance=r.relevance, vector_score=r.vector_score, keyword_score=r.keyword_score, tactic_score=r.tactic_score,
         shared_tactics=list(r.shared_tactics), what_happens_next=e.what_happens_next,
     )
@@ -231,6 +233,8 @@ def compose_answer(v: CragVerdict) -> str:
         parts.append("If you already paid or shared an OTP, call 1930 right away and file a complaint at cybercrime.gov.in. You can report the message itself on Chakshu (sancharsaathi.gov.in/sfc).")
     else:
         parts.append(f"This looks genuine. Fraud index {v.fraud_index}%, {v.risk_tier.lower()} risk.")
+        if v.genuine_matches:
+            parts.append(f"It follows the usual format of a genuine {v.genuine_matches[0].title.lower()}: it reports something that already happened and asks you for nothing.")
         if v.matched_tactics:
             parts.append("A few words resemble scam wording (" + ", ".join(t.label for t in v.matched_tactics[:3]) + "), but nothing in it asks you to act in a risky way.")
         parts.append("Still, never share an OTP or PIN, and contact the sender through their official number if anything feels off.")
@@ -253,15 +257,21 @@ def analyze_evidence(db: Session, raw_text: str) -> CragOutcome:
         t.seen_in = [c.kb_id for c in citations if t.id in c.shared_tactics]
 
     is_scam = analysis.verdict != "legitimate"
+    genuine: list[Citation] = []
+    if not is_scam:
+        genuine = [_citation(r) for r in get_retriever().search(raw_text, {t.id for t in tactics}, top_k=2, kind="genuine") if r.relevance >= CORRECT_MIN]
     notes: list[str] = []
-    if grade == "INCORRECT":
+    if genuine:
+        notes.append(f"Matches the usual format of a genuine message ({genuine[0].title.lower()}).")
+    if grade == "INCORRECT" and is_scam:
         notes.append("No known scam pattern passed the retrieval evaluator; the verdict rests on the classifier and intent engine alone.")
     verdict = CragVerdict(
         is_scam=is_scam,
         confidence_percentage=int(round(analysis.confidence_score * 100)),
         risk_tier=_TIER.get(analysis.risk_level, "Medium"),
         matched_tactics=tactics,
-        citation_links=citations,
+        citation_links=citations if is_scam or grade == "CORRECT" else [],
+        genuine_matches=genuine,
         fraud_index=int(round(analysis.threat_score * 100)),
         model_probability=int(round(analysis.scam_probability * 100)),
         scam_type=analysis.scam_category if is_scam else None,

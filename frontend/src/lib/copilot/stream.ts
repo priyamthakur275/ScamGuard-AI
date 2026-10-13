@@ -1,15 +1,19 @@
 import { APP_API_URL, ApiError, apiRequest } from "@/lib/api/client";
-import { parseStreamEvent, type ChatTurnPayload, type CopilotAnalyzeResponse, type StreamEvent } from "./types";
+import { normalizeVerdict, parseStreamEvent, type ChatTurnPayload, type CopilotAnalyzeResponse, type StreamEvent } from "./types";
 
 export class CopilotStreamError extends Error {
   readonly retryable: boolean;
   readonly status?: number;
+  /** "connect": the request could not be opened (already retried with backoff
+   * here). "stream": it opened but failed or was cut off. */
+  readonly phase: "connect" | "stream";
 
-  constructor(message: string, retryable: boolean, status?: number) {
+  constructor(message: string, retryable: boolean, status?: number, phase: "connect" | "stream" = "stream") {
     super(message);
     this.name = "CopilotStreamError";
     this.retryable = retryable;
     this.status = status;
+    this.phase = phase;
   }
 }
 
@@ -49,13 +53,13 @@ async function readError(response: Response): Promise<CopilotStreamError> {
   }
   if (response.status === 429) message = "Too many messages in a short time. Please wait a few seconds and try again.";
   const retryable = response.status === 429 || response.status >= 500;
-  return new CopilotStreamError(message, retryable, response.status);
+  return new CopilotStreamError(message, retryable, response.status, "connect");
 }
 
 /** Opens the SSE response, retrying with backoff while the server is waking up
  * or busy (network error, 429, 5xx). Retries stop once the stream has started. */
 async function openStream(body: string, signal: AbortSignal): Promise<Response> {
-  let lastError: CopilotStreamError = new CopilotStreamError("Could not reach ScamGuard.", true);
+  let lastError: CopilotStreamError = new CopilotStreamError("Could not reach ScamGuard.", true, undefined, "connect");
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
     if (attempt > 0) await wait(Math.min(1500 * 2 ** (attempt - 1), 8000), signal);
     const timeout = new AbortController();
@@ -76,7 +80,7 @@ async function openStream(body: string, signal: AbortSignal): Promise<Response> 
       if (signal.aborted) throw new DOMException("Aborted", "AbortError");
       if (err instanceof CopilotStreamError && !err.retryable) throw err;
       if (!(err instanceof CopilotStreamError)) {
-        lastError = new CopilotStreamError("Could not reach ScamGuard. Check your connection; the free server may be waking up.", true);
+        lastError = new CopilotStreamError("Could not reach ScamGuard. Check your connection; the free server may be waking up.", true, undefined, "connect");
       }
     } finally {
       window.clearTimeout(timer);
@@ -95,6 +99,10 @@ export async function streamCopilotChat(
 ): Promise<void> {
   const response = await openStream(JSON.stringify({ message, history }), signal);
   const reader = response.body!.getReader();
+  // The connect-phase abort link is released once the response arrives, so
+  // Stop must cancel the body reader directly to end the stream at once.
+  const onAbort = () => void reader.cancel("stopped by user").catch(() => undefined);
+  signal.addEventListener("abort", onAbort, { once: true });
   const decoder = new TextDecoder();
   let buffer = "";
   let finished = false;
@@ -140,16 +148,25 @@ export async function streamCopilotChat(
     throw new CopilotStreamError("The connection dropped while the answer was streaming.", true);
   } finally {
     window.clearTimeout(idleTimer);
+    signal.removeEventListener("abort", onAbort);
   }
   if (signal.aborted) throw new DOMException("Aborted", "AbortError");
   if (!finished) throw new CopilotStreamError("The answer was cut off before it finished.", true);
 }
 
 export async function analyzeWithCopilot(text: string): Promise<CopilotAnalyzeResponse> {
+  let raw: unknown;
   try {
-    return await apiRequest<CopilotAnalyzeResponse>("/copilot/analyze", { method: "POST", body: { text }, auth: false });
+    raw = await apiRequest<unknown>("/copilot/analyze", { method: "POST", body: { text }, auth: false });
   } catch (err) {
     if (err instanceof ApiError) throw err;
     throw new CopilotStreamError("Could not reach ScamGuard.", true);
   }
+  const body = (typeof raw === "object" && raw !== null ? raw : {}) as Record<string, unknown>;
+  const verdict = normalizeVerdict(body.verdict);
+  const analysis = body.analysis as CopilotAnalyzeResponse["analysis"] | undefined;
+  if (!verdict || !analysis || typeof analysis !== "object" || typeof analysis.verdict !== "string") {
+    throw new CopilotStreamError("The server sent an answer in an unexpected format.", true);
+  }
+  return { verdict, analysis, answer: typeof body.answer === "string" ? body.answer : "" };
 }
