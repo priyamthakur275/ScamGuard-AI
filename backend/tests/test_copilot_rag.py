@@ -232,3 +232,17 @@ def test_salary_credit_is_low_risk_with_genuine_match(client):
 def test_scam_verdict_never_lists_genuine_matches(client):
     v = client.post("/api/v1/copilot/analyze", json={"text": KYC}).json()["verdict"]
     assert v["is_scam"] is True and v["genuine_matches"] == []
+
+
+def test_otp_requested_by_pronoun_and_police_threats_are_detected():
+    from ml_service.inference.threat_scorer import ThreatScorer
+    found, _ = ThreatScorer.intents("I have sent a 6-digit code to your phone. Please read it to me so I can stop the block.")
+    assert "asks_for_secret" in found
+    found, _ = ThreatScorer.intents("Your account will be frozen and police action will follow.")
+    assert "legal_threat" in found
+
+
+def test_awareness_message_is_reassuring():
+    from ml_service.inference.threat_scorer import ThreatScorer
+    _, protective = ThreatScorer.intents("Beware of fake KYC calls. SBI never asks for your OTP or PIN.")
+    assert "awareness_warning" in protective

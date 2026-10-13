@@ -81,12 +81,15 @@ _INTENTS: tuple[tuple[str, float, re.Pattern[str]], ...] = tuple(
     for name, weight, rx in [
         ("asks_for_secret", 0.55, rf"\b(share|tell|send|give|provide|confirm|read out|reply with|enter|fill(?: in)?|submit|type|key in|login with|batao|batayiye|bhej|forward|replying with)\b[^.?!]{{0,40}}\b{_SECRET}\b"),
         ("asks_for_secret", 0.55, rf"\b{_SECRET}\b[^.?!]{{0,30}}\b(batao|batayiye|bhej do|bhejo|share karo|send (it|me)|to (our|the) (executive|officer|agent))"),
+        # "I have sent a 6-digit code ... please read it to me": the secret is
+        # named first and requested by pronoun in the next clause.
+        ("asks_for_secret", 0.55, rf"\b(sent|received|get|got)\b[^?!]{{0,30}}\b{_SECRET}\b[^?!]{{0,80}}\b(read|tell|share|give|say|send|forward)\s+(it|that|this|the same)\b"),
         ("remote_access_app", 0.6, r"\b(anydesk|any desk|teamviewer|quick ?support|rustdesk|screen[ -]?shar\w*)"),
         ("pay_to_receive", 0.45, r"\b(registration|processing|joining|security|onboarding|clearance|delivery|redelivery|customs|exam|activation|gate pass)\s+(fee|charge|charges|deposit|amount|duty)\b"),
         ("pay_to_receive", 0.45, r"\b(pay|deposit|recharge|transfer|bhej\w*)\b[^.?!]{0,50}\b(to|for|then)\s+(claim|receive|release|withdraw|unlock|activate|confirm|book|get)\b"),
         ("pay_to_receive", 0.35, r"\bdeposit\b[^.?!]{0,40}\b(unlock|withdraw|bigger tasks|commission)"),
         ("account_threat", 0.2, r"\b(block(ed)?|suspend(ed)?|freez\w*|frozen|deactivat\w*|disconnect\w*|be cut|cut today|band ho|kat jayega|lapse\w*|banned|on hold|locked|stopped|terminated|ends? in)\b"),
-        ("legal_threat", 0.35, r"\b(digital arrest|under arrest|avoid arrest|legal action|fir (is )?(registered|filed)|court case|warrant|money laundering|drug(s)? (parcel|case)|illegal (items|activity|messages))"),
+        ("legal_threat", 0.45, r"\b(digital arrest|under arrest|avoid arrest|legal action|fir (is )?(registered|filed)|court case|warrant|money laundering|drug(s)? (parcel|case)|illegal (items|activity|messages)|police (action|case|complaint)|case will be (filed|registered|booked)|(arrest|jail) you|sent to jail)"),
         ("deadline", 0.15, r"\b(today|tonight|immediately|right now|within \d+\s*(hours?|hrs?|minutes?|mins?)|in \d+\s*(hours?|hrs?|minutes?)|urgent\w*|turant|abhi|jaldi|final (notice|reminder)|last chance|expires? today|at midnight)\b"),
         ("suspicious_link", 0.4, r"(bit\.ly|tinyurl|rb\.gy|t\.co/|is\.gd|cutt\.ly|\.(xyz|top|online|click|site|icu|buzz|live|rest|in\.net|tk|ml|ga|cf|gq|zip|work|loan|country|cam)\b|-(verify|kyc|update|refund|claim|billing|help)\w*\.(com|in|net|org))"),
         ("link_with_action", 0.25, r"(https?://|www\.|\b(click|tap|open|visit)\b[^.?!]{0,20}\b(link|here)\b)[^.]{0,80}|\b(link|page|form)\b[^.?!]{0,40}\b(verify|update|claim|pay|renew|redeem|unlock|credentials|details)"),
@@ -120,6 +123,8 @@ _PROTECTIVE: tuple[tuple[str, float, re.Pattern[str]], ...] = tuple(
          # "bank kabhi bhi OTP nahi maangta".
          rf"|\b(share|bata\w*|bhej\w*)\s+(na|mat|nahi)\b|\b{_SECRET}\b[^.?!]{{0,25}}\bnahi\s+maang\w*"),
         ("official_channel", 0.35, r"\b(not (you|done by you)|if this was(n't| not) you)\b[^.?!]{0,40}\b(call|contact)\b[^.?!]{0,40}\b(official|helpline|back of your card|branch)\b|\b(official (app|website|portal|helpline))\b"),
+        # Public awareness messages describe a scam instead of running one.
+        ("awareness_warning", 0.6, r"\bbeware of\b|\b(is|are) (a |an )?(common )?(scam|fraud)s?\b|\b(police|banks?|rbi|officers?)\b[^.?!]{0,30}\bnever (ask|arrest|call|demand)\w*\b"),
         ("no_fee", 0.4, r"\bno (fee|charges?|payment) (is )?(required|needed)|\bthere is no fee\b|\bfree of cost\b"),
         # A bank alert that names only the masked account ("A/c XX4821") and the
         # amount is how genuine debit/credit SMS look; scam texts that copy it
