@@ -1,27 +1,28 @@
-"""The public test bench runs all 15 fixed cases through the real pipeline."""
-from app_service.services import test_bench
+"""The 15 demo sample scans and the scam-type rules they exercise."""
+from app_service.services import sample_scans
 
 
 def test_every_case_has_its_input():
-    assert len(test_bench.CASES) == 15
-    assert sum(c.expected == "scam" for c in test_bench.CASES) == 7
-    for c in test_bench.CASES:
-        assert c.text or (test_bench.FIXTURES / c.file).exists()
+    assert len(sample_scans.CASES) == 15
+    assert sum(c.expected == "scam" for c in sample_scans.CASES) == 7
+    for c in sample_scans.CASES:
+        assert c.text or (sample_scans.FIXTURES / c.file).exists()
 
 
-def test_bench_endpoint_reports_each_case(client, monkeypatch):
+def test_every_sample_gets_the_expected_verdict(client, monkeypatch):
     # Links are not fetched in tests; everything else runs for real.
     from app_service.services import extraction
+    from app_service.services.message_service import MessageService
+    from app_service.db.session import get_db
+    from app_service.main import app
+
     monkeypatch.setattr(extraction, "_fetch_url_safely", lambda *a, **k: (_ for _ in ()).throw(OSError("offline")), raising=False)
-    test_bench._CACHE.clear()
-    body = client.get("/api/v1/public/test-bench").json()
-    assert len(body["cases"]) == 15
-    assert body["summary"]["total"] == 15
-    by_id = {c["id"]: c for c in body["cases"]}
-    for c in test_bench.CASES:
-        row = by_id[c.id]
-        assert row["verdict"] in ("scam", "legitimate"), row
-        assert row["verdict"] == c.expected, (c.id, c.title, row)
+    db = next(app.dependency_overrides.get(get_db, get_db)())
+    for c in sample_scans.CASES:
+        text, metadata = sample_scans.extract_case(c)
+        result = MessageService(db).analyze_ephemeral(text, c.input_type, metadata)
+        verdict = str(getattr(result.verdict, "value", result.verdict)).lower()
+        assert verdict == c.expected, (c.id, c.title, verdict)
 
 
 def test_scam_types_follow_what_the_message_asks():

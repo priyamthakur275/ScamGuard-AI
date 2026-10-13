@@ -30,34 +30,3 @@ export function getTrends(days: 7 | 30): Promise<ScamTrends> {
   return apiRequest<ScamTrends>(`/public/trends?days=${days}`, { auth: false });
 }
 
-export interface TestBenchCase {
-  id: number;
-  input_type: string;
-  expected: "scam" | "legitimate";
-  title: string;
-  input_text: string | null;
-  input_file: string | null;
-  extracted_text?: string;
-  verdict: "scam" | "legitimate" | "error";
-  scam_likelihood?: number;
-  model_probability?: number;
-  confidence?: number;
-  risk_level?: string;
-  scam_category?: string | null;
-  model?: string;
-  correct: boolean;
-  seconds: number;
-  error?: string;
-}
-
-export interface TestBench {
-  cases: TestBenchCase[];
-  summary: { total: number; correct: number; accuracy: number; precision: number; recall: number; tp: number; tn: number; fp: number; fn: number };
-  model: string | null;
-  generated_at: string;
-}
-
-/** 15 fixed inputs run live through the real pipeline on the server. */
-export function getTestBench(fresh = false): Promise<TestBench> {
-  return apiRequest<TestBench>(`/public/test-bench${fresh ? "?fresh=true" : ""}`, { auth: false });
-}
