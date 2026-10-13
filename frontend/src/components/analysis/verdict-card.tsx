@@ -18,6 +18,8 @@ import { CopilotPanel } from "@/components/analysis/copilot-panel";
 import { RecommendedActions } from "@/components/analysis/recommended-actions";
 import { SimilarPatterns } from "@/components/analysis/similar-patterns";
 import { Button } from "@/components/ui/button";
+import { CountUp, SpeakVerdict } from "@/components/analysis/demo-polish";
+import { useLanguage } from "@/lib/i18n/language-context";
 import { formatPercent, scamCategoryLabel, verdictLabel, inputTypeLabel } from "@/lib/utils";
 import type { AnalysisResult, UrlIntelligence, EmailForensics, VoiceEvidenceSignal, CorrelationSignal } from "@/types";
 import { motion, Variants } from "framer-motion";
@@ -43,6 +45,7 @@ const containerVariants: Variants = {
 };
 
 export function VerdictCard({ result, onFeedback }: VerdictCardProps) {
+  const { lang } = useLanguage();
   const isDemo = result.metadata?.is_demo === true;
   const severity = result.threat_level === "critical" ? "critical" : result.risk_level;
   const severityClass = { low: "text-risk-low", medium: "text-risk-medium", high: "text-risk-high", critical: "text-risk-critical" }[severity];
@@ -112,7 +115,7 @@ export function VerdictCard({ result, onFeedback }: VerdictCardProps) {
               </div>
 
               <div className="flex flex-wrap items-center gap-6 sm:pt-1">
-                <div className={`border-l border-current pl-5 ${severityClass}`}><p className="text-xs">Threat score</p><p className="mt-1 text-4xl font-semibold tracking-tight">{Math.round(result.threat_score * 100)}<span className="text-base text-muted-foreground"> / 100</span></p><p className="mt-1 text-xs text-muted-foreground">ML model + scam-intent signals</p></div>
+                <div className={`border-l border-current pl-5 ${severityClass}`}><p className="text-xs">Threat score</p><p className="mt-1 text-4xl font-semibold tracking-tight tabular-nums"><CountUp value={Math.round(result.threat_score * 100)} /><span className="text-base text-muted-foreground"> / 100</span></p><p className="mt-1 text-xs text-muted-foreground">ML model + scam-intent signals</p></div>
                 <ConfidenceGauge value={result.confidence_score} />
 
               </div>
@@ -122,8 +125,9 @@ export function VerdictCard({ result, onFeedback }: VerdictCardProps) {
               <Button variant="outline" onClick={() => document.getElementById(`copilot-${result.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" })}>Ask ScamGuard</Button>
               <ReportDownloadMenu kind="scan" id={result.id} />
               {result.verdict !== "legitimate" && <ShareWarning result={result} />}
+              <SpeakVerdict isScam={result.verdict !== "legitimate"} likelihood={result.threat_score} category={result.scam_category ? scamCategoryLabel(result.scam_category) : null} lang={lang} />
             </div>}
-            {isDemo && result.verdict !== "legitimate" && <div className="-mt-4 border-b border-border pb-6"><ShareWarning result={result} /></div>}
+            {isDemo && <div className="-mt-4 flex flex-wrap items-center gap-3 border-b border-border pb-6">{result.verdict !== "legitimate" && <ShareWarning result={result} />}<SpeakVerdict isScam={result.verdict !== "legitimate"} likelihood={result.threat_score} category={result.scam_category ? scamCategoryLabel(result.scam_category) : null} lang={lang} /></div>}
             <ScamXray xray={(result.metadata?.xray as XrayData | undefined) ?? null} />
             {result.verdict !== "legitimate" && <ReportScam result={result} />}
             {/* AI Explanation */}
