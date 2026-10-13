@@ -3,6 +3,7 @@
 import { Menu, ShieldAlert } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { ElderToggle } from "@/components/analysis/protect-features";
 import { LanguageToggle } from "@/components/layout/language-toggle";
 import { ServerStatus } from "@/components/layout/server-status";
 import { Button } from "@/components/ui/button";
@@ -41,7 +42,8 @@ export function Navbar({ onMenuClick }: NavbarProps) {
       <div className="flex items-center gap-3">
         <ServerStatus />
         <LanguageToggle />
-        <ThemeToggle />
+        <span className="inline-flex"><ElderToggle /></span>
+          <ThemeToggle />
         {user && (
           <div className="hidden items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 font-mono text-xs sm:flex">
             <span className="h-1.5 w-1.5 rounded-full bg-risk-low" aria-hidden="true" />
