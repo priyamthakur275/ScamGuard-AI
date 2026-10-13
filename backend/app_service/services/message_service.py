@@ -165,6 +165,14 @@ class MessageService:
             metadata = {**metadata, "xray": xray(original_text)}
         except Exception:
             logger.warning("Scam X-Ray failed", exc_info=True)
+        if float(data.get("threat_score", 0)) >= 0.5:
+            try:
+                from app_service.services.campaigns import fingerprint
+                campaign = fingerprint(self.db, original_text)
+                if campaign:
+                    metadata = {**metadata, "campaign": campaign}
+            except Exception:
+                logger.warning("Campaign fingerprint failed", exc_info=True)
         return data, text, metadata
 
     def _apply_community_reports(self, data: dict, metadata: dict) -> tuple[dict, dict]:

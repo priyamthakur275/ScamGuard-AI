@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, History, LayoutDashboard, LogOut, ScanSearch, Settings, ShieldAlert, X, TrendingUp, GraduationCap, HeartHandshake } from "lucide-react";
+import { BarChart3, History, LayoutDashboard, LogOut, ScanSearch, Settings, ShieldAlert, X, TrendingUp, GraduationCap, MessagesSquare, HeartHandshake } from "lucide-react";
 import { useDialogFocus } from "@/hooks/use-dialog-focus";
 import { cn } from "@/lib/utils";
 import { familySummary } from "@/lib/api/family";
@@ -75,6 +75,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     { href: "/family", label: "Family", icon: HeartHandshake },
     { href: "/trends", label: "Scam Trends", icon: TrendingUp },
     { href: "/trainer", label: "Scam Trainer", icon: GraduationCap },
+    { href: "/simulator", label: "Scam Simulator", icon: MessagesSquare },
     { href: "/settings", label: "Settings", icon: Settings },
     ...(user?.role === "admin" ? [{ href: "/admin", label: "Admin Console", icon: ShieldAlert }] : []),
   ];
