@@ -69,7 +69,11 @@ class Settings(BaseSettings):
         # (DEBUG=false, i.e. every real deployment target) must not be
         # allowed to silently start with a secret an attacker can read on
         # GitHub. Fail loudly at startup instead.
-        if not self.DEBUG and self.SECRET_KEY == self._DEFAULT_SECRET_KEY:
+        # A fresh local checkout (APP_ENV defaults to "development", no .env)
+        # must start with zero setup; every real deployment sets
+        # APP_ENV=production (render.yaml) and is still refused.
+        local_dev = self.DEBUG or self.APP_ENV.strip().lower() in ("development", "dev", "local", "test")
+        if not local_dev and self.SECRET_KEY == self._DEFAULT_SECRET_KEY:
             raise ValueError(
                 "SECRET_KEY is still set to the publicly-known development default "
                 "while DEBUG=false. Set a real SECRET_KEY (e.g. "
