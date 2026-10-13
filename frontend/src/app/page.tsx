@@ -6,7 +6,7 @@ import { HeroXray } from "@/components/landing/hero-xray";
 import { LanguageToggle } from "@/components/layout/language-toggle";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, ScanSearch, ShieldAlert, Sparkles, Zap, ShieldCheck, CheckCircle2, ArrowRight, Mail, MessageCircleQuestion, FlaskConical, FileOutput } from "lucide-react";
+import { Lock, ScanSearch, ShieldAlert, Sparkles, CheckCircle2, MessageCircleQuestion, FileOutput } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
@@ -19,43 +19,33 @@ import { Card } from "@/components/ui/card";
 const FEATURES = [
   {
     icon: ScanSearch,
-    title: "Multimodal Scanning",
-    description: "Analyze text, URLs, email, images/OCR, PDFs, QR codes, screenshots and voice through one unified pipeline.",
+    title: "Scam X-Ray",
+    description: "See the exact words that make a message a scam, and how it works: the hook, the pressure, what they want, how money leaves.",
   },
   {
     icon: Sparkles,
-    title: "Explainable Risk Analysis",
-    description: "Understand the contributing signals, confidence, and risk behind each verdict.",
+    title: "Any format, one check",
+    description: "SMS and WhatsApp text, links, emails, chat screenshots, PDFs, QR codes and phone calls, in English, Hindi or Hinglish.",
   },
   {
     icon: Lock,
-    title: "URL & Domain Intelligence",
-    description: "Inspect lookalike domains, hidden destinations, suspicious URL structures, and available redirect evidence.",
-  },
-  {
-    icon: Mail,
-    title: "Email Forensics",
-    description: "Inspect senders, reply addresses, attachments, and claimed authentication headers in one evidence view.",
-  },
-  {
-    icon: ShieldAlert,
-    title: "Entity & Threat Correlation",
-    description: "Connect recurring phone numbers, domains, payment identifiers, and other entities across your saved scans.",
+    title: "Website trust score",
+    description: "How old a domain is, where a link really lands, and whether the page asks for passwords, OTPs or card details.",
   },
   {
     icon: MessageCircleQuestion,
-    title: "Evidence-Grounded Copilot",
-    description: "Ask targeted questions about a finding and get answers grounded in its observed evidence.",
+    title: "Ask ScamGuard",
+    description: "\u201cI already paid, what now?\u201d Plain answers grounded in the scan, including the exact steps to take.",
   },
   {
-    icon: FlaskConical,
-    title: "Robustness Evaluation",
-    description: "Controlled text transforms (case, spelling, homoglyphs, obfuscation) run through the real model to measure actual prediction stability.",
+    icon: ShieldAlert,
+    title: "Family guardian",
+    description: "Link a parent or grandparent. When they check a likely scam, you see it and can call before money is sent.",
   },
   {
     icon: FileOutput,
-    title: "Exportable Reports",
-    description: "JSON, CSV, and PDF reports for any scan or case, built from one shared data source so every format stays consistent.",
+    title: "Report in one tap",
+    description: "Chakshu for scam numbers, 1930 and cybercrime.gov.in for lost money, with the complaint already written for you.",
   },
 ];
 
@@ -162,9 +152,8 @@ export default function HomePage() {
         <section className="border-t border-border bg-card/30 px-6 py-20">
           <div className="mx-auto max-w-6xl">
             <div className="mb-16 max-w-2xl">
-              <p className="mb-2 text-xs text-muted-foreground">How it works</p>
               <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-                A single surface for the whole investigation
+                Everything you need when a message feels wrong
               </h2>
             </div>
 
@@ -200,22 +189,18 @@ export default function HomePage() {
             transition={{ duration: 0.4 }}
           >
             <div className="space-y-6">
-              <div className="inline-flex items-center gap-2 rounded-sm border border-[hsl(var(--risk-low))]/30 bg-[hsl(var(--risk-low))]/10 px-3 py-1 text-xs text-[hsl(var(--risk-low))]">
-                <ShieldCheck className="h-3.5 w-3.5" />
-                Security
-              </div>
-              <h2 className="font-sans text-3xl font-semibold sm:text-4xl">An investigation stays yours.</h2>
+              <h2 className="font-display text-3xl font-bold sm:text-4xl">Your messages stay yours.</h2>
               <p className="text-lg text-muted-foreground">
-                Account access controls and protected analysis endpoints support your investigation. Review the model evaluation before relying on its predictions.
+                Quick checks are never saved. Saved scans are visible only to you, and to a family member only if you choose. Links are opened on our server, never on your phone.
               </p>
             </div>
             <div>
               <ul className="grid gap-3 text-left sm:grid-cols-2">
                 {[
-                  "Bcrypt password hashing",
-                  "Short-lived JWTs + refresh rotation",
-                  "SSRF-hardened URL analysis",
-                  "CAPTCHA on registration & abuse",
+                  "Quick checks are never saved",
+                  "Only you see your scans",
+                  "Links opened safely on our server",
+                  "Download or delete everything",
                 ].map((item) => (
                   <li key={item} className="flex items-center gap-2 rounded-md border border-border bg-background px-4 py-3 text-sm font-medium text-foreground">
                     <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />
