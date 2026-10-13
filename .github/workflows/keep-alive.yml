@@ -27,14 +27,16 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping frontend and backend
+      - name: Wake frontend and backend (retry until healthy)
         run: |
           # One request through the live frontend's /backend-api proxy wakes
-          # both Render services (the Next.js frontend and the FastAPI backend).
+          # both Render services. A cold start can take a minute and Render
+          # sometimes answers 429/502 meanwhile, so keep trying for ~8 min.
           url="https://scamguard-frontend-r6t7.onrender.com/backend-api/api/v1/health"
-          status=$(curl -s -o /tmp/health.json -w "%{http_code}" --max-time 90 "$url" || echo "000")
-          echo "HTTP $status"
-          cat /tmp/health.json 2>/dev/null || true
-          if [ "$status" != "200" ]; then
-            echo "::warning::Health check through the frontend did not return 200 (got $status)."
-          fi
+          for i in $(seq 1 16); do
+            status=$(curl -s -o /tmp/health.json -w "%{http_code}" --max-time 120 "$url" || echo "000")
+            echo "attempt $i: HTTP $status"
+            if [ "$status" = "200" ]; then cat /tmp/health.json; echo; exit 0; fi
+            sleep 30
+          done
+          echo "::warning::Site did not become healthy after ~8 minutes (last status $status)."
