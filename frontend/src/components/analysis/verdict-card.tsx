@@ -19,6 +19,7 @@ import { RecommendedActions } from "@/components/analysis/recommended-actions";
 import { SimilarPatterns } from "@/components/analysis/similar-patterns";
 import { Button } from "@/components/ui/button";
 import { CountUp, SpeakVerdict } from "@/components/analysis/demo-polish";
+import { CampaignFingerprint, ElderAutoSpeak, GoldenHourButton, ScamForecast } from "@/components/analysis/protect-features";
 import { useLanguage } from "@/lib/i18n/language-context";
 import { formatPercent, scamCategoryLabel, verdictLabel, inputTypeLabel } from "@/lib/utils";
 import type { AnalysisResult, UrlIntelligence, EmailForensics, VoiceEvidenceSignal, CorrelationSignal } from "@/types";
@@ -126,9 +127,13 @@ export function VerdictCard({ result, onFeedback }: VerdictCardProps) {
               <ReportDownloadMenu kind="scan" id={result.id} />
               {result.verdict !== "legitimate" && <ShareWarning result={result} />}
               <SpeakVerdict isScam={result.verdict !== "legitimate"} likelihood={result.threat_score} category={result.scam_category ? scamCategoryLabel(result.scam_category) : null} lang={lang} />
+              <GoldenHourButton result={result} />
             </div>}
-            {isDemo && <div className="-mt-4 flex flex-wrap items-center gap-3 border-b border-border pb-6">{result.verdict !== "legitimate" && <ShareWarning result={result} />}<SpeakVerdict isScam={result.verdict !== "legitimate"} likelihood={result.threat_score} category={result.scam_category ? scamCategoryLabel(result.scam_category) : null} lang={lang} /></div>}
+            {isDemo && <div className="-mt-4 flex flex-wrap items-center gap-3 border-b border-border pb-6">{result.verdict !== "legitimate" && <ShareWarning result={result} />}<SpeakVerdict isScam={result.verdict !== "legitimate"} likelihood={result.threat_score} category={result.scam_category ? scamCategoryLabel(result.scam_category) : null} lang={lang} /><GoldenHourButton result={result} /></div>}
+            <ElderAutoSpeak result={result} lang={lang} />
+            <CampaignFingerprint result={result} />
             <ScamXray xray={(result.metadata?.xray as XrayData | undefined) ?? null} />
+            <ScamForecast result={result} />
             {result.verdict !== "legitimate" && <ReportScam result={result} />}
             {/* AI Explanation */}
             <AIExplanation
