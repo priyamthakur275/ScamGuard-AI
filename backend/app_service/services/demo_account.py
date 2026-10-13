@@ -66,6 +66,32 @@ def ensure_demo_account(db: Session) -> User:
     return user
 
 
+def seed_test_bench(db: Session) -> int:
+    """Add the 15 public test-bench cases to the demo account's history once.
+
+    Each case runs through the real pipeline (extraction, model, intent
+    engine) and is skipped if the demo history already holds the same text,
+    so restarts never duplicate it. Returns how many were added.
+    """
+    from app_service.services.test_bench import CASES, extract_case
+
+    user = ensure_demo_account(db)
+    existing = set(db.scalars(select(Message.text).where(Message.user_id == user.id)).all())
+    messages = MessageService(db)
+    added = 0
+    for case in CASES:
+        try:
+            text, metadata = extract_case(case)
+            if text in existing:
+                continue
+            messages.analyze(user.id, text, case.input_type, {**(metadata or {}), "test_bench_case": case.id})
+            existing.add(text)
+            added += 1
+        except Exception:
+            logger.warning("Test bench case %s could not be added to the demo history.", case.id, exc_info=True)
+    return added
+
+
 def _seed(db: Session, user: User) -> None:
     messages = MessageService(db)
     for input_type, raw in _SAMPLE_SCANS:

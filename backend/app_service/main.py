@@ -93,6 +93,21 @@ async def lifespan(app: FastAPI):
             from app_service.services.demo_account import ensure_demo_account
             with SessionLocal() as demo_db:
                 ensure_demo_account(demo_db)
+            if settings.APP_ENV == "production":
+                # The 15 public test-bench cases also go into the demo history.
+                # Run in the background so a cold start is not slowed down.
+                import threading
+
+                def _seed_bench() -> None:
+                    try:
+                        from app_service.services.demo_account import seed_test_bench
+                        with SessionLocal() as bench_db:
+                            seed_test_bench(bench_db)
+                    except Exception:
+                        import logging
+                        logging.getLogger("app_service.startup").warning("Test bench seeding failed.", exc_info=True)
+
+                threading.Thread(target=_seed_bench, name="seed-test-bench", daemon=True).start()
         except Exception:
             import logging
             logging.getLogger("app_service.startup").warning("Demo account setup failed.", exc_info=True)

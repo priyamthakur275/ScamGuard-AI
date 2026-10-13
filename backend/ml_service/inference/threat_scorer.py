@@ -190,10 +190,12 @@ class ThreatScorer:
         best_category, best_count = max(category_scores.items(), key=lambda item: item[1])
         chosen_category = None
         if threat_score >= 0.5:
-            if best_count > 0:
-                chosen_category = best_category
-            elif "suspicious_link" in found or "link_with_action" in found:
-                chosen_category = "phishing"
+            chosen_category = self._category_from_intents(found, text, category_scores)
+            if chosen_category is None:
+                if best_count > 0:
+                    chosen_category = best_category
+                elif "suspicious_link" in found or "link_with_action" in found:
+                    chosen_category = "phishing"
 
         urgency_hits = len(token_set & _URGENCY_SIGNALS)
         return ThreatAssessment(
@@ -210,6 +212,31 @@ class ThreatScorer:
         if threat_score < self._config.medium_risk_ceiling:
             return "medium"
         return "high"
+
+    @staticmethod
+    def _category_from_intents(found: dict[str, float], text: str, category_scores: dict[str, int]) -> str | None:
+        """Name the scam by what it asks for when that is unambiguous.
+
+        Keyword counts alone mislabel some scams: a "digital arrest" call that
+        mentions an RBI account counts as banking, and a bare link to a fake
+        "reward points" site counts as a lottery. The intents say what the
+        message actually wants, so they take priority when they are decisive.
+        """
+        if "legal_threat" in found:
+            return "government_scam"  # fake police / CBI / customs, "digital arrest"
+        if "task_scam" in found:
+            return "job_scam"
+        if "collect_request" in found or "mistaken_transfer" in found:
+            return "upi_scam"
+        # The message itself, without the evidence notes the pipeline appends.
+        core = re.split(r"\n\s*(Detected language/concepts|Observed URL signals|Observed email signals)", text)[0]
+        core = re.sub(r"^\s*URL Target:\s*", "", core)
+        without_links = re.sub(r"(https?://|www\.)\S+", " ", core, flags=re.I)
+        if len(re.sub(r"\W+", "", without_links)) < 12 and re.search(r"(https?://|www\.)\S+", core, flags=re.I):
+            return "phishing"  # the input is essentially just a link
+        if ("asks_for_secret" in found or "asks_card_details" in found) and category_scores.get("banking_fraud", 0) > 0:
+            return "banking_fraud"  # OTP / PIN / card details for a bank account
+        return None
 
     @staticmethod
     def _best_category(category_scores: dict[str, int]) -> str | None:
