@@ -68,6 +68,12 @@ def xray(text: str, max_chars: int = 1500) -> dict:
             spans.append({"start": m.start(), "end": m.end(), "intent": name, "stage": info[0], "label": info[1], "why": info[2]})
     protective = {n for n, _w, rx in _PROTECTIVE if rx.search(text)}
     reassuring = [PROTECTIVE_INFO[n] for n, _w, _rx in _PROTECTIVE if n in protective and n in PROTECTIVE_INFO]
+    from ml_service.inference.threat_scorer import ThreatScorer, is_genuine_transaction
+
+    found, prot_weights = ThreatScorer.intents(text)
+    if is_genuine_transaction(text, found, prot_weights):
+        reassuring = [r for r in reassuring if r != PROTECTIVE_INFO.get("transaction_alert")]
+        reassuring.insert(0, "Reads like a genuine bank transaction alert: masked account number, no request, no link and no number to call.")
     if "warns_not_to_share" in protective:
         # Same rule as the risk engine: "never share your OTP" is a warning,
         # not a request, so it must not be shown as a red flag.

@@ -12,6 +12,12 @@ Three independent signals are combined for every knowledge-base entry:
   using the same intent ids as the Scam X-Ray) is present in the query.
 
 relevance = 0.45 * vector + 0.25 * keyword + 0.30 * tactic, in [0, 1].
+
+Entries are of two kinds. "scam" entries are known fraud patterns and become
+citations. "genuine" entries are the usual formats of real bank, payment and
+service messages; they carry no tactics, so their relevance is the vector and
+keyword part rescaled to [0, 1] and halved when the query shows any scam
+tactic (a copied alert format that also asks for something is not genuine).
 """
 from __future__ import annotations
 
@@ -31,7 +37,8 @@ W_VECTOR = 0.45
 W_KEYWORD = 0.25
 W_TACTIC = 0.30
 
-_REQUIRED_FIELDS = ("id", "scam_type", "title", "transcript_body", "tactics", "what_happens_next", "source_name", "source_url")
+_REQUIRED_FIELDS = ("id", "scam_type", "title", "transcript_body", "what_happens_next", "source_name", "source_url")
+KINDS = ("scam", "genuine")
 
 _STOPWORDS = frozenset(
     """a an the and or but if of to in on at by for with from is are was were be been being this that these those it its
@@ -51,6 +58,7 @@ def _content_words(text: str) -> list[str]:
 @dataclass(frozen=True)
 class KnowledgeEntry:
     id: str
+    kind: str
     scam_type: str
     title: str
     transcript_body: str
@@ -80,6 +88,11 @@ def load_knowledge_base(path: Path = KB_PATH) -> list[KnowledgeEntry]:
         missing = [f for f in _REQUIRED_FIELDS if not item.get(f)]
         if missing:
             raise ValueError(f"knowledge base entry {item.get('id', '?')} is missing {missing}")
+        kind = item.get("kind", "scam")
+        if kind not in KINDS:
+            raise ValueError(f"knowledge base entry {item['id']} has unknown kind {kind!r}")
+        if kind == "scam" and not item.get("tactics"):
+            raise ValueError(f"scam entry {item['id']} must list its tactics")
         if item["id"] in seen:
             raise ValueError(f"duplicate knowledge base id {item['id']}")
         if not str(item["source_url"]).startswith("https://"):
@@ -88,10 +101,11 @@ def load_knowledge_base(path: Path = KB_PATH) -> list[KnowledgeEntry]:
         entries.append(
             KnowledgeEntry(
                 id=item["id"],
+                kind=kind,
                 scam_type=item["scam_type"],
                 title=item["title"],
                 transcript_body=item["transcript_body"],
-                tactics=tuple(item["tactics"]),
+                tactics=tuple(item.get("tactics") or ()),
                 what_happens_next=item["what_happens_next"],
                 source_name=item["source_name"],
                 source_url=item["source_url"],
@@ -128,17 +142,24 @@ class HybridRetriever:
             scores.append(min(1.0, 2.0 * hit / total))
         return scores
 
-    def search(self, query: str, query_tactics: set[str], top_k: int = 5) -> list[RetrievedEntry]:
+    def search(self, query: str, query_tactics: set[str], top_k: int = 5, kind: str = "scam") -> list[RetrievedEntry]:
         if not query.strip():
             return []
         vec = cosine_similarity(self._vectorizer.transform([query]), self._doc_matrix)[0]
         kw = self._keyword_scores(query)
         results: list[RetrievedEntry] = []
         for i, entry in enumerate(self.entries):
+            if entry.kind != kind:
+                continue
             shared = tuple(t for t in entry.tactics if t in query_tactics)
             tactic = len(shared) / len(entry.tactics) if entry.tactics else 0.0
             v = float(max(0.0, min(1.0, vec[i])))
-            relevance = W_VECTOR * v + W_KEYWORD * kw[i] + W_TACTIC * tactic
+            if entry.kind == "genuine":
+                relevance = (W_VECTOR * v + W_KEYWORD * kw[i]) / (W_VECTOR + W_KEYWORD)
+                if query_tactics:
+                    relevance *= 0.5
+            else:
+                relevance = W_VECTOR * v + W_KEYWORD * kw[i] + W_TACTIC * tactic
             results.append(RetrievedEntry(entry, round(relevance, 4), round(v, 4), round(kw[i], 4), round(tactic, 4), shared))
         results.sort(key=lambda r: r.relevance, reverse=True)
         return results[:top_k]

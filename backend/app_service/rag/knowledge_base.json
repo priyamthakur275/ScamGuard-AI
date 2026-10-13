@@ -4,319 +4,781 @@
     "scam_type": "banking_fraud",
     "title": "Fake bank KYC update / account block SMS",
     "transcript_body": "Dear customer your SBI YONO account will be blocked today due to pending KYC. Update your PAN immediately using the link below and share the OTP sent to your mobile to keep the account active.",
-    "tactics": ["account_threat", "deadline", "kyc_update_demand", "asks_for_secret", "suspicious_link", "deceptive_domain"],
+    "tactics": [
+      "account_threat",
+      "deadline",
+      "kyc_update_demand",
+      "asks_for_secret",
+      "suspicious_link",
+      "deceptive_domain"
+    ],
     "what_happens_next": "The link opens a copy of the bank's login page. The OTP you share completes a transfer or adds the scammer's phone as a new device.",
     "source_name": "Reserve Bank of India",
-    "source_url": "https://www.rbi.org.in"
+    "source_url": "https://www.rbi.org.in",
+    "kind": "scam"
   },
   {
     "id": "kb-002",
     "scam_type": "banking_fraud",
     "title": "Caller posing as bank officer asking for OTP",
     "transcript_body": "Hello sir I am calling from your bank head office. There is a suspicious transaction on your card. To cancel it please tell me the OTP you just received and your card number and expiry date.",
-    "tactics": ["impersonation", "asks_for_secret", "asks_card_details", "deadline"],
+    "tactics": [
+      "impersonation",
+      "asks_for_secret",
+      "asks_card_details",
+      "deadline"
+    ],
     "what_happens_next": "The OTP authorises a payment or a card-not-present purchase, not a cancellation.",
     "source_name": "Reserve Bank of India",
-    "source_url": "https://www.rbi.org.in"
+    "source_url": "https://www.rbi.org.in",
+    "kind": "scam"
   },
   {
     "id": "kb-003",
     "scam_type": "banking_fraud",
     "title": "Credit card reward points expiring",
     "transcript_body": "Your credit card reward points worth Rs 7,850 will expire today. Redeem now at the link and enter your card details and OTP to claim cash into your account.",
-    "tactics": ["too_good", "deadline", "link_with_action", "asks_card_details", "asks_for_secret", "suspicious_link"],
+    "tactics": [
+      "too_good",
+      "deadline",
+      "link_with_action",
+      "asks_card_details",
+      "asks_for_secret",
+      "suspicious_link"
+    ],
     "what_happens_next": "The fake redemption page captures card number, CVV and OTP and uses them for online purchases.",
     "source_name": "Reserve Bank of India",
-    "source_url": "https://www.rbi.org.in"
+    "source_url": "https://www.rbi.org.in",
+    "kind": "scam"
   },
   {
     "id": "kb-004",
     "scam_type": "upi_scam",
     "title": "UPI collect request disguised as a payment to you",
     "transcript_body": "I am sending you the advance payment for the item you listed on OLX. Please approve the request on your UPI app and enter your PIN to receive the money.",
-    "tactics": ["collect_request", "asks_for_secret", "too_good"],
+    "tactics": [
+      "collect_request",
+      "asks_for_secret",
+      "too_good"
+    ],
     "what_happens_next": "Approving a collect request and entering the UPI PIN sends money out of your account. You never need a PIN to receive money.",
     "source_name": "National Payments Corporation of India",
-    "source_url": "https://www.npci.org.in"
+    "source_url": "https://www.npci.org.in",
+    "kind": "scam"
   },
   {
     "id": "kb-005",
     "scam_type": "upi_scam",
     "title": "Money 'sent by mistake', please return",
     "transcript_body": "Bhaiya maine galti se aapke account mein 5000 rupees bhej diye hain. Please wapas kar do, yeh mere hospital ke paise the. Aapko request bhej raha hoon.",
-    "tactics": ["mistaken_transfer", "collect_request", "move_money"],
+    "tactics": [
+      "mistaken_transfer",
+      "collect_request",
+      "move_money"
+    ],
     "what_happens_next": "There is usually no real credit, only a fake SMS. The 'return' goes to the scammer, or the request pulls more money from you.",
     "source_name": "National Payments Corporation of India",
-    "source_url": "https://www.npci.org.in"
+    "source_url": "https://www.npci.org.in",
+    "kind": "scam"
   },
   {
     "id": "kb-006",
     "scam_type": "job_scam",
     "title": "Part-time job liking YouTube videos (task scam)",
     "transcript_body": "Earn Rs 3000 daily from home. Just like YouTube videos and rate hotels, Rs 50 per task. Join our Telegram group. To unlock premium tasks with higher commission deposit Rs 1000 first.",
-    "tactics": ["task_scam", "too_good", "pay_to_receive", "move_money"],
+    "tactics": [
+      "task_scam",
+      "too_good",
+      "pay_to_receive",
+      "move_money"
+    ],
     "what_happens_next": "A small first payout builds trust; then 'premium tasks' need ever larger deposits and withdrawals are blocked by fake taxes.",
     "source_name": "Indian Cyber Crime Coordination Centre (I4C)",
-    "source_url": "https://cybercrime.gov.in"
+    "source_url": "https://cybercrime.gov.in",
+    "kind": "scam"
   },
   {
     "id": "kb-007",
     "scam_type": "job_scam",
     "title": "Fake offer letter with registration or training fee",
     "transcript_body": "Congratulations! You have been selected for the post of data entry executive at Amazon. Your offer letter is attached. Pay the refundable registration and laptop security fee of Rs 2,499 to confirm joining.",
-    "tactics": ["too_good", "pay_to_receive", "impersonation", "deadline"],
+    "tactics": [
+      "too_good",
+      "pay_to_receive",
+      "impersonation",
+      "deadline"
+    ],
     "what_happens_next": "After the fee, more charges follow (verification, uniform, insurance). No real company charges candidates to join.",
     "source_name": "Indian Cyber Crime Coordination Centre (I4C)",
-    "source_url": "https://cybercrime.gov.in"
+    "source_url": "https://cybercrime.gov.in",
+    "kind": "scam"
   },
   {
     "id": "kb-008",
     "scam_type": "government_scam",
     "title": "'Digital arrest' by fake police / CBI on video call",
     "transcript_body": "This is Inspector Sharma from Mumbai Cyber Crime. A parcel with drugs was booked on your Aadhaar. You are under digital arrest. Do not disconnect the video call and do not tell anyone. Transfer your savings to the RBI safe account for verification.",
-    "tactics": ["impersonation", "legal_threat", "secrecy", "move_money", "deadline"],
+    "tactics": [
+      "impersonation",
+      "legal_threat",
+      "secrecy",
+      "move_money",
+      "deadline"
+    ],
     "what_happens_next": "Victims are kept on camera for hours and told to move savings to 'safe accounts' that belong to the gang. Digital arrest does not exist in Indian law.",
     "source_name": "Indian Cyber Crime Coordination Centre (I4C)",
-    "source_url": "https://cybercrime.gov.in"
+    "source_url": "https://cybercrime.gov.in",
+    "kind": "scam"
   },
   {
     "id": "kb-009",
     "scam_type": "government_scam",
     "title": "Courier / customs parcel held with illegal items",
     "transcript_body": "Your FedEx parcel to Taiwan has been seized by customs. It contains passports and drugs. Press 1 to talk to the customs officer. A case will be registered against you if you do not pay the clearance fine.",
-    "tactics": ["impersonation", "legal_threat", "pay_to_receive", "deadline"],
+    "tactics": [
+      "impersonation",
+      "legal_threat",
+      "pay_to_receive",
+      "deadline"
+    ],
     "what_happens_next": "The call is passed to a fake officer who demands a fine or moves to a digital arrest.",
     "source_name": "Indian Cyber Crime Coordination Centre (I4C)",
-    "source_url": "https://cybercrime.gov.in"
+    "source_url": "https://cybercrime.gov.in",
+    "kind": "scam"
   },
   {
     "id": "kb-010",
     "scam_type": "government_scam",
     "title": "Mobile number to be disconnected by TRAI / DoT",
     "transcript_body": "This call is from TRAI. Your mobile number will be disconnected in 2 hours because it was used for illegal activity. Press 9 to speak to the officer.",
-    "tactics": ["impersonation", "account_threat", "deadline", "legal_threat"],
+    "tactics": [
+      "impersonation",
+      "account_threat",
+      "deadline",
+      "legal_threat"
+    ],
     "what_happens_next": "The 'officer' asks for Aadhaar details and money to stop the disconnection or a fake police case.",
     "source_name": "Department of Telecommunications, Chakshu",
-    "source_url": "https://sancharsaathi.gov.in/sfc/"
+    "source_url": "https://sancharsaathi.gov.in/sfc/",
+    "kind": "scam"
   },
   {
     "id": "kb-011",
     "scam_type": "fake_delivery",
     "title": "India Post / courier redelivery fee",
     "transcript_body": "India Post: your package is held at the warehouse due to an incomplete address. Update your address within 24 hours at the link and pay Rs 25 redelivery charge.",
-    "tactics": ["deadline", "link_with_action", "pay_to_receive", "suspicious_link", "impersonation"],
+    "tactics": [
+      "deadline",
+      "link_with_action",
+      "pay_to_receive",
+      "suspicious_link",
+      "impersonation"
+    ],
     "what_happens_next": "The small fee page steals card details and OTP, which are then used for larger payments.",
     "source_name": "India Post",
-    "source_url": "https://www.indiapost.gov.in"
+    "source_url": "https://www.indiapost.gov.in",
+    "kind": "scam"
   },
   {
     "id": "kb-012",
     "scam_type": "phishing",
     "title": "Look-alike login page for a known brand",
     "transcript_body": "Your account has been limited. Verify your account now at http://paypa1-secure-login.verify-account.top/signin to restore access.",
-    "tactics": ["verify_account_demand", "deceptive_domain", "suspicious_link", "account_threat", "insecure_login_page"],
+    "tactics": [
+      "verify_account_demand",
+      "deceptive_domain",
+      "suspicious_link",
+      "account_threat",
+      "insecure_login_page"
+    ],
     "what_happens_next": "Anything typed on the page (password, OTP, card) goes to the attacker, who then logs into the real account.",
     "source_name": "CERT-In",
-    "source_url": "https://www.cert-in.org.in"
+    "source_url": "https://www.cert-in.org.in",
+    "kind": "scam"
   },
   {
     "id": "kb-013",
     "scam_type": "phishing",
     "title": "Fake bank email with failed sender checks",
     "transcript_body": "From: HDFC Bank Alerts <alerts@hdfcbank-secure-verify.com>. Your NetBanking access will be suspended within 24 hours due to incomplete KYC. Click the link and enter your customer ID, password and OTP.",
-    "tactics": ["impersonation", "account_threat", "deadline", "kyc_update_demand", "asks_for_secret", "deceptive_domain"],
+    "tactics": [
+      "impersonation",
+      "account_threat",
+      "deadline",
+      "kyc_update_demand",
+      "asks_for_secret",
+      "deceptive_domain"
+    ],
     "what_happens_next": "Credentials and OTP entered on the page are used to log in and add a payee.",
     "source_name": "CERT-In",
-    "source_url": "https://www.cert-in.org.in"
+    "source_url": "https://www.cert-in.org.in",
+    "kind": "scam"
   },
   {
     "id": "kb-014",
     "scam_type": "phishing",
     "title": "QR code that opens a fake reward or payment page",
     "transcript_body": "Scan this QR code to receive your SBI reward points cashback. Enter your account details on the page that opens.",
-    "tactics": ["too_good", "link_with_action", "asks_card_details", "suspicious_link"],
+    "tactics": [
+      "too_good",
+      "link_with_action",
+      "asks_card_details",
+      "suspicious_link"
+    ],
     "what_happens_next": "QR codes are for paying, not receiving. Scanning leads to a payment request or a phishing page.",
     "source_name": "National Payments Corporation of India",
-    "source_url": "https://www.npci.org.in"
+    "source_url": "https://www.npci.org.in",
+    "kind": "scam"
   },
   {
     "id": "kb-015",
     "scam_type": "lottery_scam",
     "title": "KBC / lottery prize with processing fee",
     "transcript_body": "Congratulations! Your number has won Rs 25 lakh in the KBC lucky draw. To claim the prize contact our manager on WhatsApp and pay the GST and processing fee of Rs 12,500.",
-    "tactics": ["too_good", "pay_to_receive", "impersonation"],
+    "tactics": [
+      "too_good",
+      "pay_to_receive",
+      "impersonation"
+    ],
     "what_happens_next": "Every payment is followed by another fee (tax, RBI clearance, transfer charge). There is no prize.",
     "source_name": "Indian Cyber Crime Coordination Centre (I4C)",
-    "source_url": "https://cybercrime.gov.in"
+    "source_url": "https://cybercrime.gov.in",
+    "kind": "scam"
   },
   {
     "id": "kb-016",
     "scam_type": "investment_scam",
     "title": "Stock tips WhatsApp group with fake trading app",
     "transcript_body": "Join our VIP stock market group. Our analysts give guaranteed 30% monthly returns. Download our institutional trading app and invest through the IPO allotment account shared by the admin.",
-    "tactics": ["too_good", "move_money", "remote_access_app", "suspicious_link"],
+    "tactics": [
+      "too_good",
+      "move_money",
+      "remote_access_app",
+      "suspicious_link"
+    ],
     "what_happens_next": "The app shows fake profits. Withdrawals need 'taxes' or 'commission', and the group disappears.",
     "source_name": "Securities and Exchange Board of India",
-    "source_url": "https://www.sebi.gov.in"
+    "source_url": "https://www.sebi.gov.in",
+    "kind": "scam"
   },
   {
     "id": "kb-017",
     "scam_type": "crypto_scam",
     "title": "Crypto doubling or mining platform",
     "transcript_body": "Invest USDT in our AI crypto mining platform and double your money in 15 days. Withdraw anytime. Limited slots, deposit today to get the bonus.",
-    "tactics": ["too_good", "deadline", "move_money"],
+    "tactics": [
+      "too_good",
+      "deadline",
+      "move_money"
+    ],
     "what_happens_next": "Early small withdrawals are allowed to build trust, then the platform freezes all funds.",
     "source_name": "Securities and Exchange Board of India",
-    "source_url": "https://www.sebi.gov.in"
+    "source_url": "https://www.sebi.gov.in",
+    "kind": "scam"
   },
   {
     "id": "kb-018",
     "scam_type": "loan_scam",
     "title": "Instant loan app with upfront fee or harassment",
     "transcript_body": "Pre-approved instant loan of Rs 2 lakh without documents. Pay Rs 1,999 processing fee to release the amount today. Install the app and allow contacts access.",
-    "tactics": ["too_good", "pay_to_receive", "remote_access_app", "deadline"],
+    "tactics": [
+      "too_good",
+      "pay_to_receive",
+      "remote_access_app",
+      "deadline"
+    ],
     "what_happens_next": "Either no loan arrives, or the app copies contacts and photos and later blackmails the borrower.",
     "source_name": "Reserve Bank of India, Sachet",
-    "source_url": "https://sachet.rbi.org.in"
+    "source_url": "https://sachet.rbi.org.in",
+    "kind": "scam"
   },
   {
     "id": "kb-019",
     "scam_type": "loan_scam",
     "title": "Loan app recovery blackmail with morphed photos",
     "transcript_body": "Repay immediately or we will send your morphed photos to everyone in your contact list and post them online. You have one hour.",
-    "tactics": ["harassment", "deadline", "move_money", "legal_threat"],
+    "tactics": [
+      "harassment",
+      "deadline",
+      "move_money",
+      "legal_threat"
+    ],
     "what_happens_next": "Paying does not stop the threats; the demands repeat. Report and keep evidence.",
     "source_name": "Reserve Bank of India, Sachet",
-    "source_url": "https://sachet.rbi.org.in"
+    "source_url": "https://sachet.rbi.org.in",
+    "kind": "scam"
   },
   {
     "id": "kb-020",
     "scam_type": "banking_fraud",
     "title": "Electricity bill disconnection tonight",
     "transcript_body": "Dear consumer your electricity power will be disconnected tonight at 9.30 pm because your previous month bill was not updated. Please immediately contact our electricity officer on this number.",
-    "tactics": ["account_threat", "deadline", "impersonation"],
+    "tactics": [
+      "account_threat",
+      "deadline",
+      "impersonation"
+    ],
     "what_happens_next": "The 'officer' asks you to install a screen-sharing app or pay a small amount through a link, then empties the account.",
     "source_name": "Indian Cyber Crime Coordination Centre (I4C)",
-    "source_url": "https://cybercrime.gov.in"
+    "source_url": "https://cybercrime.gov.in",
+    "kind": "scam"
   },
   {
     "id": "kb-021",
     "scam_type": "banking_fraud",
     "title": "Screen-sharing app to 'fix' a refund or KYC",
     "transcript_body": "To process your refund please install AnyDesk from the Play Store and share the 9 digit code with me so I can help you complete the form.",
-    "tactics": ["remote_access_app", "impersonation", "asks_for_secret"],
+    "tactics": [
+      "remote_access_app",
+      "impersonation",
+      "asks_for_secret"
+    ],
     "what_happens_next": "The caller watches your screen, reads OTPs and makes transfers while 'helping'.",
     "source_name": "Reserve Bank of India",
-    "source_url": "https://www.rbi.org.in"
+    "source_url": "https://www.rbi.org.in",
+    "kind": "scam"
   },
   {
     "id": "kb-022",
     "scam_type": "identity_theft",
     "title": "Fake 'relative in trouble' from a new number",
     "transcript_body": "Hi Mum this is my new number, my phone broke. I need to pay a bill urgently, can you send Rs 18,000 to this account? Don't call, I can't talk right now.",
-    "tactics": ["new_number_emergency", "move_money", "secrecy", "deadline"],
+    "tactics": [
+      "new_number_emergency",
+      "move_money",
+      "secrecy",
+      "deadline"
+    ],
     "what_happens_next": "The money goes to a mule account. Calling the relative on their old number exposes the trick.",
     "source_name": "Indian Cyber Crime Coordination Centre (I4C)",
-    "source_url": "https://cybercrime.gov.in"
+    "source_url": "https://cybercrime.gov.in",
+    "kind": "scam"
   },
   {
     "id": "kb-023",
     "scam_type": "identity_theft",
     "title": "Aadhaar / PAN details for 'verification'",
     "transcript_body": "Your Aadhaar is linked to suspicious SIM cards. Send a photo of your Aadhaar and PAN card and the OTP from UIDAI to verify your identity.",
-    "tactics": ["impersonation", "legal_threat", "kyc_update_demand", "asks_for_secret"],
+    "tactics": [
+      "impersonation",
+      "legal_threat",
+      "kyc_update_demand",
+      "asks_for_secret"
+    ],
     "what_happens_next": "The documents are used to open bank accounts, SIMs or loans in your name.",
     "source_name": "Unique Identification Authority of India",
-    "source_url": "https://uidai.gov.in"
+    "source_url": "https://uidai.gov.in",
+    "kind": "scam"
   },
   {
     "id": "kb-024",
     "scam_type": "government_scam",
     "title": "Income tax refund approval link",
     "transcript_body": "Income Tax Department: you are eligible for a tax refund of Rs 15,490. Verify your bank account details at the link to receive the refund today.",
-    "tactics": ["impersonation", "too_good", "verify_account_demand", "link_with_action", "suspicious_link"],
+    "tactics": [
+      "impersonation",
+      "too_good",
+      "verify_account_demand",
+      "link_with_action",
+      "suspicious_link"
+    ],
     "what_happens_next": "The page collects net-banking credentials. Real refunds are credited automatically to the validated account.",
     "source_name": "Income Tax Department",
-    "source_url": "https://www.incometax.gov.in"
+    "source_url": "https://www.incometax.gov.in",
+    "kind": "scam"
   },
   {
     "id": "kb-025",
     "scam_type": "subscription_scam",
     "title": "Auto-debit renewal you did not order",
     "transcript_body": "Your Norton antivirus subscription has been renewed for Rs 24,999. If you did not authorise this, call our refund desk immediately.",
-    "tactics": ["impersonation", "deadline", "remote_access_app"],
+    "tactics": [
+      "impersonation",
+      "deadline",
+      "remote_access_app"
+    ],
     "what_happens_next": "The refund desk asks you to install a remote app and 'type the refund amount', which actually sends money.",
     "source_name": "US Federal Trade Commission, consumer advice",
-    "source_url": "https://consumer.ftc.gov"
+    "source_url": "https://consumer.ftc.gov",
+    "kind": "scam"
   },
   {
     "id": "kb-026",
     "scam_type": "romance_scam",
     "title": "Online friend needing money for customs or travel",
     "transcript_body": "My love, I sent you a gift parcel with jewellery and dollars but it is stuck at Delhi customs. Please pay the clearance fee so they can deliver it. Don't tell your family yet.",
-    "tactics": ["too_good", "pay_to_receive", "secrecy", "impersonation"],
+    "tactics": [
+      "too_good",
+      "pay_to_receive",
+      "secrecy",
+      "impersonation"
+    ],
     "what_happens_next": "A fake customs officer calls and the fees keep increasing. The 'friend' never meets in person.",
     "source_name": "US Federal Trade Commission, consumer advice",
-    "source_url": "https://consumer.ftc.gov"
+    "source_url": "https://consumer.ftc.gov",
+    "kind": "scam"
   },
   {
     "id": "kb-027",
     "scam_type": "upi_scam",
     "title": "Fake payment screenshot from a buyer",
     "transcript_body": "I have paid Rs 9,500, here is the screenshot. It shows pending, please send the product now or refund the extra amount I sent by mistake.",
-    "tactics": ["mistaken_transfer", "move_money", "deadline"],
+    "tactics": [
+      "mistaken_transfer",
+      "move_money",
+      "deadline"
+    ],
     "what_happens_next": "Screenshots are edited. Check your own bank statement before sending anything.",
     "source_name": "National Payments Corporation of India",
-    "source_url": "https://www.npci.org.in"
+    "source_url": "https://www.npci.org.in",
+    "kind": "scam"
   },
   {
     "id": "kb-028",
     "scam_type": "phishing",
     "title": "Fake government scheme or free recharge link",
     "transcript_body": "PM free recharge yojana: all Indian users get 3 months free recharge of Rs 239. Click the link and share with 10 groups to activate before the offer ends.",
-    "tactics": ["too_good", "impersonation", "deadline", "link_with_action", "suspicious_link"],
+    "tactics": [
+      "too_good",
+      "impersonation",
+      "deadline",
+      "link_with_action",
+      "suspicious_link"
+    ],
     "what_happens_next": "The page collects phone numbers and spreads malware or ads; some ask for payment details.",
     "source_name": "Press Information Bureau Fact Check",
-    "source_url": "https://pib.gov.in"
+    "source_url": "https://pib.gov.in",
+    "kind": "scam"
   },
   {
     "id": "kb-029",
     "scam_type": "banking_fraud",
     "title": "SIM swap or eSIM upgrade request",
     "transcript_body": "Your SIM card will be blocked within 24 hours. Upgrade to 5G eSIM by replying with the 20 digit number on your SIM and the OTP you receive.",
-    "tactics": ["account_threat", "deadline", "asks_for_secret", "impersonation"],
+    "tactics": [
+      "account_threat",
+      "deadline",
+      "asks_for_secret",
+      "impersonation"
+    ],
     "what_happens_next": "The scammer moves your number to their SIM and receives your bank OTPs.",
     "source_name": "Department of Telecommunications, Chakshu",
-    "source_url": "https://sancharsaathi.gov.in/sfc/"
+    "source_url": "https://sancharsaathi.gov.in/sfc/",
+    "kind": "scam"
   },
   {
     "id": "kb-030",
     "scam_type": "job_scam",
     "title": "Work-from-home data entry with security deposit",
     "transcript_body": "Hiring for part time work from home. Typing and data entry, earn Rs 25,000 per month. Pay a refundable security deposit of Rs 1,500 to get the login ID.",
-    "tactics": ["task_scam", "too_good", "pay_to_receive"],
+    "tactics": [
+      "task_scam",
+      "too_good",
+      "pay_to_receive"
+    ],
     "what_happens_next": "The work is rejected for 'errors' and the deposit is kept, sometimes with a fake legal notice demanding more.",
     "source_name": "Indian Cyber Crime Coordination Centre (I4C)",
-    "source_url": "https://cybercrime.gov.in"
+    "source_url": "https://cybercrime.gov.in",
+    "kind": "scam"
   },
   {
     "id": "kb-031",
     "scam_type": "investment_scam",
     "title": "Ponzi deposit scheme with high fixed returns",
     "transcript_body": "Invest Rs 1 lakh in our chit fund and get Rs 10,000 every month guaranteed. Bring two members and get extra commission.",
-    "tactics": ["too_good", "move_money"],
+    "tactics": [
+      "too_good",
+      "move_money"
+    ],
     "what_happens_next": "Returns are paid from new members' money until the scheme collapses.",
     "source_name": "Reserve Bank of India, Sachet",
-    "source_url": "https://sachet.rbi.org.in"
+    "source_url": "https://sachet.rbi.org.in",
+    "kind": "scam"
   },
   {
     "id": "kb-032",
     "scam_type": "phishing",
     "title": "Social media account will be deleted",
     "transcript_body": "Instagram: your account violated copyright rules and will be deleted in 24 hours. Appeal here to keep your account and enter your password to confirm.",
-    "tactics": ["impersonation", "account_threat", "deadline", "asks_for_secret", "suspicious_link"],
+    "tactics": [
+      "impersonation",
+      "account_threat",
+      "deadline",
+      "asks_for_secret",
+      "suspicious_link"
+    ],
     "what_happens_next": "The account is taken over and used to message your friends for money.",
     "source_name": "CERT-In",
+    "source_url": "https://www.cert-in.org.in",
+    "kind": "scam"
+  },
+  {
+    "id": "kb-033",
+    "kind": "scam",
+    "scam_type": "government_scam",
+    "title": "Fake RTO e-challan link",
+    "transcript_body": "Your vehicle KA01AB1234 has a pending traffic e-challan of Rs 500. Pay within 24 hours to avoid court action. Download the e-challan app from the link.",
+    "tactics": [
+      "impersonation",
+      "deadline",
+      "legal_threat",
+      "link_with_action",
+      "pay_to_receive",
+      "remote_access_app"
+    ],
+    "what_happens_next": "The 'app' is a malicious APK that reads your SMS and OTPs. Real challans are paid only on the Parivahan e-challan portal.",
+    "source_name": "Ministry of Road Transport, e-Challan",
+    "source_url": "https://echallan.parivahan.gov.in"
+  },
+  {
+    "id": "kb-034",
+    "kind": "scam",
+    "scam_type": "banking_fraud",
+    "title": "FASTag KYC expiry",
+    "transcript_body": "Your FASTag will be deactivated today due to incomplete KYC. Update KYC at the link to avoid double toll charges.",
+    "tactics": [
+      "account_threat",
+      "deadline",
+      "kyc_update_demand",
+      "link_with_action",
+      "suspicious_link"
+    ],
+    "what_happens_next": "The page asks for net-banking or card details and OTP. FASTag KYC is done only through the issuing bank's own app or branch.",
+    "source_name": "National Payments Corporation of India",
+    "source_url": "https://www.npci.org.in"
+  },
+  {
+    "id": "kb-035",
+    "kind": "scam",
+    "scam_type": "banking_fraud",
+    "title": "LPG gas connection KYC or subsidy",
+    "transcript_body": "Your Indane gas connection will be blocked as e-KYC is pending. Call our KYC executive and install the support app to complete it.",
+    "tactics": [
+      "impersonation",
+      "account_threat",
+      "kyc_update_demand",
+      "remote_access_app"
+    ],
+    "what_happens_next": "The support app gives the caller control of your phone; they then read OTPs and move money.",
+    "source_name": "Indian Cyber Crime Coordination Centre (I4C)",
+    "source_url": "https://cybercrime.gov.in"
+  },
+  {
+    "id": "kb-036",
+    "kind": "scam",
+    "scam_type": "upi_scam",
+    "title": "Fake army officer buyer on OLX / Marketplace",
+    "transcript_body": "I am an army officer posted at the base, I want to buy your sofa. Our payments go through the army account, first send Rs 1 to verify and then scan this QR to receive the full amount.",
+    "tactics": [
+      "impersonation",
+      "collect_request",
+      "move_money",
+      "too_good"
+    ],
+    "what_happens_next": "Each 'test' payment or QR scan sends money from you; the amount grows with every attempt.",
+    "source_name": "Indian Cyber Crime Coordination Centre (I4C)",
+    "source_url": "https://cybercrime.gov.in"
+  },
+  {
+    "id": "kb-037",
+    "kind": "scam",
+    "scam_type": "identity_theft",
+    "title": "Fake customer care number from web search",
+    "transcript_body": "Thank you for calling Flipkart customer care. To process your refund, share the OTP you received and install the screen sharing app so I can help.",
+    "tactics": [
+      "impersonation",
+      "asks_for_secret",
+      "remote_access_app"
+    ],
+    "what_happens_next": "Fake helpline numbers are posted online; callers are asked for OTPs or remote access to 'process the refund'.",
+    "source_name": "Indian Cyber Crime Coordination Centre (I4C)",
+    "source_url": "https://cybercrime.gov.in"
+  },
+  {
+    "id": "kb-038",
+    "kind": "scam",
+    "scam_type": "romance_scam",
+    "title": "Sextortion after a video call",
+    "transcript_body": "We have recorded your video call. Pay Rs 30,000 within one hour or we will send the video to all your contacts and upload it on YouTube.",
+    "tactics": [
+      "harassment",
+      "deadline",
+      "move_money"
+    ],
+    "what_happens_next": "Paying leads to more demands. Do not pay; keep evidence and report on cybercrime.gov.in or 1930.",
+    "source_name": "Indian Cyber Crime Coordination Centre (I4C)",
+    "source_url": "https://cybercrime.gov.in"
+  },
+  {
+    "id": "kb-039",
+    "kind": "scam",
+    "scam_type": "government_scam",
+    "title": "PM Kisan or government subsidy via APK",
+    "transcript_body": "PM Kisan Yojana: your Rs 6,000 instalment is on hold. Download the PM Kisan app from this link and verify your Aadhaar to receive the money.",
+    "tactics": [
+      "impersonation",
+      "too_good",
+      "link_with_action",
+      "kyc_update_demand",
+      "remote_access_app"
+    ],
+    "what_happens_next": "The APK steals SMS and banking credentials. Government schemes do not send app download links by SMS or WhatsApp.",
+    "source_name": "Press Information Bureau Fact Check",
+    "source_url": "https://pib.gov.in"
+  },
+  {
+    "id": "kb-040",
+    "kind": "scam",
+    "scam_type": "investment_scam",
+    "title": "Fake IPO or institutional trading account",
+    "transcript_body": "Exclusive IPO allotment for VIP members. Transfer funds to our institutional account to get guaranteed listing gains of 40 percent.",
+    "tactics": [
+      "too_good",
+      "move_money"
+    ],
+    "what_happens_next": "Money goes to mule accounts; the 'trading app' shows fake balances that can never be withdrawn.",
+    "source_name": "Securities and Exchange Board of India",
+    "source_url": "https://www.sebi.gov.in"
+  },
+  {
+    "id": "kb-041",
+    "kind": "scam",
+    "scam_type": "job_scam",
+    "title": "Overseas job visa and medical fee",
+    "transcript_body": "Selected for a job in Canada with salary 3 lakh per month. Pay visa processing and medical fee of Rs 45,000 to confirm your seat this week.",
+    "tactics": [
+      "too_good",
+      "pay_to_receive",
+      "deadline"
+    ],
+    "what_happens_next": "There is no job; more fees follow and the 'agent' disappears. Check recruiters on the eMigrate portal.",
+    "source_name": "Ministry of External Affairs, eMigrate",
+    "source_url": "https://emigrate.gov.in"
+  },
+  {
+    "id": "kb-042",
+    "kind": "scam",
+    "scam_type": "phishing",
+    "title": "Fake bank reward or cashback via WhatsApp APK",
+    "transcript_body": "SBI Rewardz: your 5,000 points expire today. Install the SBI Reward APK sent on WhatsApp to redeem cash into your account.",
+    "tactics": [
+      "too_good",
+      "deadline",
+      "remote_access_app",
+      "link_with_action"
+    ],
+    "what_happens_next": "The APK forwards your SMS and OTPs to the attacker, who then drains the account.",
+    "source_name": "CERT-In",
     "source_url": "https://www.cert-in.org.in"
+  },
+  {
+    "id": "gen-001",
+    "kind": "genuine",
+    "scam_type": "genuine",
+    "title": "Salary credit alert",
+    "transcript_body": "Dear Customer, your A/c XX4417 is credited with INR 52,300.00 on 01-10-2026 towards SALARY FOR SEP 2026. Avl Bal: INR 61,882.40.",
+    "tactics": [],
+    "what_happens_next": "This is the usual format of a genuine alert: it reports something that already happened and asks you for nothing. Messages that copy this format but add a link, a mobile number to call, an app to install or a request to return money are scams.",
+    "source_name": "Reserve Bank of India",
+    "source_url": "https://www.rbi.org.in"
+  },
+  {
+    "id": "gen-002",
+    "kind": "genuine",
+    "scam_type": "genuine",
+    "title": "Bank debit alert",
+    "transcript_body": "Rs. 2,450.00 debited from A/c XX4821 on 12-10-26 to AMAZON PAY. Avl bal Rs 18,302.55. Not you? Call the number on the back of your card.",
+    "tactics": [],
+    "what_happens_next": "This is the usual format of a genuine alert: it reports something that already happened and asks you for nothing. Messages that copy this format but add a link, a mobile number to call, an app to install or a request to return money are scams.",
+    "source_name": "Reserve Bank of India",
+    "source_url": "https://www.rbi.org.in"
+  },
+  {
+    "id": "gen-003",
+    "kind": "genuine",
+    "scam_type": "genuine",
+    "title": "UPI money received",
+    "transcript_body": "Rs.500.00 received in your A/c XX3321 from RAHUL KUMAR via UPI. UPI Ref No 629148203311.",
+    "tactics": [],
+    "what_happens_next": "This is the usual format of a genuine alert: it reports something that already happened and asks you for nothing. Messages that copy this format but add a link, a mobile number to call, an app to install or a request to return money are scams.",
+    "source_name": "Reserve Bank of India",
+    "source_url": "https://www.rbi.org.in"
+  },
+  {
+    "id": "gen-004",
+    "kind": "genuine",
+    "scam_type": "genuine",
+    "title": "Credit card spend alert",
+    "transcript_body": "INR 899.00 spent on your Credit Card ending 4432 at SWIGGY on 12/10/26. Available limit Rs 54,210. Not you? Call the helpline on your card.",
+    "tactics": [],
+    "what_happens_next": "This is the usual format of a genuine alert: it reports something that already happened and asks you for nothing. Messages that copy this format but add a link, a mobile number to call, an app to install or a request to return money are scams.",
+    "source_name": "Reserve Bank of India",
+    "source_url": "https://www.rbi.org.in"
+  },
+  {
+    "id": "gen-005",
+    "kind": "genuine",
+    "scam_type": "genuine",
+    "title": "Utility bill payment confirmation",
+    "transcript_body": "Your electricity bill of Rs 1,284 for consumer no 2210045 has been paid successfully via UPI. Ref No 829104772. Thank you.",
+    "tactics": [],
+    "what_happens_next": "This is the usual format of a genuine alert: it reports something that already happened and asks you for nothing. Messages that copy this format but add a link, a mobile number to call, an app to install or a request to return money are scams.",
+    "source_name": "Reserve Bank of India",
+    "source_url": "https://www.rbi.org.in"
+  },
+  {
+    "id": "gen-006",
+    "kind": "genuine",
+    "scam_type": "genuine",
+    "title": "EMI due reminder",
+    "transcript_body": "Your EMI of Rs 6,412 for loan a/c XX8812 is due on 05-11-2026. Please keep sufficient balance in your account.",
+    "tactics": [],
+    "what_happens_next": "This is the usual format of a genuine alert: it reports something that already happened and asks you for nothing. Messages that copy this format but add a link, a mobile number to call, an app to install or a request to return money are scams.",
+    "source_name": "Reserve Bank of India",
+    "source_url": "https://www.rbi.org.in"
+  },
+  {
+    "id": "gen-007",
+    "kind": "genuine",
+    "scam_type": "genuine",
+    "title": "Genuine OTP message",
+    "transcript_body": "123456 is your OTP for login. Valid for 10 minutes. Do not share this OTP with anyone. Bank staff will never ask for it.",
+    "tactics": [],
+    "what_happens_next": "This is the usual format of a genuine alert: it reports something that already happened and asks you for nothing. Messages that copy this format but add a link, a mobile number to call, an app to install or a request to return money are scams.",
+    "source_name": "Reserve Bank of India",
+    "source_url": "https://www.rbi.org.in"
+  },
+  {
+    "id": "gen-008",
+    "kind": "genuine",
+    "scam_type": "genuine",
+    "title": "Delivery update",
+    "transcript_body": "Your order with 'boAt Airdopes' has been delivered. Track or return your order in the official app.",
+    "tactics": [],
+    "what_happens_next": "This is the usual format of a genuine alert: it reports something that already happened and asks you for nothing. Messages that copy this format but add a link, a mobile number to call, an app to install or a request to return money are scams.",
+    "source_name": "Reserve Bank of India",
+    "source_url": "https://www.rbi.org.in"
+  },
+  {
+    "id": "gen-009",
+    "kind": "genuine",
+    "scam_type": "genuine",
+    "title": "Bill generated notice",
+    "transcript_body": "Your mobile bill of Rs 499 for October has been generated. Due date 20-10-2026. Pay through the official app or website.",
+    "tactics": [],
+    "what_happens_next": "This is the usual format of a genuine alert: it reports something that already happened and asks you for nothing. Messages that copy this format but add a link, a mobile number to call, an app to install or a request to return money are scams.",
+    "source_name": "Reserve Bank of India",
+    "source_url": "https://www.rbi.org.in"
+  },
+  {
+    "id": "gen-010",
+    "kind": "genuine",
+    "scam_type": "genuine",
+    "title": "NEFT / IMPS credit",
+    "transcript_body": "Rs 1,200.00 credited to your A/c XX5562 on 13-10-26 by NEFT from INFOSYS LTD. UTR no 182930. Avl bal Rs 45,120.",
+    "tactics": [],
+    "what_happens_next": "This is the usual format of a genuine alert: it reports something that already happened and asks you for nothing. Messages that copy this format but add a link, a mobile number to call, an app to install or a request to return money are scams.",
+    "source_name": "Reserve Bank of India",
+    "source_url": "https://www.rbi.org.in"
   }
 ]

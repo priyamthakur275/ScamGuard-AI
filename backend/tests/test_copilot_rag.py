@@ -31,7 +31,8 @@ def test_knowledge_base_is_valid_and_cites_https_sources():
     entries = load_knowledge_base()
     assert len(entries) >= 30
     assert len({e.id for e in entries}) == len(entries)
-    assert all(e.source_url.startswith("https://") and e.tactics for e in entries)
+    assert all(e.source_url.startswith("https://") for e in entries)
+    assert all(e.tactics for e in entries if e.kind == "scam")
 
 
 def test_retriever_ranks_matching_scheme_first_and_scores_genuine_low():
@@ -180,3 +181,54 @@ def test_bank_alert_is_reassuring_unless_it_asks_for_something():
 def test_genuine_short_debit_alert_is_not_flagged(client):
     v = client.post("/api/v1/copilot/analyze", json={"text": GENUINE}).json()["verdict"]
     assert v["is_scam"] is False and not v["matched_tactics"]
+
+
+SALARY = ("Dear Customer, your A/c XX4417 is credited with INR 52,300.00 on 01-10-2026 towards SALARY FOR SEP 2026. "
+          "Avl Bal: INR 61,882.40 - HDFC Bank")
+
+
+def test_knowledge_base_has_scam_and_genuine_layers():
+    entries = load_knowledge_base()
+    kinds = {e.kind for e in entries}
+    assert kinds == {"scam", "genuine"}
+    assert sum(e.kind == "scam" for e in entries) >= 40 and sum(e.kind == "genuine" for e in entries) >= 10
+
+
+@pytest.mark.parametrize("text", [
+    SALARY,
+    "Rs 1,200.00 credited to your A/c XX5562 on 13-10-26 by NEFT from INFOSYS LTD. Avl bal Rs 45,120.",
+    "Salary for the month of September 2026 has been credited to your account XXXX8890. Ref No 482910337. -ICICI Bank",
+    "INR 899.00 spent on your SBI Credit Card ending 4432 at SWIGGY on 12/10/26. Available limit Rs 54,210. Not you? Call 1860 180 1290.",
+    "Your EMI of Rs 6,412 for loan a/c XX8812 is due on 05-11-2026. Please keep sufficient balance. -Bajaj Finance",
+])
+def test_genuine_transaction_guard_accepts_real_alerts(text):
+    from ml_service.inference.threat_scorer import ThreatScorer, is_genuine_transaction
+    found, protective = ThreatScorer.intents(text)
+    assert is_genuine_transaction(text, found, protective)
+    assert ThreatScorer().assess(0.96, [], text).threat_score <= 0.15
+
+
+@pytest.mark.parametrize("text", [
+    "Your salary of Rs 45,000 is credited to your A/c XX1234. To receive it click http://salary-hr-portal.xyz and verify.",
+    "Salary Rs 50,000 credited to A/c XX1234 by mistake from our HR. Please return it to 9876543210 on PhonePe.",
+    "Rs 25,000 credited to your A/c XX7781. Call 9812345670 to activate the amount.",
+    "Your A/c XX7781 is credited with Rs 4,999 cashback reward. Pay Rs 49 processing fee to claim.",
+    "Rs 10,000 credited to your account XX2231. Share the OTP to confirm receipt. Avl bal Rs 12,000.",
+    "Your A/c XX1234 salary has been credited. Install SalaryPay app from apk link to withdraw.",
+])
+def test_genuine_transaction_guard_rejects_lookalike_scams(text):
+    from ml_service.inference.threat_scorer import ThreatScorer, is_genuine_transaction
+    found, protective = ThreatScorer.intents(text)
+    assert not is_genuine_transaction(text, found, protective)
+
+
+def test_salary_credit_is_low_risk_with_genuine_match(client):
+    v = client.post("/api/v1/copilot/analyze", json={"text": SALARY}).json()["verdict"]
+    assert v["is_scam"] is False and v["risk_tier"] == "Low"
+    assert v["genuine_matches"] and v["genuine_matches"][0]["kb_id"] == "gen-001"
+    assert all(c["kind"] == "scam" for c in v["citation_links"])
+
+
+def test_scam_verdict_never_lists_genuine_matches(client):
+    v = client.post("/api/v1/copilot/analyze", json={"text": KYC}).json()["verdict"]
+    assert v["is_scam"] is True and v["genuine_matches"] == []
