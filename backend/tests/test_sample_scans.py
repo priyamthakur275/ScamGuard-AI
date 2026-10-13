@@ -40,3 +40,17 @@ def test_link_only_input_is_phishing_even_with_pipeline_notes():
     from ml_service.inference.threat_scorer import ThreatScorer
     text = "http://sbi-reward-points.xyz/claim?ref=KYC-update\n\nDetected language/concepts (heuristic):\nDetected concepts: KYC."
     assert ThreatScorer().assess(0.9, [], text).scam_category == "phishing"
+
+
+def test_sample_scans_go_into_listed_account_once(db_session, monkeypatch):
+    from app_service.core.config import get_settings
+    from app_service.db.postgres.models import Message, User, UserRole
+    from app_service.services import demo_account
+    user = User(email="owner@example.com", password_hash="x", role=UserRole.USER, is_active=True)
+    db_session.add(user); db_session.commit()
+    monkeypatch.setattr(get_settings(), "SAMPLE_SCAN_EMAILS", "owner@example.com")
+    demo_account.seed_sample_scans(db_session)
+    n1 = db_session.query(Message).filter(Message.user_id == user.id).count()
+    demo_account.seed_sample_scans(db_session)
+    n2 = db_session.query(Message).filter(Message.user_id == user.id).count()
+    assert n1 >= 13 and n2 == n1

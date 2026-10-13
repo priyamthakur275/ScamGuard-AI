@@ -34,6 +34,8 @@ class Settings(BaseSettings):
     # POST /auth/demo-login, and profile/password/delete actions are blocked.
     DEMO_ACCOUNT_ENABLED: bool = True
     DEMO_ACCOUNT_EMAIL: str = "demo@scamguard.app"
+    # Accounts that also receive the 15 sample scans once (comma separated).
+    SAMPLE_SCAN_EMAILS: str = "priyamthakur275@gmail.com"
     APP_ENV: str = "development"
     # SECURITY: defaults to False deliberately. Starlette's debug mode can
     # surface internal tracebacks for errors that occur outside our own
