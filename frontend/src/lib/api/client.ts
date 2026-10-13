@@ -26,7 +26,7 @@ interface RequestOptions {
 // These are same-origin paths, rewritten server-side to the real backend
 // URLs by next.config.js's rewrites() -- see that file for why.
 const APP_API_URL = "/backend-api/api/v1";
-const API_TIMEOUT_MS = 45000;
+const API_TIMEOUT_MS = 125000;
 
 let refreshPromise: Promise<TokenPair | null> | null = null;
 
@@ -71,7 +71,8 @@ function refreshOnce(): Promise<TokenPair | null> {
   return refreshPromise;
 }
 
-const MAX_RETRIES = 3;
+// 429/502/503 retries back off up to ~60 s in total, covering a cold start.
+const MAX_RETRIES = 6;
 
 async function parseErrorBody(response: Response): Promise<ApiErrorBody> {
   if (response.status === 429) {
@@ -148,7 +149,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
       const retryable = res.status === 429 || res.status === 502 || res.status === 503 || (res.status === 504 && method === "GET");
       if (!retryable || attempt >= MAX_RETRIES) return res;
       const retryAfter = Number(res.headers.get("retry-after"));
-      const delay = Number.isFinite(retryAfter) && retryAfter > 0 ? Math.min(retryAfter * 1000, 8000) : 800 * 2 ** attempt;
+      const delay = Number.isFinite(retryAfter) && retryAfter > 0 ? Math.min(retryAfter * 1000, 8000) : Math.min(800 * 2 ** attempt, 15000);
       await new Promise((r) => setTimeout(r, delay + Math.random() * 300));
     }
   };

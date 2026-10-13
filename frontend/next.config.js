@@ -22,6 +22,10 @@ const CONTENT_SECURITY_POLICY = [
 
 const nextConfig = {
   reactStrictMode: true,
+  // The free backend can take 40-90 s to wake from sleep. Next's rewrite
+  // proxy gives up after 30 s by default and answers 502 ("backend not
+  // available"), so let it wait for the backend instead.
+  experimental: { proxyTimeout: 120000 },
   async headers() {
     const securityHeaders = [
       { key: "X-Content-Type-Options", value: "nosniff" },
