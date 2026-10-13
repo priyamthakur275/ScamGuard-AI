@@ -107,6 +107,14 @@ This starts all services together:
 
 ---
 
+### Quickest: one command (macOS / Linux)
+
+```bash
+./start.sh
+```
+
+First run installs everything (Python virtual environment in `backend/.venv` and npm packages), then it starts the backend on :8000 and the frontend on :3000, waits until both answer and opens http://localhost:3000. Ctrl+C stops both. Logs are in `.run-logs/`. No `.env` file is needed for local use.
+
 ### Option B: Local Setup Without Docker (VS Code / Terminal)
 
 Open **three terminal windows** in your IDE/command prompt:

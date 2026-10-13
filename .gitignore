@@ -40,3 +40,7 @@ build/
 
 
 ScamGuard-AI-Final.zip
+
+# Local run helper
+.venv/
+.run-logs/
