@@ -12,7 +12,7 @@ explanation, grouped into the four stages most scams follow:
 
 from __future__ import annotations
 
-from ml_service.inference.threat_scorer import _INTENTS, _PROTECTIVE
+from ml_service.inference.threat_scorer import _INTENTS, _PROTECTIVE  # noqa: F401
 
 STAGES = ("hook", "pressure", "ask", "cashout")
 
@@ -54,12 +54,22 @@ PROTECTIVE_INFO = {
 }
 
 
-def xray(text: str, max_chars: int = 1500) -> dict:
+def xray(text: str, max_chars: int = 1500, is_scam: bool = True) -> dict:
+    """Trap phrases grouped by scam stage.
+
+    Spans are shown only for messages the system judged to be scams, and only
+    for intents the risk engine actually counted (so "never share your OTP"
+    is not underlined as a request for the OTP). For a genuine message the
+    reassuring signs are returned instead.
+    """
+    from ml_service.inference.threat_scorer import ThreatScorer
+
     text = text[:max_chars]
+    counted, _protective = ThreatScorer.intents(text)
     spans: list[dict] = []
     for name, _weight, rx in _INTENTS:
         info = INTENT_INFO.get(name)
-        if not info:
+        if not info or not is_scam or name not in counted:
             continue
         for m in rx.finditer(text):
             if m.end() - m.start() < 2:

@@ -162,7 +162,7 @@ class MessageService:
         data, metadata = self._apply_community_reports(data, metadata)
         try:
             from ml_service.inference.scam_xray import xray
-            metadata = {**metadata, "xray": xray(original_text)}
+            metadata = {**metadata, "xray": xray(original_text, is_scam=float(data["threat_score"]) >= 0.5)}
         except Exception:
             logger.warning("Scam X-Ray failed", exc_info=True)
         return data, text, metadata
