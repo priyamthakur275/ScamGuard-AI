@@ -31,11 +31,15 @@ class CopilotLlmUnavailableError(Exception):
 
 class CopilotLlmProvider(ABC):
     @abstractmethod
+    def complete(self, system: str, user: str, max_tokens: int = 400) -> str:
+        """Send one system + user turn and return the model's text. Must raise
+        on any HTTP or format failure; must never return a fabricated answer."""
+
     def answer(self, question: str, grounding_context: str) -> str:
         """grounding_context is a plain-text rendering of ONLY the real,
-        already-computed evidence for this scan -- implementors must not
-        add any other knowledge source. Must raise on failure; must never
-        return a fabricated answer."""
+        already-computed evidence for this scan -- no other knowledge source
+        is given to the model."""
+        return self.complete(SYSTEM_PROMPT, _user_prompt(question, grounding_context))
 
 
 SYSTEM_PROMPT = (
@@ -63,7 +67,7 @@ class GeminiProvider(CopilotLlmProvider):
 
     default_model = "gemini-2.5-flash"
 
-    def answer(self, question: str, grounding_context: str) -> str:
+    def complete(self, system: str, user: str, max_tokens: int = 400) -> str:
         settings = get_settings()
         model = settings.COPILOT_LLM_MODEL or self.default_model
         with _http_client() as client:
@@ -71,9 +75,9 @@ class GeminiProvider(CopilotLlmProvider):
                 f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
                 headers={"x-goog-api-key": settings.COPILOT_LLM_API_KEY},
                 json={
-                    "system_instruction": {"parts": [{"text": SYSTEM_PROMPT}]},
-                    "contents": [{"role": "user", "parts": [{"text": _user_prompt(question, grounding_context)}]}],
-                    "generationConfig": {"maxOutputTokens": 400, "temperature": 0.2},
+                    "system_instruction": {"parts": [{"text": system}]},
+                    "contents": [{"role": "user", "parts": [{"text": user}]}],
+                    "generationConfig": {"maxOutputTokens": max_tokens, "temperature": 0.2},
                 },
             )
             resp.raise_for_status()
@@ -86,7 +90,7 @@ class AnthropicProvider(CopilotLlmProvider):
 
     default_model = ""
 
-    def answer(self, question: str, grounding_context: str) -> str:
+    def complete(self, system: str, user: str, max_tokens: int = 400) -> str:
         settings = get_settings()
         with _http_client() as client:
             resp = client.post(
@@ -98,9 +102,9 @@ class AnthropicProvider(CopilotLlmProvider):
                 },
                 json={
                     "model": settings.COPILOT_LLM_MODEL or self.default_model,
-                    "max_tokens": 400,
-                    "system": SYSTEM_PROMPT,
-                    "messages": [{"role": "user", "content": _user_prompt(question, grounding_context)}],
+                    "max_tokens": max_tokens,
+                    "system": system,
+                    "messages": [{"role": "user", "content": user}],
                 },
             )
             resp.raise_for_status()
@@ -112,7 +116,7 @@ class OpenAIProvider(CopilotLlmProvider):
 
     default_model = "gpt-4o-mini"
 
-    def answer(self, question: str, grounding_context: str) -> str:
+    def complete(self, system: str, user: str, max_tokens: int = 400) -> str:
         settings = get_settings()
         with _http_client() as client:
             resp = client.post(
@@ -120,11 +124,11 @@ class OpenAIProvider(CopilotLlmProvider):
                 headers={"Authorization": f"Bearer {settings.COPILOT_LLM_API_KEY}"},
                 json={
                     "model": settings.COPILOT_LLM_MODEL or self.default_model,
-                    "max_tokens": 400,
+                    "max_tokens": max_tokens,
                     "temperature": 0.2,
                     "messages": [
-                        {"role": "system", "content": SYSTEM_PROMPT},
-                        {"role": "user", "content": _user_prompt(question, grounding_context)},
+                        {"role": "system", "content": system},
+                        {"role": "user", "content": user},
                     ],
                 },
             )
@@ -139,7 +143,8 @@ _PROVIDERS: dict[str, type[CopilotLlmProvider]] = {
 }
 
 
-def get_llm_answer(question: str, grounding_context: str) -> str:
+def get_configured_provider() -> CopilotLlmProvider:
+    """Return the configured provider or raise CopilotLlmUnavailableError."""
     settings = get_settings()
     provider_name = getattr(settings, "COPILOT_LLM_PROVIDER", None)
 
@@ -162,5 +167,12 @@ def get_llm_answer(question: str, grounding_context: str) -> str:
             f"LLM provider '{provider_name}' is selected but no COPILOT_LLM_API_KEY is configured."
         )
 
-    provider = provider_cls()
-    return provider.answer(question, grounding_context)
+    return provider_cls()
+
+
+def get_llm_answer(question: str, grounding_context: str) -> str:
+    return get_configured_provider().answer(question, grounding_context)
+
+
+def get_llm_completion(system: str, user: str, max_tokens: int = 600) -> str:
+    return get_configured_provider().complete(system, user, max_tokens)
