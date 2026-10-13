@@ -378,3 +378,219 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .signal-aurora::before, .verdict-heading::before, .shimmer, .hero-glow { animation: none; }
   .sg-button.bg-primary:hover::after { animation: none; }
 }
+
+/* ================================================================== */
+/* Neural Command theme — presentation only.                          */
+/* Midnight blue + electric cyan, circuit texture, glass panels,      */
+/* HUD accents and a slow scan line. No component logic depends on it.*/
+/* ================================================================== */
+:root {
+  --primary: 199 89% 42%;
+  --glow: 195 90% 45%;
+  --ring-cyan: 190 100% 50%;
+}
+.dark {
+  --background: 224 64% 4%;
+  --foreground: 200 60% 96%;
+  --card: 220 58% 8%;
+  --card-foreground: 200 60% 96%;
+  --border: 205 70% 20%;
+  --muted: 218 50% 11%;
+  --muted-foreground: 205 30% 70%;
+  --primary: 190 100% 56%;
+  --primary-foreground: 224 64% 5%;
+  --secondary: 218 50% 12%;
+  --secondary-foreground: 200 60% 96%;
+  --glow: 195 100% 55%;
+  --ring-cyan: 190 100% 56%;
+  --safe: 165 80% 50%;
+  --risk-low: 165 80% 50%;
+  --risk-very-low: 165 80% 50%;
+}
+
+@keyframes nc-scan {
+  0%   { transform: translateY(-10%); opacity: 0; }
+  10%  { opacity: .9; }
+  90%  { opacity: .9; }
+  100% { transform: translateY(1100%); opacity: 0; }
+}
+@keyframes nc-spin { to { transform: rotate(360deg); } }
+@keyframes nc-pulse { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
+@keyframes nc-border { to { --nc-angle: 360deg; } }
+@property --nc-angle { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+
+@layer base {
+  /* Circuit-board texture + cyan bloom, fixed behind every page. */
+  .dark body {
+    background-color: hsl(var(--background));
+    background-image:
+      radial-gradient(70rem 34rem at 80% -12%, hsl(var(--glow) / .16), transparent 62%),
+      radial-gradient(48rem 30rem at -8% 18%, hsl(212 100% 50% / .10), transparent 60%),
+      radial-gradient(40rem 26rem at 50% 115%, hsl(var(--glow) / .08), transparent 60%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Cg fill='none' stroke='%2322d3ee' stroke-opacity='0.07' stroke-width='1'%3E%3Cpath d='M0 40h60l20 20h60M140 60v40l20 20h80M30 240v-60l30-30h40M100 150h40l20-20V90M200 0v50l-20 20M0 120h30l15 15v45M240 170h-50l-20 20v50'/%3E%3C/g%3E%3Cg fill='%2322d3ee' fill-opacity='0.16'%3E%3Ccircle cx='60' cy='40' r='2'/%3E%3Ccircle cx='140' cy='60' r='2'/%3E%3Ccircle cx='160' cy='120' r='2'/%3E%3Ccircle cx='100' cy='150' r='2'/%3E%3Ccircle cx='60' cy='150' r='2'/%3E%3Ccircle cx='200' cy='50' r='2'/%3E%3Ccircle cx='45' cy='135' r='2'/%3E%3Ccircle cx='190' cy='170' r='2'/%3E%3C/g%3E%3C/svg%3E"),
+      linear-gradient(hsl(var(--glow) / .025) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--glow) / .025) 1px, transparent 1px);
+    background-size: auto, auto, auto, 240px 240px, 48px 48px, 48px 48px;
+    background-attachment: fixed;
+  }
+  .dark h1 { text-shadow: 0 0 28px hsl(var(--glow) / .18); }
+  .dark ::selection { background: hsl(var(--primary) / .35); }
+  .dark ::-webkit-scrollbar { width: 10px; height: 10px; }
+  .dark ::-webkit-scrollbar-track { background: hsl(var(--background)); }
+  .dark ::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 10px; border: 2px solid hsl(var(--background)); }
+  .dark ::-webkit-scrollbar-thumb:hover { background: hsl(var(--primary) / .5); }
+}
+
+@layer components {
+  /* Glass panels with a cyan edge and HUD corner ticks. */
+  .dark .sg-card, .dark .console-panel {
+    background:
+      linear-gradient(hsl(var(--primary)), hsl(var(--primary))) top left / 14px 1px no-repeat,
+      linear-gradient(hsl(var(--primary)), hsl(var(--primary))) top left / 1px 14px no-repeat,
+      linear-gradient(hsl(var(--primary)), hsl(var(--primary))) bottom right / 14px 1px no-repeat,
+      linear-gradient(hsl(var(--primary)), hsl(var(--primary))) bottom right / 1px 14px no-repeat,
+      linear-gradient(180deg, hsl(var(--card) / .86), hsl(var(--card) / .66));
+    border-color: hsl(var(--primary) / .18);
+    backdrop-filter: blur(16px) saturate(150%);
+    box-shadow:
+      inset 0 1px 0 hsl(var(--primary) / .10),
+      0 0 0 1px hsl(var(--background) / .6),
+      0 18px 48px -24px hsl(var(--glow) / .45);
+    transition: border-color 220ms, box-shadow 220ms;
+  }
+  .dark .sg-card:hover, .dark .console-panel:hover {
+    border-color: hsl(var(--primary) / .32);
+    box-shadow: inset 0 1px 0 hsl(var(--primary) / .14), 0 0 0 1px hsl(var(--background) / .6), 0 22px 56px -22px hsl(var(--glow) / .6);
+  }
+  .dark .evidence-grid > *, .dark .copilot-panel, .dark .scanner-panel {
+    background: hsl(var(--card) / .55);
+    border-color: hsl(var(--primary) / .16);
+    backdrop-filter: blur(12px);
+  }
+  .dark .evidence-grid > *:hover { border-color: hsl(var(--primary) / .3); }
+
+  /* Animated conic border on the main scanner and the verdict. */
+  .dark .scanner-panel, .dark .verdict-heading { position: relative; }
+  .dark .scanner-panel::after {
+    content: ""; position: absolute; inset: -1px; border-radius: inherit; padding: 1px; pointer-events: none;
+    background: conic-gradient(from var(--nc-angle), transparent 0 70%, hsl(var(--ring-cyan) / .9) 82%, transparent 92%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    animation: nc-border 6s linear infinite;
+  }
+
+  /* Primary buttons: electric cyan to blue, dark label, soft bloom. */
+  .dark .sg-button.bg-primary {
+    background-image: linear-gradient(120deg, hsl(188 100% 58%), hsl(205 100% 55%) 55%, hsl(222 100% 62%));
+    color: hsl(224 64% 6%);
+    box-shadow: 0 0 0 1px hsl(var(--primary) / .5), 0 8px 26px -8px hsl(var(--glow) / .85), inset 0 1px 0 hsl(0 0% 100% / .35);
+  }
+  .dark .sg-button.bg-primary:hover { box-shadow: 0 0 0 1px hsl(var(--primary) / .7), 0 10px 34px -6px hsl(var(--glow) / 1), inset 0 1px 0 hsl(0 0% 100% / .4); }
+
+  /* Inputs: dark glass, cyan focus ring. */
+  .dark input:not([type=checkbox]):not([type=radio]):not([type=file]), .dark textarea, .dark select {
+    background-color: hsl(222 60% 6% / .75);
+    border-color: hsl(var(--primary) / .2);
+  }
+  .dark input:focus-visible, .dark textarea:focus-visible, .dark select:focus-visible {
+    border-color: hsl(var(--primary) / .8) !important;
+    box-shadow: 0 0 0 4px hsl(var(--primary) / .16), 0 0 24px -6px hsl(var(--glow) / .6);
+  }
+
+  /* Header + sidebar glass with a cyan hairline. */
+  .dark header.sticky, .dark header[class*="sticky"] {
+    background: hsl(var(--background) / .72) !important;
+    border-bottom-color: hsl(var(--primary) / .18) !important;
+    box-shadow: 0 1px 0 hsl(var(--primary) / .06), 0 10px 30px -20px hsl(var(--glow) / .5);
+  }
+  .dark .sg-sidebar {
+    background: linear-gradient(180deg, hsl(222 62% 6% / .85), hsl(224 64% 4% / .9));
+    border-color: hsl(var(--primary) / .14) !important;
+  }
+  .dark .sg-sidebar nav a:hover:not([aria-current=page]) { background: hsl(var(--primary) / .07); color: hsl(var(--foreground)); }
+  .dark .sg-sidebar nav a[aria-current=page] {
+    background: linear-gradient(90deg, hsl(var(--primary) / .22), hsl(var(--primary) / .03));
+    border-color: hsl(var(--primary) / .4);
+    box-shadow: inset 3px 0 0 hsl(var(--primary)), 0 0 28px -8px hsl(var(--glow) / .9);
+  }
+
+  /* Scanner tabs: lit segment. */
+  .dark .scanner-tabs button:hover:not([aria-pressed=true]) { background: hsl(var(--primary) / .06); }
+  .dark .scanner-tabs button[aria-pressed=true] {
+    background: linear-gradient(180deg, hsl(var(--primary) / .16), hsl(var(--primary) / .04));
+    border-color: hsl(var(--primary) / .55);
+    box-shadow: 0 0 0 1px hsl(var(--primary) / .2), 0 0 22px -6px hsl(var(--glow) / .9);
+  }
+
+  /* Hero: rotating HUD rings + slow scan line over the existing glow. */
+  .dark .hero-glow {
+    background:
+      radial-gradient(38rem 26rem at 72% 30%, hsl(var(--glow) / .30), transparent 70%),
+      radial-gradient(30rem 22rem at 90% 64%, hsl(212 100% 55% / .18), transparent 70%),
+      radial-gradient(34rem 24rem at 15% 10%, hsl(var(--glow) / .10), transparent 70%);
+  }
+  .dark .hero-glow { filter: none; }
+  .dark .hero-glow::before {
+    content: ""; position: absolute; width: 36rem; height: 36rem; right: 5%; top: 2rem; border-radius: 50%;
+    border: 1px solid hsl(var(--ring-cyan) / .16);
+    background:
+      radial-gradient(circle, hsl(var(--glow) / .10) 0 18%, transparent 19%),
+      radial-gradient(circle, transparent 0 33%, hsl(var(--ring-cyan) / .28) 33.3%, transparent 33.8%),
+      radial-gradient(circle, transparent 0 47%, hsl(var(--ring-cyan) / .14) 47.3%, transparent 47.8%),
+      repeating-conic-gradient(from 0deg, hsl(var(--ring-cyan) / .22) 0 1.5deg, transparent 1.5deg 12deg);
+    -webkit-mask: radial-gradient(circle, #000 0 49%, transparent 49.5% 60%, #000 60.5% 64%, transparent 64.5%);
+    mask: radial-gradient(circle, #000 0 49%, transparent 49.5% 60%, #000 60.5% 64%, transparent 64.5%);
+    animation: nc-spin 80s linear infinite;
+  }
+  .dark .hero-glow::after {
+    content: ""; position: absolute; left: 0; right: 0; top: 0; height: 9%;
+    background: linear-gradient(180deg, transparent, hsl(var(--ring-cyan) / .05) 75%, hsl(var(--ring-cyan) / .22) 99%, transparent);
+    animation: nc-scan 10s ease-in-out infinite;
+  }
+  .dark .text-signal {
+    background: linear-gradient(100deg, hsl(var(--foreground)) 15%, hsl(188 100% 62%) 55%, hsl(214 100% 66%));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+
+  /* Verdict: scan line sweeps once when the result appears. */
+  .dark .verdict-heading::after {
+    content: ""; position: absolute; left: 0; right: 0; top: 0; height: 20%; pointer-events: none;
+    background: linear-gradient(180deg, transparent, hsl(var(--ring-cyan) / .25));
+    animation: nc-scan 1.6s ease-out 1 forwards;
+  }
+
+  /* Kickers and badges read as HUD labels. */
+  .dark .console-kicker { color: hsl(var(--primary)); text-shadow: 0 0 12px hsl(var(--glow) / .5); }
+
+  /* Tables: subtle cyan header and row hover. */
+  .dark .sg-page thead { background: linear-gradient(90deg, hsl(var(--primary) / .1), hsl(var(--primary) / .03)); }
+  .dark .sg-page tbody tr { transition: background-color 160ms; }
+  .dark .sg-page tbody tr:hover { background: hsl(var(--primary) / .05); }
+
+  /* Auth screens use the same circuit backdrop. */
+  .dark .auth-blueprint {
+    background-color: hsl(224 64% 4%);
+    background-image:
+      radial-gradient(40rem 28rem at 70% 20%, hsl(var(--glow) / .22), transparent 65%),
+      linear-gradient(hsl(var(--glow) / .05) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--glow) / .05) 1px, transparent 1px);
+    background-size: auto, 40px 40px, 40px 40px;
+  }
+
+  /* Dialogs and menus: glass. */
+  .dark [role=dialog], .dark [role=menu] {
+    background: hsl(var(--card) / .92);
+    border-color: hsl(var(--primary) / .25);
+    backdrop-filter: blur(18px);
+    box-shadow: 0 30px 80px -20px hsl(224 64% 2% / .9), 0 0 40px -16px hsl(var(--glow) / .5);
+  }
+  .dark .recharts-default-tooltip { background: hsl(var(--card) / .95) !important; border-color: hsl(var(--primary) / .3) !important; }
+}
+
+@media (max-width: 767px) {
+  .dark .hero-glow::before { width: 20rem; height: 20rem; right: -4rem; top: 6rem; opacity: .45; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dark .hero-glow::before, .dark .hero-glow::after, .dark .scanner-panel::after, .dark .verdict-heading::after { animation: none; }
+  .dark .hero-glow::after, .dark .verdict-heading::after { display: none; }
+}
