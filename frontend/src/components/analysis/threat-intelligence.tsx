@@ -1,3 +1,4 @@
+import { LookalikeDomain } from "@/components/analysis/demo-polish";
 import { ShieldQuestion, ArrowRight } from "lucide-react";
 import type { UrlIntelligence } from "@/types";
 
@@ -50,6 +51,8 @@ export function ThreatIntelligence({ urlIntelligence }: ThreatIntelligenceProps)
         <ShieldQuestion className="h-3.5 w-3.5 text-primary" />
         URL intelligence signals
       </p>
+
+      {urlIntelligence.hostname && <LookalikeDomain hostname={urlIntelligence.hostname} backendBrand={urlIntelligence.lookalike_of} />}
 
       {trust && (
         <div className="mb-4 rounded-xl border border-border bg-background/50 p-4">
