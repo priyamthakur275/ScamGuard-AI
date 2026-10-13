@@ -96,6 +96,7 @@ export default function HomePage() {
           <LanguageToggle />
           <Link href="/trends" className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground md:inline">Scam trends</Link>
           <Link href="/trainer" className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground md:inline">Trainer</Link>
+          <Link href="/test-bench" className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground md:inline">Test bench</Link>
           <ThemeToggle />
           <Link href="/login" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
             Sign in
@@ -225,6 +226,7 @@ export default function HomePage() {
           <div className="flex gap-4">
             <Link href="/trends" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Scam trends</Link>
             <Link href="/trainer" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Scam trainer</Link>
+            <Link href="/test-bench" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Test bench</Link>
             <Link href="/extension" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Browser extension</Link>
             <Link href="/register" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Create account</Link>
             <Link href="/login" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Sign in</Link>
