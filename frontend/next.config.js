@@ -41,6 +41,15 @@ const nextConfig = {
 
     return [{ source: "/:path*", headers: securityHeaders }];
   },
+  async redirects() {
+    // Family guardian and the scam trainer were retired; old links and the
+    // installed app's shortcuts land somewhere useful instead of a 404.
+    return [
+      { source: "/family/:path*", destination: "/dashboard", permanent: true },
+      { source: "/family", destination: "/dashboard", permanent: true },
+      { source: "/trainer", destination: "/simulator", permanent: true },
+    ];
+  },
   async rewrites() {
     // Runs in the Next.js server (Node process, or Vercel's serverless
     // functions), never in the browser -- so from the browser's point of

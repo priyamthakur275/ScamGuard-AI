@@ -50,6 +50,7 @@ PROTECTIVE_INFO = {
     "warns_not_to_share": "Tells you not to share your OTP — genuine messages do this.",
     "official_channel": "Points you to an official channel, not a number in the message.",
     "no_fee": "Says no fee is required.",
+    "awareness_warning": "Warns about a scam instead of asking you to do anything.",
     "status_update": "Just confirms something that already happened.",
     "transaction_alert": "Looks like a normal bank alert: masked account number and amount, nothing to do.",
 }

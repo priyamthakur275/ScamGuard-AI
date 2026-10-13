@@ -22,6 +22,6 @@
   },
   "shortcuts": [
     { "name": "Quick check", "url": "/#quick-check", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Scam trainer", "url": "/trainer", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
+    { "name": "Scam simulator", "url": "/simulator", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
   ]
 }
