@@ -25,14 +25,15 @@ Hosted on Render's free tier (frontend + `app_service` + PostgreSQL). The backen
 **Act on it**
 - One-tap reporting to **Chakshu** (Sanchar Saathi) or **1930 / cybercrime.gov.in**, with a ready-to-paste complaint.
 - **Community reports** for numbers, link domains, UPI IDs and emails (one vote per user; 2+ reports raise the score).
-- **Family guardian** — link a family member; with consent on both sides they see your high-risk scans and can call before money is sent.
+- **Golden Hour** — for people who already paid: a one-hour countdown, a direct call to 1930 and a complaint filled in from the scan.
 - Share a warning on WhatsApp; export PDF/CSV/JSON reports.
 
 **Learn and reach people**
-- **Scam Awareness Trainer** — spot-the-scam rounds with red-flag lessons.
+- **ScamGuard Copilot** — a streaming chat that checks pasted messages, links and call transcripts with corrective retrieval over 42 Indian scam patterns and 10 genuine message formats, citing official sources.
+- **Scam simulator** — five scripted scams (bank KYC, task job, digital arrest, UPI refund, electricity cut); every scammer line is checked live by the real engine, and wrong answers show the money you would have lost.
 - **Public scam trends** (anonymous aggregates), **English/Hindi interface**, installable **PWA with Android share target**, and a **Chrome/Edge/Brave extension** (`browser-extension/`).
 
-**Platform** — JWT auth with refresh rotation, bcrypt, self-hosted CAPTCHA, per-visitor rate limits, SSRF-safe URL fetching, CSP, admin model evaluation and robustness testing, 560+ automated tests.
+**Platform** — JWT auth with refresh rotation, bcrypt, self-hosted CAPTCHA, per-visitor rate limits, SSRF-safe URL fetching, CSP, admin model evaluation and robustness testing, 600+ automated tests.
 
 ---
 

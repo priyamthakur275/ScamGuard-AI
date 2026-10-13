@@ -39,8 +39,8 @@ const FEATURES = [
   },
   {
     icon: ShieldAlert,
-    title: "Family guardian",
-    description: "Link a parent or grandparent. When they check a likely scam, you see it and can call before money is sent.",
+    title: "Golden Hour help",
+    description: "Already paid or shared an OTP? A one-hour countdown, a direct call to 1930 and a complaint filled in from your scan.",
   },
   {
     icon: FileOutput,
@@ -95,7 +95,6 @@ export default function HomePage() {
           <InstallAppButton />
           <LanguageToggle />
           <Link href="/trends" className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground md:inline">Scam trends</Link>
-          <Link href="/trainer" className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground md:inline">Trainer</Link>
           <Link href="/simulator" className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground md:inline">Simulator</Link>
           <ThemeToggle />
           <Link href="/login" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
@@ -192,7 +191,7 @@ export default function HomePage() {
             <div className="space-y-6">
               <h2 className="font-display text-3xl font-bold sm:text-4xl">Your messages stay yours.</h2>
               <p className="text-lg text-muted-foreground">
-                Quick checks are never saved. Saved scans are visible only to you, and to a family member only if you choose. Links are opened on our server, never on your phone.
+                Quick checks are never saved. Saved scans are visible only to you. Links are opened on our server, never on your phone.
               </p>
             </div>
             <div>
@@ -225,7 +224,6 @@ export default function HomePage() {
           </p>
           <div className="flex gap-4">
             <Link href="/trends" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Scam trends</Link>
-            <Link href="/trainer" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Scam trainer</Link>
             <Link href="/simulator" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Scam simulator</Link>
             <Link href="/extension" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Browser extension</Link>
             <Link href="/register" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Create account</Link>

@@ -300,7 +300,11 @@ class CommunityReport(Base):
 
 
 class GuardianLink(Base):
-    """A person (protected) asks a family member (guardian) to watch out
+    """Retired: the family guardian feature was removed and nothing reads or
+    writes this table any more. The model stays so the schema and its
+    migration history (0007) remain consistent with existing databases.
+
+A person (protected) asks a family member (guardian) to watch out
     for them. Pending until the guardian accepts; while active the guardian
     sees the protected person's high-risk scans from that point on."""
 
