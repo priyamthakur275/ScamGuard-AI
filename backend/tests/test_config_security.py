@@ -9,7 +9,15 @@ KNOWN_DEFAULT_SECRET = "scamguard_development_secret_key_minimum_32_chars_123456
 class TestSecretKeySafetyGuard:
     def test_refuses_to_start_with_default_secret_when_debug_false(self):
         with pytest.raises(ValidationError, match="publicly-known development default"):
-            Settings(DEBUG=False, SECRET_KEY=KNOWN_DEFAULT_SECRET)
+            Settings(DEBUG=False, APP_ENV="production", SECRET_KEY=KNOWN_DEFAULT_SECRET)
+
+    def test_fresh_local_checkout_starts_without_any_env(self, monkeypatch):
+        # VS Code / terminal run with no .env: APP_ENV defaults to development.
+        monkeypatch.delenv("DEBUG", raising=False)
+        monkeypatch.delenv("APP_ENV", raising=False)
+        monkeypatch.delenv("SECRET_KEY", raising=False)
+        settings = Settings(_env_file=None)
+        assert settings.APP_ENV == "development"
 
     def test_allows_default_secret_when_debug_true(self):
         # Local development convenience: DEBUG=true is the explicit signal
