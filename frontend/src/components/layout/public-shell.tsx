@@ -13,6 +13,7 @@ const NAV: { href: string; label: StringKey }[] = [
   { href: "/#quick-check", label: "nav.quick" },
   { href: "/trends", label: "nav.trends" },
   { href: "/trainer", label: "nav.trainer" },
+  { href: "/test-bench", label: "nav.bench" },
   { href: "/extension", label: "nav.extension" },
 ];
 
