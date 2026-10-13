@@ -1,0 +1,182 @@
+import json
+from unittest.mock import patch
+
+import pytest
+
+from app_service.api.v1.copilot_chat import looks_like_evidence
+from app_service.rag import crag
+from app_service.rag.retriever import HybridRetriever, get_retriever, load_knowledge_base
+from app_service.services.copilot_llm_provider import CopilotLlmUnavailableError
+
+KYC = ("Dear SBI customer, your YONO account will be blocked today due to pending KYC. Share the OTP sent to your "
+       "mobile and update PAN at http://sbi-yono-kyc.xyz")
+JOB = ("Congratulations! You are selected for a part-time job. Earn Rs 5000 daily by liking YouTube videos. "
+       "Pay Rs 999 registration fee on UPI to start today.")
+GENUINE = "Rs. 2,450.00 debited from A/c XX4821 on 12-10-26 to AMAZON PAY. Not you? Call 1800-1234. Never share your OTP with anyone."
+
+
+def _events(body: str) -> list[tuple[str, dict]]:
+    out = []
+    for block in body.split("\n\n"):
+        lines = [l for l in block.splitlines() if not l.startswith(":")]
+        if not lines:
+            continue
+        name = next(l[7:] for l in lines if l.startswith("event: "))
+        data = json.loads(next(l[6:] for l in lines if l.startswith("data: ")))
+        out.append((name, data))
+    return out
+
+
+def test_knowledge_base_is_valid_and_cites_https_sources():
+    entries = load_knowledge_base()
+    assert len(entries) >= 30
+    assert len({e.id for e in entries}) == len(entries)
+    assert all(e.source_url.startswith("https://") and e.tactics for e in entries)
+
+
+def test_retriever_ranks_matching_scheme_first_and_scores_genuine_low():
+    r = get_retriever()
+    top = r.search(KYC, {"account_threat", "deadline", "asks_for_secret"}, top_k=3)[0]
+    assert top.entry.id == "kb-001" and top.relevance >= crag.CORRECT_MIN
+    assert r.search("Are we still meeting for the project discussion tomorrow at 10?", set(), top_k=1)[0].relevance < crag.AMBIGUOUS_MIN
+
+
+def test_retriever_rejects_empty_knowledge_base():
+    with pytest.raises(ValueError):
+        HybridRetriever([])
+
+
+def test_grade_retrieval_thresholds():
+    r = get_retriever()
+    grade, conf, refined = crag.grade_retrieval(r.search(KYC, {"asks_for_secret"}, top_k=5))
+    assert grade == "CORRECT" and conf >= crag.CORRECT_MIN and refined
+    assert crag.grade_retrieval([]) == ("INCORRECT", 0.0, [])
+
+
+def test_parse_llm_json_rejects_preamble_and_bad_schema():
+    good = '{"is_scam": true, "confidence_percentage": 90, "risk_tier": "High", "matched_tactics": [], "citation_links": []}'
+    assert crag.parse_llm_json(good).is_scam is True
+    with pytest.raises(ValueError):
+        crag.parse_llm_json("Sure! Here is the JSON: " + good)
+    with pytest.raises(Exception):
+        crag.parse_llm_json('{"is_scam": true, "confidence_percentage": 140, "risk_tier": "High", "matched_tactics": [], "citation_links": []}')
+
+
+def test_analyze_scam_returns_strict_verdict_with_citations(client):
+    res = client.post("/api/v1/copilot/analyze", json={"text": KYC})
+    assert res.status_code == 200
+    v = res.json()["verdict"]
+    assert v["is_scam"] is True and v["risk_tier"] == "High" and v["fraud_index"] >= 90
+    assert v["retrieval_grade"] == "CORRECT" and v["citation_links"][0]["kb_id"] == "kb-001"
+    assert {"asks_for_secret", "account_threat"} <= {t["id"] for t in v["matched_tactics"]}
+    assert v["verdict_source"] == "engine" and v["emerging_threat"] is False
+
+
+def test_analyze_genuine_message(client):
+    v = client.post("/api/v1/copilot/analyze", json={"text": GENUINE}).json()["verdict"]
+    assert v["is_scam"] is False and v["risk_tier"] == "Low" and v["scam_type"] is None
+
+
+def test_analyze_validation_errors(client):
+    assert client.post("/api/v1/copilot/analyze", json={"text": "  \u0000 "}).status_code == 422
+    assert client.post("/api/v1/copilot/analyze", json={"text": "x" * 4001}).status_code == 422
+    assert client.post("/api/v1/copilot/analyze", json={}).status_code == 422
+
+
+def test_unmatched_scam_is_flagged_as_emerging_threat(db_session):
+    with patch.object(crag, "grade_retrieval", return_value=("INCORRECT", 0.1, [])):
+        out = crag.analyze_evidence(db_session, KYC)
+    assert out.verdict.is_scam and out.verdict.emerging_threat and not out.verdict.citation_links
+    assert "emerging" in out.answer
+
+
+def test_llm_review_is_guarded(db_session):
+    invented = json.dumps({"is_scam": True, "confidence_percentage": 88, "risk_tier": "High",
+                           "matched_tactics": ["Asks for OTP / PIN / password", "Made up tactic"],
+                           "citation_links": ["https://www.rbi.org.in", "https://evil.example.com"]})
+    with patch("app_service.services.copilot_llm_provider.get_llm_completion", return_value=invented):
+        v = crag.analyze_evidence(db_session, KYC).verdict
+    assert v.verdict_source == "llm_reviewed" and v.confidence_percentage == 88
+    assert all(c.url != "https://evil.example.com" for c in v.citation_links)
+    assert [t.label for t in v.matched_tactics] == ["Asks for OTP / PIN / password"]
+
+
+def test_llm_contradicting_confident_engine_is_overruled(db_session):
+    flip = json.dumps({"is_scam": False, "confidence_percentage": 70, "risk_tier": "Low", "matched_tactics": [], "citation_links": []})
+    with patch("app_service.services.copilot_llm_provider.get_llm_completion", return_value=flip):
+        v = crag.analyze_evidence(db_session, KYC).verdict
+    assert v.is_scam is True and v.verdict_source == "engine_kept_over_llm"
+
+
+def test_llm_garbage_falls_back_to_engine(db_session):
+    with patch("app_service.services.copilot_llm_provider.get_llm_completion", return_value="I think it's a scam!"):
+        v = crag.analyze_evidence(db_session, KYC).verdict
+    assert v.verdict_source == "engine" and any("failed validation" in n for n in v.notes)
+
+
+def test_no_provider_configured_uses_engine(db_session):
+    with patch("app_service.services.copilot_llm_provider.get_llm_completion", side_effect=CopilotLlmUnavailableError("x")):
+        assert crag.analyze_evidence(db_session, KYC).verdict.verdict_source == "engine"
+
+
+def test_looks_like_evidence():
+    assert looks_like_evidence(KYC)
+    assert looks_like_evidence("http://paypa1-login.top")
+    assert not looks_like_evidence("what should I do?")
+    assert not looks_like_evidence("hi")
+
+
+def test_chat_streams_verdict_and_tokens(client):
+    res = client.post("/api/v1/copilot/chat", json={"message": JOB})
+    assert res.status_code == 200 and res.headers["content-type"].startswith("text/event-stream")
+    ev = _events(res.text)
+    names = [n for n, _ in ev]
+    assert names[0] == "status" and "verdict" in names and names[-1] == "done"
+    verdict = next(d for n, d in ev if n == "verdict")
+    assert verdict["is_scam"] is True and verdict["scam_type"] == "job_scam"
+    text = "".join(d["text"] for n, d in ev if n == "token")
+    assert text.startswith("This looks like a scam")
+
+
+def test_chat_follow_up_uses_previous_evidence(client):
+    res = client.post("/api/v1/copilot/chat", json={"message": "I already paid, what now?", "history": [{"role": "user", "content": JOB}]})
+    ev = _events(res.text)
+    assert ev[-1] == ("done", {"kind": "follow_up"})
+    assert "1930" in "".join(d["text"] for n, d in ev if n == "token")
+
+
+def test_chat_without_evidence_gives_guidance(client):
+    ev = _events(client.post("/api/v1/copilot/chat", json={"message": "hello"}).text)
+    assert ev[-1] == ("done", {"kind": "guidance"})
+
+
+def test_chat_server_failure_becomes_error_event(client):
+    with patch("app_service.api.v1.copilot_chat.analyze_evidence", side_effect=RuntimeError("db down")):
+        ev = _events(client.post("/api/v1/copilot/chat", json={"message": JOB}).text)
+    assert ev == [("error", {"message": "The analysis failed on the server. Please try again in a moment.", "retryable": True})]
+
+
+def test_chat_history_limits(client):
+    turns = [{"role": "user", "content": "hi"}] * 21
+    assert client.post("/api/v1/copilot/chat", json={"message": "hi", "history": turns}).status_code == 422
+    assert client.post("/api/v1/copilot/chat", json={"message": "hi", "history": [{"role": "system", "content": "x"}]}).status_code == 422
+
+
+def test_xray_does_not_flag_a_never_share_warning():
+    from ml_service.inference.scam_xray import xray
+    spans = xray("Rs. 2,450.00 debited from A/c XX4821. Never share your OTP with anyone.")["spans"]
+    assert "asks_for_secret" not in {s["intent"] for s in spans}
+
+
+def test_bank_alert_is_reassuring_unless_it_asks_for_something():
+    from ml_service.inference.threat_scorer import ThreatScorer
+    s = ThreatScorer()
+    found, protective = s.intents("Rs. 2,450.00 debited from A/c XX4821 on 12-10-26 to AMAZON PAY. Not you? Call 1800-1234.")
+    assert "transaction_alert" in protective and not found
+    found, protective = s.intents("Rs 5000 credited to your A/c XX1234 by mistake from my side. Please return it on PhonePe.")
+    assert "mistaken_transfer" in found and "transaction_alert" not in protective
+
+
+def test_genuine_short_debit_alert_is_not_flagged(client):
+    v = client.post("/api/v1/copilot/analyze", json={"text": GENUINE}).json()["verdict"]
+    assert v["is_scam"] is False and not v["matched_tactics"]

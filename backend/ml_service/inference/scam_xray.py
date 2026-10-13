@@ -51,6 +51,7 @@ PROTECTIVE_INFO = {
     "official_channel": "Points you to an official channel, not a number in the message.",
     "no_fee": "Says no fee is required.",
     "status_update": "Just confirms something that already happened.",
+    "transaction_alert": "Looks like a normal bank alert: masked account number and amount, nothing to do.",
 }
 
 
@@ -65,7 +66,12 @@ def xray(text: str, max_chars: int = 1500) -> dict:
             if m.end() - m.start() < 2:
                 continue
             spans.append({"start": m.start(), "end": m.end(), "intent": name, "stage": info[0], "label": info[1], "why": info[2]})
-    reassuring = [PROTECTIVE_INFO[n] for n, _w, rx in _PROTECTIVE if rx.search(text) and n in PROTECTIVE_INFO]
+    protective = {n for n, _w, rx in _PROTECTIVE if rx.search(text)}
+    reassuring = [PROTECTIVE_INFO[n] for n, _w, _rx in _PROTECTIVE if n in protective and n in PROTECTIVE_INFO]
+    if "warns_not_to_share" in protective:
+        # Same rule as the risk engine: "never share your OTP" is a warning,
+        # not a request, so it must not be shown as a red flag.
+        spans = [s for s in spans if s["intent"] != "asks_for_secret"]
 
     # Keep spans non-overlapping: prefer earlier, then longer ones.
     spans.sort(key=lambda s: (s["start"], -(s["end"] - s["start"])))

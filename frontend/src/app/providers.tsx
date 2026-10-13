@@ -7,6 +7,10 @@ import { ToastProvider } from "@/hooks/use-toast";
 import { MotionConfig } from "framer-motion";
 import { Toaster } from "@/components/ui/toaster";
 import { LanguageProvider } from "@/lib/i18n/language-context";
+import { CopilotProvider } from "@/components/copilot/copilot-provider";
+import { ScamGuardChat } from "@/components/copilot/scamguard-chat";
+import { GlobalErrorReporter } from "@/components/layout/global-error-reporter";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 export function Providers({ children }: { children: ReactNode }) {
   useEffect(() => {
@@ -18,8 +22,14 @@ export function Providers({ children }: { children: ReactNode }) {
     <MotionConfig reducedMotion="user"><ThemeProvider><LanguageProvider>
       <ToastProvider>
         <AuthProvider>
-          {children}
+          <CopilotProvider>
+            {children}
+            <ErrorBoundary area="Copilot" silentFallback>
+              <ScamGuardChat />
+            </ErrorBoundary>
+          </CopilotProvider>
           <Toaster />
+          <GlobalErrorReporter />
         </AuthProvider>
       </ToastProvider>
     </LanguageProvider></ThemeProvider></MotionConfig>

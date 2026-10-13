@@ -11,6 +11,10 @@ import { cn, scamCategoryLabel } from "@/lib/utils";
 import type { AnalysisResult } from "@/types";
 import { useLanguage } from "@/lib/i18n/language-context";
 import { ScamXray, type XrayData } from "@/components/analysis/scam-xray";
+import { analyzeWithCopilot } from "@/lib/copilot/stream";
+import type { CragVerdict } from "@/lib/copilot/types";
+import { RagVerdict } from "@/components/copilot/rag-verdict";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 const SAMPLE =
   "URGENT: Your SBI account will be blocked today. Update KYC immediately at http://sbi-kyc-verify.xyz and share the OTP sent to your phone.";
@@ -30,6 +34,7 @@ export function QuickCheck({ initialText = "", autoRun = false, heading }: Quick
   const [text, setText] = useState(initialText);
   const autoRan = useRef(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [verdict, setVerdict] = useState<CragVerdict | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -41,9 +46,19 @@ export function QuickCheck({ initialText = "", autoRun = false, heading }: Quick
     setLoading(true);
     setError(null);
     try {
-      setResult(await quickCheck(value.trim()));
+      try {
+        const res = await analyzeWithCopilot(value.trim());
+        setResult(res.analysis);
+        setVerdict(res.verdict);
+      } catch (err) {
+        // Older backend without the Copilot route: fall back to the plain quick check.
+        if (!(err instanceof ApiError && err.status === 404)) throw err;
+        setResult(await quickCheck(value.trim()));
+        setVerdict(null);
+      }
     } catch (err) {
       setResult(null);
+      setVerdict(null);
       setError(
         err instanceof ApiError && err.status === 429
           ? t("qc.busy")
@@ -112,32 +127,40 @@ export function QuickCheck({ initialText = "", autoRun = false, heading }: Quick
           <div
             className={cn(
               "mt-6 border p-5",
-              isScam ? "border-destructive/50 bg-destructive/5" : "border-emerald-500/50 bg-emerald-500/5",
+              isScam ? "border-destructive/50 bg-destructive/5" : "border-risk-low/50 bg-risk-low/5",
             )}
           >
-            <div className="flex items-center gap-2">
-              {isScam ? (
-                <ShieldAlert className="h-5 w-5 text-destructive" />
-              ) : (
-                <ShieldCheck className="h-5 w-5 text-emerald-600" />
-              )}
-              <p className="text-lg font-semibold text-foreground">
-                {isScam ? `${t("qc.scam")} · ${scamCategoryLabel(result.scam_category)}` : t("qc.safe")}
+            {verdict ? (
+              <ErrorBoundary area="The result view">
+                <RagVerdict verdict={verdict} />
+              </ErrorBoundary>
+            ) : (
+              <>
+              <div className="flex items-center gap-2">
+                {isScam ? (
+                  <ShieldAlert className="h-5 w-5 text-destructive" />
+                ) : (
+                  <ShieldCheck className="h-5 w-5 text-emerald-600" />
+                )}
+                <p className="text-lg font-semibold text-foreground">
+                  {isScam ? `${t("qc.scam")} · ${scamCategoryLabel(result.scam_category)}` : t("qc.safe")}
+                </p>
+              </div>
+              <p className="mt-1 font-mono text-xs text-muted-foreground">
+                {Math.round(result.threat_score * 100)}% {t("qc.likelihood")} · {t("qc.model")}{" "}
+                {Math.round(result.scam_probability * 100)}%
               </p>
-            </div>
-            <p className="mt-1 font-mono text-xs text-muted-foreground">
-              {Math.round(result.threat_score * 100)}% {t("qc.likelihood")} · {t("qc.model")}{" "}
-              {Math.round(result.scam_probability * 100)}%
-            </p>
 
-            {result.top_contributing_tokens?.length > 0 && (
-              <p className="mt-3 text-sm text-muted-foreground">
-                {t("qc.signals")}:{" "}
-                {result.top_contributing_tokens
-                  .slice(0, 5)
-                  .map((t) => displayToken(t.token))
-                  .join(", ")}
-              </p>
+              {result.top_contributing_tokens?.length > 0 && (
+                <p className="mt-3 text-sm text-muted-foreground">
+                  {t("qc.signals")}:{" "}
+                  {result.top_contributing_tokens
+                    .slice(0, 5)
+                    .map((t) => displayToken(t.token))
+                    .join(", ")}
+                </p>
+              )}
+              </>
             )}
 
             <div className="mt-4">
@@ -150,7 +173,7 @@ export function QuickCheck({ initialText = "", autoRun = false, heading }: Quick
               </p>
             ))}
 
-            {isScam && (result.recommended_actions?.length ?? 0) > 0 && (
+            {!verdict && isScam && (result.recommended_actions?.length ?? 0) > 0 && (
               <ul className="mt-3 list-disc pl-5 text-sm text-foreground">
                 {result.recommended_actions!.slice(0, 3).map((a) => (
                   <li key={a}>{a}</li>

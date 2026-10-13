@@ -94,7 +94,7 @@ _INTENTS: tuple[tuple[str, float, re.Pattern[str]], ...] = tuple(
         ("too_good", 0.4, r"(double your money|guaranteed\s+\d+%|\d+\s*%\s*(daily|per day|weekly)|assured (daily )?(profit|returns?)|daily profit|lucky draw|lottery|you (have )?won|jeet\w*|mubarak ho|selected for (a )?(lucky|prize)|kbc|cashback of)"),
         ("secrecy", 0.4, r"(do not|don't|dont) (tell|inform) (anyone|your family|anybody)|kisi ko (mat|na) bata|stay on (the )?(video )?call|do not disconnect|don't disconnect"),
         ("task_scam", 0.4, r"\b(like|rate|review|subscribe)\w*\b[^.?!]{0,40}\b(earn|per like|per review|rupees per|rs\.?\s*\d+ per)|\bprepaid task\b|\btask (job|account)\b"),
-        ("mistaken_transfer", 0.45, r"(by mistake|galti se|wrong(ly)? (transfer|sent)|sent (you )?.{0,20}by mistake)[^.]{0,80}(return|wapas|approve|request|refund)"),
+        ("mistaken_transfer", 0.45, r"(by mistake|galti se|wrong(ly)? (transfer|sent)|sent (you )?.{0,20}by mistake)[\s\S]{0,120}?(return|wapas|approve|request|refund)"),
         ("collect_request", 0.4, r"\b(accept|approve)\b[^.?!]{0,30}\b(collect )?request\b[^.?!]{0,40}\b(receive|money|back|cashback|refund)|enter (your )?(upi )?pin to receive"),
         ("new_number_emergency", 0.4, r"(new number|lost my phone|phone (broke|is broken)|friend'?s (phone|number)|met with an accident|stuck at (the )?(airport|customs))"),
         ("impersonation", 0.15, r"\b(rbi|reserve bank|cbi|cyber ?(crime|cell)|police|trai|telecom regulator|customs (officer|department)|narcotics|income tax department|ed officer|enforcement directorate|head office|kyc officer)\b"),
@@ -120,9 +120,20 @@ _PROTECTIVE: tuple[tuple[str, float, re.Pattern[str]], ...] = tuple(
          rf"|\b(share|bata\w*|bhej\w*)\s+(na|mat|nahi)\b|\b{_SECRET}\b[^.?!]{{0,25}}\bnahi\s+maang\w*"),
         ("official_channel", 0.35, r"\b(not (you|done by you)|if this was(n't| not) you)\b[^.?!]{0,40}\b(call|contact)\b[^.?!]{0,40}\b(official|helpline|back of your card|branch)\b|\b(official (app|website|portal|helpline))\b"),
         ("no_fee", 0.4, r"\bno (fee|charges?|payment) (is )?(required|needed)|\bthere is no fee\b|\bfree of cost\b"),
+        # A bank alert that names only the masked account ("A/c XX4821") and the
+        # amount is how genuine debit/credit SMS look; scam texts that copy it
+        # still carry their own ask (sent-by-mistake, collect request, OTP).
+        ("transaction_alert", 0.4, r"\b(debited|credited|withdrawn|spent)\b[^.?!]{0,40}\b(a/?c|acct|account|card)\s*(no\.?\s*)?(x+|\*+)\d{3,4}\b"
+         r"|\b(a/?c|acct|account|card)\s*(no\.?\s*)?(x+|\*+)\d{3,4}\b[^.?!]{0,40}\b(debited|credited)\b"),
         ("status_update", 0.3, r"\b(has been|is|was) (successfully )?(credited|processed|delivered|confirmed|received|resolved|verified|generated|shipped|completed|booked|matured)\b|\bsuccessful(ly)?\b|\bpayment (status:?\s*)?(received|successful|confirmed)\b"),
     ]
 )
+
+
+_ALERT_OVERRIDES = frozenset({
+    "mistaken_transfer", "collect_request", "asks_for_secret", "asks_card_details", "move_money",
+    "pay_to_receive", "suspicious_link", "link_with_action", "remote_access_app", "verify_account_demand",
+})
 
 
 def _logit(p: float) -> float:
@@ -163,6 +174,10 @@ class ThreatScorer:
         # the warning wins when it is the only thing asking about secrets.
         if "warns_not_to_share" in protective:
             found.pop("asks_for_secret", None)
+        # A copied bank-alert format is no comfort when the text also asks for
+        # something (fake "credited by mistake" or refund SMS).
+        if found.keys() & _ALERT_OVERRIDES:
+            protective.pop("transaction_alert", None)
         return found, protective
 
     def assess(self, scam_probability: float, tokens: list[str], raw_text: str = "", ignore_intents: tuple[str, ...] = ()) -> ThreatAssessment:
