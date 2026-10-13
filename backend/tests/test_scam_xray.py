@@ -23,3 +23,16 @@ def test_quick_check_returns_xray(client):
     body = client.post("/api/v1/public/quick-check", json={"text": "Your SBI account will be blocked today, share the OTP now"}).json()
     xr = body["metadata"]["xray"]
     assert xr["text"].startswith("Your SBI account") and xr["spans"]
+
+
+def test_genuine_message_gets_no_red_flags_only_reassurance():
+    from ml_service.inference.scam_xray import xray
+    out = xray("Rs 2,450 debited. Not you? Call the official helpline. Never share your OTP with anyone.", is_scam=False)
+    assert out["spans"] == []
+    assert out["reassuring"]
+
+
+def test_never_share_warning_is_not_underlined_as_an_ask():
+    from ml_service.inference.scam_xray import xray
+    out = xray("Never share your OTP. Your account will be blocked today, pay the fee to unlock it.")
+    assert "asks_for_secret" not in {s["intent"] for s in out["spans"]}
