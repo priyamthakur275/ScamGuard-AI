@@ -1,5 +1,6 @@
 "use client";
 
+import { ExampleChips } from "@/components/analysis/demo-polish";
 import { useState, useRef } from "react";
 import { FileText, Link as LinkIcon, Mail, Image as ImageIcon, File, QrCode, Mic } from "lucide-react";
 import { FileUploadZone } from "./file-upload-zone";
@@ -120,6 +121,14 @@ export function ScanTabs({ onScan, isScanning = false }: ScanTabsProps) {
               className="min-h-[240px] resize-y border-border bg-background text-base leading-7 placeholder:text-muted-foreground"
               value={textValue}
               onChange={(e) => setTextValue(e.target.value)}
+            />
+            <ExampleChips
+              channel={activeTab}
+              disabled={isScanning}
+              onPick={(text) => {
+                setTextValue(text);
+                onScan([text], [], activeTab);
+              }}
             />
           </div>
         )}

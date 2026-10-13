@@ -1,5 +1,6 @@
 "use client";
 
+import { ScanProgress } from "@/components/analysis/demo-polish";
 import { useState, useCallback, useEffect, memo } from "react";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
@@ -26,6 +27,7 @@ export const BatchScanner = memo(function BatchScanner() {
   const [items, setItems] = useState<ScanItem[]>([]);
   const [isScanning, setIsScanning] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [channel, setChannel] = useState("text");
 
   const handleScan = useCallback(async (texts: string[], files: File[], inputType: string) => {
     const newItems: ScanItem[] = [];
@@ -52,6 +54,7 @@ export const BatchScanner = memo(function BatchScanner() {
 
     setItems(newItems);
     setIsScanning(true);
+    setChannel(inputType);
     setCurrentIndex(0);
 
     let completed = 0;
@@ -106,15 +109,7 @@ export const BatchScanner = memo(function BatchScanner() {
       <ScanTabs onScan={handleScan} isScanning={isScanning} />
 
       {isScanning && (
-        <div className="flex items-center gap-4 bg-card border border-border px-6 py-4 rounded-xl">
-          <div className="flex items-center gap-3">
-            <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-primary" />
-            <span className="font-medium" role="status">Analyzing evidence…</span>
-          </div>
-          <span className="text-sm font-medium text-muted-foreground ml-auto">
-            Item {currentIndex + 1} of {items.length}
-          </span>
-        </div>
+        <ScanProgress channel={channel} label={items.length > 1 ? `Item ${currentIndex + 1} of ${items.length}` : undefined} />
       )}
 
       {items.some((i) => i.status === "done" || i.status === "error") && (
