@@ -103,12 +103,3 @@ def trends(request: Request, days: int = 30, db: Session = Depends(get_db)) -> d
     _TRENDS_CACHE[days] = (_time.monotonic(), data)
     return data
 
-
-# --------------------------------------------------------------------------
-# Public test bench: 15 fixed inputs run live through the real pipeline.
-# --------------------------------------------------------------------------
-@router.get("/test-bench")
-@limiter.limit("10/minute")
-def test_bench(request: Request, fresh: bool = False, db: Session = Depends(get_db)) -> dict:
-    from app_service.services.test_bench import run_all
-    return run_all(db, fresh=fresh)

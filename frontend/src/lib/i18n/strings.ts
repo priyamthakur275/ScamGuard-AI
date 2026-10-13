@@ -4,7 +4,6 @@ export const STRINGS = {
   "nav.quick": { en: "Quick check", hi: "तुरंत जाँच" },
   "nav.trends": { en: "Scam trends", hi: "स्कैम ट्रेंड" },
   "nav.trainer": { en: "Trainer", hi: "ट्रेनर" },
-  "nav.bench": { en: "Test bench", hi: "टेस्ट बेंच" },
   "nav.extension": { en: "Extension", hi: "एक्सटेंशन" },
   "nav.signin": { en: "Sign in", hi: "साइन इन" },
   "footer.lost": { en: "Lost money to a scam? Call", hi: "स्कैम में पैसे गए? तुरंत कॉल करें" },
