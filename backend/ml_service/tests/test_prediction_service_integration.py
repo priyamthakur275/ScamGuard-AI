@@ -55,3 +55,17 @@ class TestPredictionServiceIntegration:
         result = prediction_service.predict(PredictionRequest(text=text))
 
         assert result.scam_probability == round(raw.scam_probability, 4)
+
+
+    def test_unreadable_link_starts_from_trust_score_not_bare_url_text(self, prediction_service):
+        """A bare address says nothing to the text model; when the page could
+        not be read, a trustworthy site must not be flagged because links were
+        common in SMS spam, while a deceptive one still is."""
+        safe = prediction_service.predict(PredictionRequest(
+            text="URL Target: https://www.irctc.co.in/nget/train-search", input_type="URL",
+            metadata={"fetch_status": "direct_url_analysis", "url_intelligence": {"trust": {"score": 65}}}))
+        assert safe.verdict == "legitimate"
+        bad = prediction_service.predict(PredictionRequest(
+            text="URL Target: http://paypa1-secure-login.verify-account.top/signin", input_type="URL",
+            metadata={"fetch_status": "direct_url_analysis", "url_intelligence": {"trust": {"score": 10}}}))
+        assert bad.verdict == "scam"

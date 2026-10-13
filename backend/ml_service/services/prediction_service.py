@@ -55,7 +55,20 @@ class PredictionService:
         raw_result = self._engine.predict(request.text)
         tokens, features = self._engine.transform(request.text)
 
-        threat = self._threat_scorer.assess(raw_result.scam_probability, tokens, request.text)
+        base_probability, ignore = raw_result.scam_probability, ()
+        if (request.input_type or "").upper() == "URL":
+            # The input itself is a link, so "contains a link" is not evidence.
+            ignore = ("link_with_action",)
+            intel = (request.metadata or {}).get("url_intelligence") or {}
+            trust = intel.get("trust") or {}
+            page_read = (request.metadata or {}).get("fetch_status") not in ("direct_url_analysis", "blocked_unsafe_target")
+            if not page_read and isinstance(trust.get("score"), (int, float)):
+                # The page could not be read, so the text model only sees a bare
+                # address -- and links in its SMS training data were mostly spam,
+                # which says nothing about this site. Start from the documented
+                # website trust score instead; URL evidence then moves it.
+                base_probability = min(max(1 - trust["score"] / 100, 0.02), 0.98)
+        threat = self._threat_scorer.assess(base_probability, tokens, request.text, ignore_intents=ignore)
 
         # scam_probability is always the model's own, real, unmodified
         # output. threat_score (from the risk engine above) is a distinct,
