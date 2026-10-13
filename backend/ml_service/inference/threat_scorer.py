@@ -114,10 +114,13 @@ _INTENTS: tuple[tuple[str, float, re.Pattern[str]], ...] = tuple(
 _PROTECTIVE: tuple[tuple[str, float, re.Pattern[str]], ...] = tuple(
     (name, weight, re.compile(rx, re.I))
     for name, weight, rx in [
-        ("warns_not_to_share", 0.6, rf"\b{_NEG}\b[^.?!]{{0,25}}\b(share|disclose|tell|give)\b|\bnever (asks?|call\w*)\b[^.?!]{{0,30}}\b{_SECRET}\b"),
+        ("warns_not_to_share", 0.6, rf"\b{_NEG}\b[^.?!]{{0,25}}\b(share|disclose|tell|give)\b|\bnever (asks?|call\w*)\b[^.?!]{{0,30}}\b{_SECRET}\b"
+         # Hinglish puts the negation after the verb: "OTP kisi ke saath share na karein",
+         # "bank kabhi bhi OTP nahi maangta".
+         rf"|\b(share|bata\w*|bhej\w*)\s+(na|mat|nahi)\b|\b{_SECRET}\b[^.?!]{{0,25}}\bnahi\s+maang\w*"),
         ("official_channel", 0.35, r"\b(not (you|done by you)|if this was(n't| not) you)\b[^.?!]{0,40}\b(call|contact)\b[^.?!]{0,40}\b(official|helpline|back of your card|branch)\b|\b(official (app|website|portal|helpline))\b"),
         ("no_fee", 0.4, r"\bno (fee|charges?|payment) (is )?(required|needed)|\bthere is no fee\b|\bfree of cost\b"),
-        ("status_update", 0.3, r"\b(has been|is|was) (successfully )?(credited|processed|delivered|confirmed|received|resolved|verified|generated|shipped|completed|booked|matured)\b|\bsuccessful(ly)?\b"),
+        ("status_update", 0.3, r"\b(has been|is|was) (successfully )?(credited|processed|delivered|confirmed|received|resolved|verified|generated|shipped|completed|booked|matured)\b|\bsuccessful(ly)?\b|\bpayment (status:?\s*)?(received|successful|confirmed)\b"),
     ]
 )
 
@@ -162,12 +165,14 @@ class ThreatScorer:
             found.pop("asks_for_secret", None)
         return found, protective
 
-    def assess(self, scam_probability: float, tokens: list[str], raw_text: str = "") -> ThreatAssessment:
+    def assess(self, scam_probability: float, tokens: list[str], raw_text: str = "", ignore_intents: tuple[str, ...] = ()) -> ThreatAssessment:
         text = raw_text or " ".join(tokens)
         text_lower = text.lower()
         token_set = set(tokens)
 
         found, protective = self.intents(text)
+        for name in ignore_intents:
+            found.pop(name, None)
         evidence_for = sum(found.values())
         # Weak context signals only count once a real intent is present.
         if set(found) <= {"deadline", "impersonation", "account_threat", "link_with_action"}:

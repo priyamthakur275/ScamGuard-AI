@@ -24,6 +24,8 @@ def test_scam_intent_lifts_an_unsure_model(text):
     "482913 is your OTP for the HDFC transaction. Do not share it with anyone.",
     "Rs 2,450 debited from a/c XX4821. Not you? Call the official helpline on the back of your card.",
     "Your salary of Rs 45,000 has been credited to your account.",
+    "482913 aapka HDFC NetBanking login OTP hai. Yeh OTP kisi ke saath share na karein.",
+    "HDFC Bank kabhi bhi OTP nahi maangta. Login OTP 551207.",
 ])
 def test_genuine_notices_are_pulled_down(text):
     assert S.assess(0.6, text.lower().split(), text).threat_score < 0.5
@@ -50,3 +52,11 @@ def test_unseen_challenge_set_accuracy_does_not_regress():
         tokens, _ = engine.transform(text)
         correct += (S.assess(p, tokens, text).threat_score >= 0.5) == (label == "scam")
     assert correct / len(df) >= 0.85
+
+
+@pytest.mark.parametrize("text", [
+    "OTP batao jaldi warna account band ho jayega",
+    "Apna OTP share karo abhi, account block ho jayega",
+])
+def test_hinglish_requests_for_otp_stay_scams(text):
+    assert S.assess(0.5, text.lower().split(), text).threat_score >= 0.8
