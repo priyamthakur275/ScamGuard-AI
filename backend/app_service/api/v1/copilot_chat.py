@@ -148,16 +148,26 @@ def chat(request: Request, payload: ChatRequest, db: Session = Depends(get_db)) 
         return StreamingResponse(iter([failure]), media_type="text/event-stream", headers=_STREAM_HEADERS)
 
     async def stream() -> AsyncIterator[str]:
-        yield ": stream-open\n\n"
-        yield _sse("status", {"stage": "answering"})
-        for e in events:
-            yield e
-        for i, piece in enumerate(_chunks(answer)):
-            if i % 16 == 0 and await request.is_disconnected():
-                return
-            yield _sse("token", {"text": piece})
-            await asyncio.sleep(0.012)
-        yield _sse("done", {"kind": kind})
+        # Everything that can fail ran above; this loop only writes. If writing
+        # still fails, the client gets an explicit error event (it never waits
+        # on a half-open stream), and the full answer is included so nothing
+        # that was already computed is lost.
+        try:
+            yield ": stream-open\n\n"
+            yield _sse("status", {"stage": "answering"})
+            for e in events:
+                yield e
+            for i, piece in enumerate(_chunks(answer)):
+                if i % 16 == 0 and await request.is_disconnected():
+                    return
+                yield _sse("token", {"text": piece})
+                await asyncio.sleep(0.012)
+            yield _sse("done", {"kind": kind})
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            logger.exception("Copilot stream failed while writing")
+            yield _sse("error", {"message": "The answer was interrupted. Please retry.", "retryable": True, "fallback_answer": answer})
 
     return StreamingResponse(stream(), media_type="text/event-stream", headers=_STREAM_HEADERS)
 

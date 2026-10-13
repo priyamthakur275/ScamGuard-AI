@@ -58,6 +58,7 @@ class ThreatAssessment:
     scam_category: str | None
     matched_signal_count: int
     intents: tuple[str, ...] = ()
+    genuine_transaction: bool = False
 
 
 # ---------------------------------------------------------------------------
@@ -136,6 +137,54 @@ _ALERT_OVERRIDES = frozenset({
 })
 
 
+# Genuine transaction guard. The TF-IDF model is overconfident on Indian
+# bank alerts (a salary credit SMS scores about 0.96) because the public
+# training data has few of them. A message that only reports money moving on
+# a masked account, carries no request, no link, no mobile number to call and
+# no app to install cannot be used to steal anything, so its final score is
+# capped. Any scam intent, or any of the blockers below, disables the guard.
+_MONTHS = r"(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*"
+_TXN_FORM = re.compile(
+    r"\b(debited|credited|withdrawn|spent|deposited|received)\b[^.?!]{0,60}\b(a/?c|acct|account|card)\s*(no\.?\s*)?(x+|\*+)\d{3,4}\b"
+    r"|\b(a/?c|acct|account|card)\s*(no\.?\s*)?(x+|\*+)\d{3,4}\b[^.?!]{0,60}\b(debited|credited|deposited)\b"
+    r"|\b(debited|spent|used)\b[^.?!]{0,60}\b(card|a/?c|account)\s+ending\s+(in\s+)?\d{4}\b"
+    r"|\bsalary\b[^.?!]{0,60}\b(credited|deposited|processed|paid)\b|\b(credited|deposited)\b[^.?!]{0,60}\bsalary\b"
+    r"|\b(emi|bill|premium|instal+ment)\b[^.?!]{0,60}\b(is due|due on|due date)\b"
+    rf"|\bsalary for (the month of )?{_MONTHS}\b",
+    re.I,
+)
+_TXN_ANCHOR = re.compile(
+    r"\b(a/?c|acct|account|card)\s*(no\.?\s*)?(x+|\*+)\d{3,4}\b|\b(card|a/?c|account)\s+ending\s+(in\s+)?\d{4}\b|\bavl\.? ?bal|\bavailable balance\b|\b(upi )?ref(erence)?\.? ?(no\.?)?:? ?\d{6,}|\butr\b",
+    re.I,
+)
+_TXN_BLOCKERS = re.compile(
+    r"https?://|www\.|\b[a-z0-9-]+\.(xyz|top|link|online|site|live|shop|info|click)\b|bit\.ly"
+    r"|\b(install|download|apk|anydesk|teamviewer|quicksupport|click|tap here)\b"
+    r"|\b(by mistake|galti|wrongly|return (it|the|money|amount)|send (it|money|back)|refund it)\b"
+    r"|\b(kyc|pan card|aadhaar|update your|verify your|blocked|suspend\w*|expire\w*)\b"
+    r"|\b(pay|paying)\s+(rs\.?|inr|₹|\d|now|a|the|fee|charges?)\b|\b(fee|charges? of|processing|claim|lottery|prize|reward)\b"
+    r"|(?<!\d)(\+?91[\s-]?)?[6-9]\d{9}(?!\d)",
+    re.I,
+)
+_OTP_WORD = re.compile(r"\b(otp|pin|cvv|password)\b", re.I)
+
+
+def is_genuine_transaction(text: str, found: dict[str, float], protective: dict[str, float]) -> bool:
+    if found:
+        return False
+    flat = " ".join(text.split())
+    if not (_TXN_FORM.search(flat) and _TXN_ANCHOR.search(flat)):
+        return False
+    if _TXN_BLOCKERS.search(flat):
+        return False
+    if _OTP_WORD.search(flat) and "warns_not_to_share" not in protective:
+        return False
+    return True
+
+
+GENUINE_TRANSACTION_CAP = 0.15
+
+
 def _logit(p: float) -> float:
     p = min(max(p, 1e-4), 1 - 1e-4)
     return math.log(p / (1 - p))
@@ -176,7 +225,7 @@ class ThreatScorer:
             found.pop("asks_for_secret", None)
         # A copied bank-alert format is no comfort when the text also asks for
         # something (fake "credited by mistake" or refund SMS).
-        if found.keys() & _ALERT_OVERRIDES:
+        if found.keys() & _ALERT_OVERRIDES or _TXN_BLOCKERS.search(text):
             protective.pop("transaction_alert", None)
         return found, protective
 
@@ -197,6 +246,9 @@ class ThreatScorer:
         model_logit = max(-self._MODEL_LOGIT_CAP, min(self._MODEL_LOGIT_CAP, _logit(scam_probability)))
         logit = model_logit + self._GAIN * (evidence_for - evidence_against)
         threat_score = 1 / (1 + math.exp(-logit))
+        genuine_transaction = is_genuine_transaction(text, found, protective)
+        if genuine_transaction:
+            threat_score = min(threat_score, GENUINE_TRANSACTION_CAP)
 
         category_scores: dict[str, int] = {}
         for category, signals in _CATEGORY_SIGNALS.items():
@@ -219,6 +271,7 @@ class ThreatScorer:
             scam_category=chosen_category,
             matched_signal_count=len(found) + urgency_hits,
             intents=tuple(sorted(found)),
+            genuine_transaction=genuine_transaction,
         )
 
     def _risk_level_for(self, threat_score: float) -> str:

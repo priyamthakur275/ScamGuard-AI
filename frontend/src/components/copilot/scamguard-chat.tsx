@@ -173,7 +173,7 @@ function ChatPanel() {
             </button>
           )}
         </div>
-        <p className="mt-1.5 text-[11px] text-muted-foreground">Nothing you send here is saved. Never paste your own OTP or PIN.</p>
+        <p className="mt-1.5 text-[11px] text-muted-foreground">Not stored on our servers. This chat stays in this browser for 24 hours (bin icon clears it). Never paste your own OTP or PIN.</p>
       </form>
     </section>
   );
