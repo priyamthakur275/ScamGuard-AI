@@ -92,11 +92,53 @@ def looks_like_evidence(text: str) -> bool:
     words = text.split()
     if _URL.search(text) or _PHONE_OR_UPI.search(text):
         return True
+    if text.rstrip().endswith("?") and len(words) < 40 and not _FORWARDED.search(text):
+        return False  # a question to the Copilot, however long
     if len(words) >= 12:
         return True
     if classify_intent(text) != "unknown":
         return False
     return len(words) >= 6
+
+
+_FORWARDED = re.compile(r"\b(dear (customer|user|sir|madam)|your (account|kyc|card|parcel|order)|click|otp|congratulations|you have won)\b", re.I)
+
+COPILOT_PERSONA = (
+    "You are ScamGuard Copilot, the AI assistant inside ScamGuard, a scam and fraud detection website for India. "
+    "Answer any question the user asks helpfully and accurately, like a capable general AI assistant: general knowledge, "
+    "explanations, how-tos, writing help and technology questions are all fine. Your speciality is online safety: scams, "
+    "phishing, UPI and banking fraud, digital arrest, job and investment fraud, cyber hygiene, privacy and what to do after "
+    "a fraud. Reply in the user's language (English, Hindi or Hinglish), clearly and concisely, in plain text without markdown headings or tables; for lists start lines with "- " or "1. ". "
+    "Never ask for or encourage sharing OTPs, PINs, passwords, CVV or card numbers. If money was lost, tell them to call 1930 "
+    "immediately and report at cybercrime.gov.in; for scam calls or messages without loss, report on Chakshu "
+    "(sancharsaathi.gov.in). If the user wants a message, link or number checked, tell them to paste it in this chat. "
+    "Do not invent facts, phone numbers or laws; say when you are unsure. Refuse clearly harmful requests, such as help "
+    "writing scam messages or phishing pages."
+)
+
+
+def ai_reply(message: str, history: list[ChatTurn], scan_context: str | None = None) -> str | None:
+    """A free-form answer from the configured LLM, or None when none is
+    configured or the call fails (the caller then uses the built-in answers)."""
+    from app_service.services.copilot_llm_provider import CopilotLlmUnavailableError, get_configured_provider
+
+    try:
+        provider = get_configured_provider()
+    except CopilotLlmUnavailableError:
+        return None
+    convo = "\n".join(f"{'User' if t.role == 'user' else 'Copilot'}: {t.content[:1500]}" for t in history[-8:])
+    parts = []
+    if scan_context:
+        parts.append(f"ScamGuard's analysis of the message the user shared earlier:\n{scan_context[:2500]}")
+    if convo:
+        parts.append(f"Conversation so far:\n{convo}")
+    parts.append(f"User: {message}\nCopilot:")
+    try:
+        text = provider.complete(COPILOT_PERSONA, "\n\n".join(parts), max_tokens=900).strip()
+    except Exception:
+        logger.exception("Copilot LLM call failed; using built-in answers")
+        return None
+    return text or None
 
 
 def _sse(event: str, data: dict) -> str:
@@ -137,11 +179,11 @@ def chat(request: Request, payload: ChatRequest, db: Session = Depends(get_db)) 
         else:
             previous = next((t.content for t in reversed(payload.history) if t.role == "user" and looks_like_evidence(t.content)), None)
             if previous is None:
-                answer = GUIDANCE
+                answer = ai_reply(payload.message, payload.history) or GUIDANCE
             else:
                 kind = "follow_up"
                 outcome = analyze_evidence(db, previous)
-                answer = get_answer(payload.message, outcome.analysis).answer
+                answer = ai_reply(payload.message, payload.history, outcome.answer) or get_answer(payload.message, outcome.analysis).answer
     except Exception:
         logger.exception("Copilot chat failed")
         failure = _sse("error", {"message": "The analysis failed on the server. Please try again in a moment.", "retryable": True})

@@ -246,3 +246,44 @@ def test_awareness_message_is_reassuring():
     from ml_service.inference.threat_scorer import ThreatScorer
     _, protective = ThreatScorer.intents("Beware of fake KYC calls. SBI never asks for your OTP or PIN.")
     assert "awareness_warning" in protective
+
+
+class _FakeLLM:
+    def __init__(self, reply="Phishing is a trick to steal your details.", fail=False):
+        self.reply, self.fail, self.calls = reply, fail, []
+
+    def complete(self, system, user, max_tokens=400):
+        self.calls.append((system, user))
+        if self.fail:
+            raise RuntimeError("provider down")
+        return self.reply
+
+
+def test_long_question_is_not_treated_as_evidence():
+    assert not looks_like_evidence("What is the difference between phishing and smishing and how can I protect my parents from both?")
+    assert looks_like_evidence("Dear customer your KYC is pending, click here to update or your account will be blocked today?")
+
+
+def test_chat_general_question_uses_llm_with_history(client):
+    fake = _FakeLLM()
+    with patch("app_service.services.copilot_llm_provider.get_configured_provider", return_value=fake):
+        ev = _events(client.post("/api/v1/copilot/chat", json={
+            "message": "what is phishing?", "history": [{"role": "user", "content": "hi"}, {"role": "assistant", "content": "Hello!"}]}).text)
+    assert "".join(d["text"] for n, d in ev if n == "token") == fake.reply
+    assert ev[-1] == ("done", {"kind": "guidance"})
+    system, user = fake.calls[0]
+    assert "ScamGuard Copilot" in system and "Copilot: Hello!" in user and "what is phishing?" in user
+
+
+def test_chat_follow_up_gives_llm_the_scan(client):
+    fake = _FakeLLM("Call 1930 now.")
+    with patch("app_service.services.copilot_llm_provider.get_configured_provider", return_value=fake):
+        ev = _events(client.post("/api/v1/copilot/chat", json={"message": "I already paid, what now?", "history": [{"role": "user", "content": JOB}]}).text)
+    assert ev[-1] == ("done", {"kind": "follow_up"})
+    assert "analysis of the message" in fake.calls[-1][1]
+
+
+def test_chat_llm_failure_falls_back_to_builtin(client):
+    with patch("app_service.services.copilot_llm_provider.get_configured_provider", return_value=_FakeLLM(fail=True)):
+        ev = _events(client.post("/api/v1/copilot/chat", json={"message": "hello"}).text)
+    assert "Paste the message" in "".join(d["text"] for n, d in ev if n == "token")
