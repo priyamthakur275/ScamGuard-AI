@@ -77,11 +77,14 @@ class GeminiProvider(CopilotLlmProvider):
                 json={
                     "system_instruction": {"parts": [{"text": system}]},
                     "contents": [{"role": "user", "parts": [{"text": user}]}],
-                    "generationConfig": {"maxOutputTokens": max_tokens, "temperature": 0.2},
+                    # 2.5 models spend output tokens on hidden "thinking" unless the
+                    # budget is 0, which can leave the visible answer empty.
+                    "generationConfig": {"maxOutputTokens": max_tokens, "temperature": 0.3,
+                                         "thinkingConfig": {"thinkingBudget": 0}},
                 },
             )
             resp.raise_for_status()
-            parts = resp.json()["candidates"][0]["content"]["parts"]
+            parts = resp.json()["candidates"][0].get("content", {}).get("parts", [])
             return "".join(p.get("text", "") for p in parts).strip()
 
 
@@ -115,12 +118,13 @@ class OpenAIProvider(CopilotLlmProvider):
     """OpenAI-compatible chat completions. COPILOT_LLM_PROVIDER=openai."""
 
     default_model = "gpt-4o-mini"
+    base_url = "https://api.openai.com/v1"
 
     def complete(self, system: str, user: str, max_tokens: int = 400) -> str:
         settings = get_settings()
         with _http_client() as client:
             resp = client.post(
-                "https://api.openai.com/v1/chat/completions",
+                f"{self.base_url}/chat/completions",
                 headers={"Authorization": f"Bearer {settings.COPILOT_LLM_API_KEY}"},
                 json={
                     "model": settings.COPILOT_LLM_MODEL or self.default_model,
@@ -136,8 +140,16 @@ class OpenAIProvider(CopilotLlmProvider):
             return resp.json()["choices"][0]["message"]["content"].strip()
 
 
+class GroqProvider(OpenAIProvider):
+    """Groq (free tier, OpenAI-compatible). COPILOT_LLM_PROVIDER=groq."""
+
+    default_model = "llama-3.3-70b-versatile"
+    base_url = "https://api.groq.com/openai/v1"
+
+
 _PROVIDERS: dict[str, type[CopilotLlmProvider]] = {
     "gemini": GeminiProvider,
+    "groq": GroqProvider,
     "anthropic": AnthropicProvider,
     "openai": OpenAIProvider,
 }

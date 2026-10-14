@@ -8,6 +8,13 @@ import { useCopilot } from "./copilot-provider";
 import { RagVerdict } from "./rag-verdict";
 import type { ChatMessage } from "@/lib/copilot/types";
 
+/** Shows **bold** from model answers as bold text (React escapes everything else). */
+function renderInline(text: string) {
+  return text.replace(/^#{1,4}\s+/gm, "").split(/(\*\*[^*\n]+\*\*)/g).map((part, i) =>
+    part.startsWith("**") && part.endsWith("**") && part.length > 4 ? <strong key={i}>{part.slice(2, -2)}</strong> : part,
+  );
+}
+
 const STARTERS = [
   { label: "Bank KYC SMS", text: "Dear customer, your SBI YONO account will be blocked today. Update PAN at http://sbi-yono-kyc.xyz and share the OTP sent to your phone." },
   { label: "Call transcript", text: "Caller: This is Inspector Sharma from Mumbai Cyber Crime. A parcel with drugs was booked on your Aadhaar. You are under digital arrest, don't disconnect and don't tell your family." },
@@ -42,7 +49,7 @@ function AssistantBubble({ m, onRetry }: { m: ChatMessage; onRetry: () => void }
       )}
       {m.content && (
         <p className="whitespace-pre-wrap leading-relaxed">
-          {m.content}
+          {renderInline(m.content)}
           {m.status === "streaming" && <span className="ml-0.5 inline-block h-4 w-1.5 animate-pulse bg-primary align-middle" aria-hidden />}
         </p>
       )}
@@ -154,7 +161,7 @@ function ChatPanel() {
             onChange={(e) => setDraft(e.target.value.slice(0, 4000))}
             onKeyDown={onKeyDown}
             rows={2}
-            placeholder="Paste the message or ask a follow-up…"
+            placeholder="Paste a message to check, or ask me anything…"
             aria-label="Message for ScamGuard Copilot"
             className="max-h-40 min-h-[44px] flex-1 resize-y rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           />
