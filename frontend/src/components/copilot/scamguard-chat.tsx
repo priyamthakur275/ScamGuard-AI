@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
-import { MessageSquareWarning, RotateCcw, Send, Square, Trash2, X } from "lucide-react";
+import { Mic, MicOff, MessageSquareWarning, RotateCcw, Send, Square, Trash2, Volume2, VolumeX, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { useCopilot } from "./copilot-provider";
@@ -20,6 +20,54 @@ const STARTERS = [
   { label: "Call transcript", text: "Caller: This is Inspector Sharma from Mumbai Cyber Crime. A parcel with drugs was booked on your Aadhaar. You are under digital arrest, don't disconnect and don't tell your family." },
   { label: "Suspicious link", text: "http://paypa1-secure-login.verify-account.top/signin" },
 ];
+
+const QUESTIONS = [
+  "What is a digital arrest scam?",
+  "I paid a scammer on UPI. What do I do now?",
+  "How do I spot a fake customer care number?",
+  "UPI collect request se paise kaise kat jaate hain?",
+];
+
+// ---- Voice: the browser's own speech APIs (free, nothing leaves the device
+// except what the browser's speech service needs). Hidden where unsupported.
+type Recognition = {
+  lang: string; interimResults: boolean; continuous: boolean;
+  onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
+  onend: (() => void) | null; onerror: (() => void) | null;
+  start: () => void; stop: () => void;
+};
+
+function getRecognition(): (new () => Recognition) | null {
+  if (typeof window === "undefined") return null;
+  const w = window as unknown as { SpeechRecognition?: new () => Recognition; webkitSpeechRecognition?: new () => Recognition };
+  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
+}
+
+const DEVANAGARI = /[\u0900-\u097F]/;
+
+function SpeakButton({ text }: { text: string }) {
+  const [speaking, setSpeaking] = useState(false);
+  const [supported, setSupported] = useState(false);
+  useEffect(() => setSupported(typeof window !== "undefined" && "speechSynthesis" in window), []);
+  useEffect(() => () => { if (speaking) window.speechSynthesis.cancel(); }, [speaking]);
+  if (!supported) return null;
+  const toggle = () => {
+    const synth = window.speechSynthesis;
+    if (speaking) { synth.cancel(); setSpeaking(false); return; }
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(text.replace(/\*\*/g, ""));
+    u.lang = DEVANAGARI.test(text) ? "hi-IN" : "en-IN";
+    u.rate = 0.95;
+    u.onend = u.onerror = () => setSpeaking(false);
+    synth.speak(u);
+    setSpeaking(true);
+  };
+  return (
+    <button type="button" onClick={toggle} className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary" aria-label={speaking ? "Stop reading" : "Read aloud"}>
+      {speaking ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />} {speaking ? "Stop" : "Listen"}
+    </button>
+  );
+}
 
 function Skeleton() {
   return (
@@ -53,6 +101,7 @@ function AssistantBubble({ m, onRetry }: { m: ChatMessage; onRetry: () => void }
           {m.status === "streaming" && <span className="ml-0.5 inline-block h-4 w-1.5 animate-pulse bg-primary align-middle" aria-hidden />}
         </p>
       )}
+      {m.status === "done" && m.content && <SpeakButton text={m.content} />}
       {m.status === "stopped" && <p className="text-xs text-muted-foreground">Stopped.</p>}
       {m.status === "error" && (
         <div role="alert" className="flex flex-wrap items-center gap-2 text-xs text-destructive">
@@ -71,6 +120,31 @@ function ChatPanel() {
   const [draft, setDraft] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const recRef = useRef<Recognition | null>(null);
+  const [listening, setListening] = useState(false);
+  const [voiceLang, setVoiceLang] = useState<"en-IN" | "hi-IN">("en-IN");
+  const [canListen, setCanListen] = useState(false);
+  useEffect(() => setCanListen(getRecognition() !== null), []);
+  useEffect(() => () => recRef.current?.stop(), []);
+
+  const toggleMic = () => {
+    if (listening) { recRef.current?.stop(); return; }
+    const Rec = getRecognition();
+    if (!Rec) return;
+    const rec = new Rec();
+    rec.lang = voiceLang;
+    rec.interimResults = true;
+    rec.continuous = false;
+    const before = draft ? draft.trimEnd() + " " : "";
+    rec.onresult = (e) => {
+      const said = Array.from(e.results).map((r) => r[0]?.transcript ?? "").join("");
+      setDraft((before + said).slice(0, 4000));
+    };
+    rec.onend = rec.onerror = () => { setListening(false); recRef.current = null; };
+    recRef.current = rec;
+    setListening(true);
+    rec.start();
+  };
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "end" });
@@ -112,7 +186,7 @@ function ChatPanel() {
       <header className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
         <div>
           <p className="font-semibold">ScamGuard Copilot</p>
-          <p className="text-xs text-muted-foreground">Paste a message, link or call transcript</p>
+          <p className="text-xs text-muted-foreground">Check a message, or ask anything about staying safe</p>
         </div>
         <div className="flex items-center gap-1">
           {messages.length > 0 && (
@@ -129,11 +203,20 @@ function ChatPanel() {
       <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4" aria-live="polite">
         {messages.length === 0 && (
           <div className="space-y-3 text-sm text-muted-foreground">
-            <p>I check suspicious messages against the trained model, the scam-intent engine and a library of known Indian scams, and show you which ones it matches.</p>
+            <p>Paste a suspicious message, link or call transcript and I&apos;ll check it against the trained model, the scam-intent engine and a library of known Indian scams. You can also ask me anything, by typing or with the mic, in English or Hindi.</p>
+            <p className="text-xs font-medium uppercase tracking-wide">Check an example</p>
             <div className="flex flex-wrap gap-2">
               {STARTERS.map((s) => (
                 <button key={s.label} type="button" onClick={() => submit(s.text)} className="rounded-full border border-border px-3 py-1 text-xs hover:border-primary hover:text-primary">
                   {s.label}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs font-medium uppercase tracking-wide">Or ask</p>
+            <div className="flex flex-col items-start gap-1.5">
+              {QUESTIONS.map((q) => (
+                <button key={q} type="button" onClick={() => submit(q)} className="rounded-xl border border-border px-3 py-1.5 text-left text-xs hover:border-primary hover:text-primary">
+                  {q}
                 </button>
               ))}
             </div>
@@ -165,6 +248,23 @@ function ChatPanel() {
             aria-label="Message for ScamGuard Copilot"
             className="max-h-40 min-h-[44px] flex-1 resize-y rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           />
+          {canListen && (
+            <div className="flex flex-col items-center gap-0.5">
+              <button
+                type="button"
+                onClick={toggleMic}
+                className={cn("inline-flex h-11 w-11 items-center justify-center rounded-xl border border-border hover:bg-muted", listening && "animate-pulse border-destructive text-destructive")}
+                aria-label={listening ? "Stop listening" : "Speak your question"}
+                aria-pressed={listening}
+              >
+                {listening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              </button>
+              <button type="button" onClick={() => setVoiceLang((l) => (l === "en-IN" ? "hi-IN" : "en-IN"))} disabled={listening}
+                className="text-[10px] text-muted-foreground hover:text-primary" aria-label="Voice language">
+                {voiceLang === "en-IN" ? "EN" : "हिं"}
+              </button>
+            </div>
+          )}
           {busy ? (
             <button type="button" onClick={stop} className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-border hover:bg-muted" aria-label="Stop">
               <Square className="h-4 w-4" />
