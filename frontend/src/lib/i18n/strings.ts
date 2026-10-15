@@ -3,6 +3,7 @@ export type Lang = "en" | "hi";
 export const STRINGS = {
   "nav.quick": { en: "Quick check", hi: "तुरंत जाँच" },
   "nav.trends": { en: "Scam trends", hi: "स्कैम ट्रेंड" },
+  "nav.tools": { en: "Safety tools", hi: "सुरक्षा टूल" },
   "nav.simulator": { en: "Simulator", hi: "सिम्युलेटर" },
   "nav.extension": { en: "Extension", hi: "एक्सटेंशन" },
   "nav.signin": { en: "Sign in", hi: "साइन इन" },

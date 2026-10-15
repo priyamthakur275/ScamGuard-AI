@@ -29,6 +29,7 @@ import { ShareWarning } from "@/components/analysis/share-warning";
 import { ReportScam } from "@/components/analysis/report-scam";
 import { ChatPanel } from "@/components/analysis/chat-panel";
 import { ScamXray, type XrayData } from "@/components/analysis/scam-xray";
+import { WhatIf } from "@/components/analysis/what-if";
 import { CommunityReports } from "@/components/analysis/community-reports";
 
 interface VerdictCardProps {
@@ -133,6 +134,7 @@ export function VerdictCard({ result, onFeedback }: VerdictCardProps) {
             <ElderAutoSpeak result={result} lang={lang} />
             <CampaignFingerprint result={result} />
             <ScamXray xray={(result.metadata?.xray as XrayData | undefined) ?? null} />
+            <WhatIf result={result} />
             <ScamForecast result={result} />
             {result.verdict !== "legitimate" && <ReportScam result={result} />}
             {/* AI Explanation */}
