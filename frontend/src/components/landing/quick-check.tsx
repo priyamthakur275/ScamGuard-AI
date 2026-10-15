@@ -11,6 +11,7 @@ import { cn, scamCategoryLabel } from "@/lib/utils";
 import type { AnalysisResult } from "@/types";
 import { useLanguage } from "@/lib/i18n/language-context";
 import { ScamXray, type XrayData } from "@/components/analysis/scam-xray";
+import { WhatIf } from "@/components/analysis/what-if";
 import { analyzeWithCopilot } from "@/lib/copilot/stream";
 import type { CragVerdict } from "@/lib/copilot/types";
 import { RagVerdict } from "@/components/copilot/rag-verdict";
@@ -165,6 +166,9 @@ export function QuickCheck({ initialText = "", autoRun = false, heading }: Quick
 
             <div className="mt-4">
               <ScamXray compact xray={(result.metadata?.xray as XrayData | undefined) ?? null} />
+            </div>
+            <div className="mt-4">
+              <WhatIf result={result} />
             </div>
 
             {((result.metadata?.community_reports as { display: string; report_count: number }[] | undefined) ?? []).map((c) => (

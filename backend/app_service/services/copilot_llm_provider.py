@@ -35,6 +35,11 @@ class CopilotLlmProvider(ABC):
         """Send one system + user turn and return the model's text. Must raise
         on any HTTP or format failure; must never return a fabricated answer."""
 
+    def stream(self, system: str, user: str, max_tokens: int = 400):
+        """Yield the answer in pieces as the model writes it. Providers without
+        streaming yield the whole answer once."""
+        yield self.complete(system, user, max_tokens)
+
     def answer(self, question: str, grounding_context: str) -> str:
         """grounding_context is a plain-text rendering of ONLY the real,
         already-computed evidence for this scan -- no other knowledge source
@@ -88,6 +93,32 @@ class GeminiProvider(CopilotLlmProvider):
             return "".join(p.get("text", "") for p in parts).strip()
 
 
+    def stream(self, system: str, user: str, max_tokens: int = 400):
+        import json as _json
+
+        settings = get_settings()
+        model = settings.COPILOT_LLM_MODEL or self.default_model
+        with _http_client() as client, client.stream(
+            "POST",
+            f"https://generativelanguage.googleapis.com/v1beta/models/{model}:streamGenerateContent?alt=sse",
+            headers={"x-goog-api-key": settings.COPILOT_LLM_API_KEY},
+            json={
+                "system_instruction": {"parts": [{"text": system}]},
+                "contents": [{"role": "user", "parts": [{"text": user}]}],
+                "generationConfig": {"maxOutputTokens": max_tokens, "temperature": 0.3, "thinkingConfig": {"thinkingBudget": 0}},
+            },
+        ) as resp:
+            resp.raise_for_status()
+            for line in resp.iter_lines():
+                if not line.startswith("data:"):
+                    continue
+                chunk = _json.loads(line[5:])
+                for cand in chunk.get("candidates", [])[:1]:
+                    for part in cand.get("content", {}).get("parts", []):
+                        if part.get("text"):
+                            yield part["text"]
+
+
 class AnthropicProvider(CopilotLlmProvider):
     """Anthropic API. COPILOT_LLM_PROVIDER=anthropic; set COPILOT_LLM_MODEL."""
 
@@ -138,6 +169,31 @@ class OpenAIProvider(CopilotLlmProvider):
             )
             resp.raise_for_status()
             return resp.json()["choices"][0]["message"]["content"].strip()
+
+
+    def stream(self, system: str, user: str, max_tokens: int = 400):
+        import json as _json
+
+        settings = get_settings()
+        with _http_client() as client, client.stream(
+            "POST",
+            f"{self.base_url}/chat/completions",
+            headers={"Authorization": f"Bearer {settings.COPILOT_LLM_API_KEY}"},
+            json={
+                "model": settings.COPILOT_LLM_MODEL or self.default_model,
+                "max_tokens": max_tokens,
+                "temperature": 0.3,
+                "stream": True,
+                "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
+            },
+        ) as resp:
+            resp.raise_for_status()
+            for line in resp.iter_lines():
+                if not line.startswith("data:") or line.strip() == "data: [DONE]":
+                    continue
+                delta = _json.loads(line[5:])["choices"][0].get("delta", {}).get("content")
+                if delta:
+                    yield delta
 
 
 class GroqProvider(OpenAIProvider):
