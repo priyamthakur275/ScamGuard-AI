@@ -58,7 +58,7 @@ const nextConfig = {
     if (!appServiceUrl || (!appServiceUrl.startsWith("http://") && !appServiceUrl.startsWith("https://"))) {
       appServiceUrl = process.env.NODE_ENV === "development"
         ? "http://localhost:8000"
-        : "https://scamguard-app-service.onrender.com";
+        : "https://scamguard-ai-ecnj.onrender.com";
     }
 
     return [{ source: "/backend-api/:path*", destination: `${appServiceUrl}/:path*` }];
