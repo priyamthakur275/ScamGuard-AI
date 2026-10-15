@@ -52,6 +52,11 @@ jobs:
           cache: "pip"
           cache-dependency-path: backend/requirements.txt
 
+      - name: Syntax check (fails in seconds, before installing anything)
+        # A syntax error here crashes the Render backend on start. With Render
+        # set to auto-deploy only after CI checks pass, this blocks the deploy.
+        run: python -m compileall -q app_service alembic
+
       - name: Install OCR and QR system packages
         # The image-upload tests run real OCR. The production image installs
         # these too (infra/docker/Dockerfile.app_service).
