@@ -18,9 +18,8 @@ import { CopilotPanel } from "@/components/analysis/copilot-panel";
 import { RecommendedActions } from "@/components/analysis/recommended-actions";
 import { SimilarPatterns } from "@/components/analysis/similar-patterns";
 import { Button } from "@/components/ui/button";
-import { CountUp, SpeakVerdict } from "@/components/analysis/demo-polish";
-import { CampaignFingerprint, ElderAutoSpeak, GoldenHourButton, ScamForecast } from "@/components/analysis/protect-features";
-import { useLanguage } from "@/lib/i18n/language-context";
+import { CountUp } from "@/components/analysis/demo-polish";
+import { CampaignFingerprint, GoldenHourButton, ScamForecast } from "@/components/analysis/protect-features";
 import { formatPercent, scamCategoryLabel, verdictLabel, inputTypeLabel } from "@/lib/utils";
 import type { AnalysisResult, UrlIntelligence, EmailForensics, VoiceEvidenceSignal, CorrelationSignal } from "@/types";
 import { motion, Variants } from "framer-motion";
@@ -47,7 +46,6 @@ const containerVariants: Variants = {
 };
 
 export function VerdictCard({ result, onFeedback }: VerdictCardProps) {
-  const { lang } = useLanguage();
   const isDemo = result.metadata?.is_demo === true;
   const severity = result.threat_level === "critical" ? "critical" : result.risk_level;
   const severityClass = { low: "text-risk-low", medium: "text-risk-medium", high: "text-risk-high", critical: "text-risk-critical" }[severity];
@@ -127,11 +125,9 @@ export function VerdictCard({ result, onFeedback }: VerdictCardProps) {
               <Button variant="outline" onClick={() => document.getElementById(`copilot-${result.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" })}>Ask ScamGuard</Button>
               <ReportDownloadMenu kind="scan" id={result.id} />
               {result.verdict !== "legitimate" && <ShareWarning result={result} />}
-              <SpeakVerdict isScam={result.verdict !== "legitimate"} likelihood={result.threat_score} category={result.scam_category ? scamCategoryLabel(result.scam_category) : null} lang={lang} />
               <GoldenHourButton result={result} />
             </div>}
-            {isDemo && <div className="-mt-4 flex flex-wrap items-center gap-3 border-b border-border pb-6">{result.verdict !== "legitimate" && <ShareWarning result={result} />}<SpeakVerdict isScam={result.verdict !== "legitimate"} likelihood={result.threat_score} category={result.scam_category ? scamCategoryLabel(result.scam_category) : null} lang={lang} /><GoldenHourButton result={result} /></div>}
-            <ElderAutoSpeak result={result} lang={lang} />
+            {isDemo && <div className="-mt-4 flex flex-wrap items-center gap-3 border-b border-border pb-6">{result.verdict !== "legitimate" && <ShareWarning result={result} />}<GoldenHourButton result={result} /></div>}
             <CampaignFingerprint result={result} />
             <ScamXray xray={(result.metadata?.xray as XrayData | undefined) ?? null} />
             <WhatIf result={result} />
