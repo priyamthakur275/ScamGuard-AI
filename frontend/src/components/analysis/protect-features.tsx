@@ -215,7 +215,7 @@ export function ElderToggle() {
       type="button"
       onClick={() => set(!on)}
       aria-pressed={on}
-      title="Elder mode: bigger text, simpler screens, verdict read aloud"
+      title="Elder mode: bigger text, simpler screens"
       className={`rounded-md border px-2.5 py-1.5 text-xs font-semibold ${on ? "border-primary bg-primary/15 text-primary" : "border-border text-muted-foreground hover:text-foreground"}`}
     >
       {on ? "Elder mode on" : "Elder mode"}
