@@ -70,7 +70,7 @@ def _http_client():
 class GeminiProvider(CopilotLlmProvider):
     """Google Gemini (has a free tier). COPILOT_LLM_PROVIDER=gemini."""
 
-    default_model = "gemini-2.5-flash"
+    default_model = "gemini-3.8-flash"
 
     def complete(self, system: str, user: str, max_tokens: int = 400) -> str:
         settings = get_settings()
