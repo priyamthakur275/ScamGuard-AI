@@ -117,9 +117,10 @@ COPILOT_PERSONA = (
 )
 
 
-def ai_reply(message: str, history: list[ChatTurn], scan_context: str | None = None) -> str | None:
-    """A free-form answer from the configured LLM, or None when none is
-    configured or the call fails (the caller then uses the built-in answers)."""
+def ai_stream(message: str, history: list[ChatTurn], scan_context: str | None = None):
+    """An iterator over the configured LLM's answer as it is written, or None
+    when no LLM is configured (the caller then uses the built-in answers).
+    Nothing is sent until the iterator is first advanced."""
     from app_service.services.copilot_llm_provider import CopilotLlmUnavailableError, get_configured_provider
 
     try:
@@ -133,12 +134,15 @@ def ai_reply(message: str, history: list[ChatTurn], scan_context: str | None = N
     if convo:
         parts.append(f"Conversation so far:\n{convo}")
     parts.append(f"User: {message}\nCopilot:")
-    try:
-        text = provider.complete(COPILOT_PERSONA, "\n\n".join(parts), max_tokens=900).strip()
-    except Exception:
-        logger.exception("Copilot LLM call failed; using built-in answers")
-        return None
-    return text or None
+    user = "\n\n".join(parts)
+    stream = getattr(provider, "stream", None)
+    if stream is not None:
+        return iter(stream(COPILOT_PERSONA, user, 900))
+
+    def once():
+        yield provider.complete(COPILOT_PERSONA, user, 900)
+
+    return once()
 
 
 def _sse(event: str, data: dict) -> str:
@@ -170,6 +174,7 @@ def chat(request: Request, payload: ChatRequest, db: Session = Depends(get_db)) 
 
     events: list[str] = []
     kind = "guidance"
+    llm = None  # live LLM answer; `answer` is the built-in fallback
     try:
         if looks_like_evidence(payload.message):
             kind = "evidence"
@@ -179,11 +184,13 @@ def chat(request: Request, payload: ChatRequest, db: Session = Depends(get_db)) 
         else:
             previous = next((t.content for t in reversed(payload.history) if t.role == "user" and looks_like_evidence(t.content)), None)
             if previous is None:
-                answer = ai_reply(payload.message, payload.history) or GUIDANCE
+                answer = GUIDANCE
+                llm = ai_stream(payload.message, payload.history)
             else:
                 kind = "follow_up"
                 outcome = analyze_evidence(db, previous)
-                answer = ai_reply(payload.message, payload.history, outcome.answer) or get_answer(payload.message, outcome.analysis).answer
+                answer = get_answer(payload.message, outcome.analysis).answer
+                llm = ai_stream(payload.message, payload.history, outcome.answer)
     except Exception:
         logger.exception("Copilot chat failed")
         failure = _sse("error", {"message": "The analysis failed on the server. Please try again in a moment.", "retryable": True})
@@ -199,6 +206,29 @@ def chat(request: Request, payload: ChatRequest, db: Session = Depends(get_db)) 
             yield _sse("status", {"stage": "answering"})
             for e in events:
                 yield e
+            if llm is not None:
+                started = False
+                try:
+                    while True:
+                        piece = await asyncio.to_thread(next, llm, None)
+                        if piece is None:
+                            break
+                        if not started and not piece.strip():
+                            continue
+                        started = True
+                        yield _sse("token", {"text": piece})
+                        if await request.is_disconnected():
+                            return
+                except asyncio.CancelledError:
+                    raise
+                except Exception:
+                    logger.exception("Copilot LLM stream failed")
+                    if started:
+                        yield _sse("error", {"message": "The answer was interrupted. Please retry.", "retryable": True})
+                        return
+                if started:
+                    yield _sse("done", {"kind": kind})
+                    return
             for i, piece in enumerate(_chunks(answer)):
                 if i % 16 == 0 and await request.is_disconnected():
                     return

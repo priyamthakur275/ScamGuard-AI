@@ -287,3 +287,61 @@ def test_chat_llm_failure_falls_back_to_builtin(client):
     with patch("app_service.services.copilot_llm_provider.get_configured_provider", return_value=_FakeLLM(fail=True)):
         ev = _events(client.post("/api/v1/copilot/chat", json={"message": "hello"}).text)
     assert "Paste the message" in "".join(d["text"] for n, d in ev if n == "token")
+
+
+class _StreamingLLM:
+    def __init__(self, pieces, fail_after=None):
+        self.pieces, self.fail_after = pieces, fail_after
+
+    def stream(self, system, user, max_tokens=400):
+        for i, p in enumerate(self.pieces):
+            if self.fail_after is not None and i == self.fail_after:
+                raise RuntimeError("connection reset")
+            yield p
+
+
+def test_chat_streams_llm_pieces_live(client):
+    with patch("app_service.services.copilot_llm_provider.get_configured_provider", return_value=_StreamingLLM(["Digital ", "arrest ", "is a scam."])):
+        ev = _events(client.post("/api/v1/copilot/chat", json={"message": "what is digital arrest?"}).text)
+    assert [d["text"] for n, d in ev if n == "token"] == ["Digital ", "arrest ", "is a scam."]
+    assert ev[-1] == ("done", {"kind": "guidance"})
+
+
+def test_chat_llm_stream_interrupted_midway(client):
+    with patch("app_service.services.copilot_llm_provider.get_configured_provider", return_value=_StreamingLLM(["Part one ", "two"], fail_after=1)):
+        ev = _events(client.post("/api/v1/copilot/chat", json={"message": "what is phishing?"}).text)
+    assert ("token", {"text": "Part one "}) in ev and ev[-1][0] == "error" and ev[-1][1]["retryable"] is True
+
+
+def test_chat_llm_fails_before_first_piece_uses_builtin(client):
+    with patch("app_service.services.copilot_llm_provider.get_configured_provider", return_value=_StreamingLLM(["x"], fail_after=0)):
+        ev = _events(client.post("/api/v1/copilot/chat", json={"message": "hello"}).text)
+    assert "Paste the message" in "".join(d["text"] for n, d in ev if n == "token") and ev[-1][0] == "done"
+
+
+def _mock_client(body: str):
+    import httpx
+
+    return lambda: httpx.Client(transport=httpx.MockTransport(lambda req: httpx.Response(200, text=body, headers={"content-type": "text/event-stream"})))
+
+
+def test_gemini_stream_parser():
+    from app_service.services import copilot_llm_provider as prov
+
+    body = ('data: {"candidates":[{"content":{"parts":[{"text":"Hello "}]}}]}\r\n\r\n'
+            'data: {"candidates":[{"content":{"parts":[{"text":"there"}]},"finishReason":"STOP"}]}\r\n\r\n')
+    from types import SimpleNamespace
+
+    cfg = SimpleNamespace(COPILOT_LLM_MODEL=None, COPILOT_LLM_API_KEY="test-key")
+    with patch.object(prov, "_http_client", _mock_client(body)), patch.object(prov, "get_settings", return_value=cfg):
+        assert list(prov.GeminiProvider().stream("s", "u")) == ["Hello ", "there"]
+
+
+def test_openai_compatible_stream_parser():
+    from app_service.services import copilot_llm_provider as prov
+
+    body = ('data: {"choices":[{"delta":{"role":"assistant"}}]}\n\n'
+            'data: {"choices":[{"delta":{"content":"Namaste"}}]}\n\n'
+            'data: {"choices":[{"delta":{"content":"!"}}]}\n\ndata: [DONE]\n\n')
+    with patch.object(prov, "_http_client", _mock_client(body)):
+        assert list(prov.GroqProvider().stream("s", "u")) == ["Namaste", "!"]
