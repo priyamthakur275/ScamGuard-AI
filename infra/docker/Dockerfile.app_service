@@ -36,6 +36,7 @@ COPY backend/ml_service ./ml_service
 COPY backend/artifacts ./artifacts
 COPY backend/alembic ./alembic
 COPY backend/alembic.ini ./alembic.ini
+COPY infra/docker/start_app_service.sh ./start_app_service.sh
 
 RUN chown -R appuser:appuser /app
 USER appuser
@@ -49,11 +50,9 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
     CMD curl -f http://localhost:${PORT:-8000}/api/v1/health || exit 1
 
-# Run migrations, then start the API server. Defaults to ONE uvicorn worker:
-# each worker loads its own copy of the model, scikit-learn/numpy and OCR
-# stack (~250 MB RSS measured after OCR/PDF/model use), so the previous
-# default of 4 exceeded the 512 MB of Render's free instance and got the
-# container OOM-killed. Raise UVICORN_WORKERS only on an instance with the
-# memory for it (roughly 300 MB per worker).
-CMD alembic upgrade head && \
-    uvicorn app_service.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers ${UVICORN_WORKERS:-1}
+# Run migrations, then start the API server (see start_app_service.sh: if the
+# configured database is unreachable it falls back to a temporary SQLite file
+# instead of crash-looping). Defaults to ONE uvicorn worker: each worker loads
+# its own copy of the model, scikit-learn/numpy and OCR stack (~250 MB RSS), so
+# more than one exceeds the 512 MB of Render's free instance.
+CMD ["sh", "./start_app_service.sh"]
