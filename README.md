@@ -52,7 +52,8 @@ graph TD
 > inference as a separate `ml_service` container (see `infra/docker-compose.yml`
 > and `backend/docs/ML_SERVICE.md` for the multi-service local/self-hosted setup, useful
 > for independently scaling inference). The **current Render deployment
-> (`render.yaml`) only provisions the single `app_service` container**, which
+> (`render.yaml`) runs the `app_service` container (`ScamGuard-AI`) plus the
+> Next.js frontend (`scamguard-frontend`)**; the backend
 > loads the model in-process — there is no separate ML microservice running in
 > production today. This is a deliberate simplification (one fewer moving part,
 > one fewer cold start) rather than an oversight; the app_service code still

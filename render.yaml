@@ -1,13 +1,25 @@
+# The live ScamGuard deployment on Render (free plan, Oregon):
+#   ScamGuard-AI        backend API  -> https://scamguard-ai-ecnj.onrender.com
+#   scamguard-frontend  Next.js app  -> https://scamguard-frontend-r6t7.onrender.com
+# The frontend proxies /backend-api/* to the backend (frontend/next.config.js),
+# so the browser only ever talks to the frontend's origin.
+#
+# Both deploy from main only after GitHub CI checks pass, so a commit that
+# fails Backend CI or Frontend CI never replaces the running version.
+#
+# The database is an external Postgres: DATABASE_URL is set on the backend in
+# the Render dashboard and is not kept in this file.
 services:
   - type: web
-    name: scamguard-app-service
-    env: docker
+    name: ScamGuard-AI
+    runtime: docker
+    region: oregon
+    plan: free
+    branch: main
+    autoDeployTrigger: checksPass
     dockerfilePath: infra/docker/Dockerfile.app_service
     dockerContext: .
-    plan: free
     envVars:
-      - key: PORT
-        value: "8000"
       - key: APP_ENV
         value: "production"
       - key: DEBUG
@@ -16,14 +28,19 @@ services:
       - key: UVICORN_WORKERS
         value: "1"
       - key: DATABASE_URL
-        fromDatabase:
-          name: scamguard-db
-          property: connectionString
+        sync: false
       - key: SECRET_KEY
         generateValue: true
-      - key: CORS_ORIGINS
-        value: "http://localhost:3000,https://frontend-psi-ebon-83.vercel.app"
 
-databases:
-  - name: scamguard-db
+  - type: web
+    name: scamguard-frontend
+    runtime: node
+    region: oregon
     plan: free
+    branch: main
+    autoDeployTrigger: checksPass
+    buildCommand: cd frontend && npm install && npm run build
+    startCommand: cd frontend && npm start
+    envVars:
+      - key: APP_SERVICE_URL
+        value: "https://scamguard-ai-ecnj.onrender.com"
