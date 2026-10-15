@@ -244,3 +244,25 @@ def get_llm_answer(question: str, grounding_context: str) -> str:
 
 def get_llm_completion(system: str, user: str, max_tokens: int = 600) -> str:
     return get_configured_provider().complete(system, user, max_tokens)
+
+
+def self_check() -> str:
+    """One tiny request to the configured provider; returns a log line that
+    says whether it works. Never includes the API key."""
+    try:
+        provider = get_configured_provider()
+    except CopilotLlmUnavailableError as exc:
+        return f"Copilot LLM not configured: {exc}"
+    name = type(provider).__name__
+    try:
+        reply = provider.complete("Reply with the single word OK.", "ping", max_tokens=5)
+        return f"Copilot LLM check OK ({name}): replied {reply[:20]!r}"
+    except Exception as exc:  # noqa: BLE001 - report any failure in the log
+        detail = ""
+        resp = getattr(exc, "response", None)
+        if resp is not None:
+            try:
+                detail = f" HTTP {resp.status_code}: {resp.json().get('error', {}).get('message', '')[:200]}"
+            except Exception:  # noqa: BLE001
+                detail = f" HTTP {resp.status_code}"
+        return f"Copilot LLM check FAILED ({name}): {type(exc).__name__}{detail}"
