@@ -112,6 +112,17 @@ async def lifespan(app: FastAPI):
             import logging
             logging.getLogger("app_service.startup").warning("Demo account setup failed.", exc_info=True)
 
+    if getattr(settings, "COPILOT_LLM_PROVIDER", None):
+        import asyncio
+        import logging
+
+        async def _llm_check() -> None:
+            from app_service.services.copilot_llm_provider import self_check
+
+            logging.getLogger("app_service.startup").info(await asyncio.to_thread(self_check))
+
+        asyncio.get_running_loop().create_task(_llm_check())
+
     keep_alive_task = None
     if settings.KEEPALIVE_ENABLED and settings.APP_ENV == "production" and settings.KEEPALIVE_URL:
         import asyncio

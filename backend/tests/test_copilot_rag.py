@@ -345,3 +345,12 @@ def test_openai_compatible_stream_parser():
             'data: {"choices":[{"delta":{"content":"!"}}]}\n\ndata: [DONE]\n\n')
     with patch.object(prov, "_http_client", _mock_client(body)):
         assert list(prov.GroqProvider().stream("s", "u")) == ["Namaste", "!"]
+
+
+def test_llm_self_check_reports_without_key():
+    from app_service.services import copilot_llm_provider as prov
+
+    with patch.object(prov, "get_configured_provider", return_value=_FakeLLM("OK")):
+        assert prov.self_check().startswith("Copilot LLM check OK")
+    with patch.object(prov, "get_configured_provider", return_value=_FakeLLM(fail=True)):
+        assert "FAILED" in prov.self_check()
