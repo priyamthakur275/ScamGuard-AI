@@ -1,3 +1,4 @@
+import os
 import asyncio
 from fastapi import APIRouter, BackgroundTasks
 import httpx
@@ -23,6 +24,9 @@ async def _wake_ml_service():
 @limiter.exempt
 def health(background_tasks: BackgroundTasks) -> dict:
     background_tasks.add_task(_wake_ml_service)
+    if os.environ.get("SCAMGUARD_DB_FALLBACK") == "1":
+        # Running on the temporary SQLite fallback (see start_app_service.sh).
+        return {"status": "ok", "database": "temporary-fallback"}
     return {"status": "ok"}
 
 
