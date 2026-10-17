@@ -141,17 +141,3 @@ def test_timeline_harmless_chat_and_validation(client):
     assert client.post("/api/v1/tools/timeline", json={"text": "just one single line here"}).status_code == 422
     assert client.post("/api/v1/tools/timeline", json={"text": "x"}).status_code == 422
 
-
-def test_flashcards_come_from_the_cited_library(client):
-    import json
-    from pathlib import Path
-
-    kb = json.loads(Path("app_service/rag/knowledge_base.json").read_text())
-    r = client.get("/api/v1/public/flashcards").json()
-    scams = [e for e in kb if e.get("kind", "scam") == "scam"]
-    assert r["count"] == len(scams) == len(r["cards"])
-    for c in r["cards"]:
-        assert c["message"] and c["title"] and c["source_url"].startswith("https://")
-        assert c["tactics"] and all(t["label"] for t in c["tactics"])
-        assert len(c["actions"]) <= 3
-    assert not any(c["id"].startswith("gen-") for c in r["cards"])

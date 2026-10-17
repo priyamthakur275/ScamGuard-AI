@@ -48,6 +48,7 @@ const nextConfig = {
       { source: "/family/:path*", destination: "/dashboard", permanent: true },
       { source: "/family", destination: "/dashboard", permanent: true },
       { source: "/trainer", destination: "/simulator", permanent: true },
+      { source: "/flashcards", destination: "/", permanent: false },
     ];
   },
   async rewrites() {
