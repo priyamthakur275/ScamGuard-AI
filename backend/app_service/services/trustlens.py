@@ -53,6 +53,42 @@ _ACTIONS: list[tuple[set[str], str, str]] = [
     ({"task_scam", "too_good"}, "offer", "Treat guaranteed returns, prizes you never entered and paid online tasks as bait."),
 ]
 
+# What a genuine message does instead of each scam tactic.
+GENUINE_INSTEAD = {
+    "asks_for_secret": "Genuine messages tell you never to share an OTP or PIN; they never ask you for one.",
+    "asks_card_details": "Banks never ask for your card number, expiry date or CVV by message or call.",
+    "verify_account_demand": "Real account checks happen inside the official app or at the branch, not through a link in a message.",
+    "kyc_update_demand": "KYC is updated in the official app or at the branch; a genuine SMS never sends a KYC link.",
+    "account_threat": "Genuine alerts report what already happened (amount, masked account) without threatening to block you.",
+    "deadline": "Real notices give an ordinary due date, not 'today' or 'within 2 hours'.",
+    "legal_threat": "Police and courts send written notices; they never demand money or keep you on a video call.",
+    "secrecy": "No genuine bank, company or officer asks you to keep a payment secret from your family.",
+    "impersonation": "Genuine bank SMS come from the bank's registered sender ID and don't need to convince you who they are.",
+    "too_good": "Real prizes and returns don't arrive for contests or schemes you never joined.",
+    "pay_to_receive": "Nobody genuine asks you to pay a fee before you receive a prize, refund, loan or job.",
+    "move_money": "No bank or agency asks you to move money to a 'safe account'.",
+    "collect_request": "To receive money you never approve a request or enter your PIN; genuine credits simply arrive.",
+    "remote_access_app": "Banks never ask you to install screen-sharing apps such as AnyDesk.",
+    "mistaken_transfer": "A genuine credit shows up in your bank app with a reference number and never comes with a request to send it back.",
+    "task_scam": "Real jobs don't pay for likes or reviews and never ask you for a deposit.",
+    "new_number_emergency": "A relative in trouble can be checked by calling the number you already have for them.",
+    "suspicious_link": "Genuine messages point to the official app or a well-known official website, or carry no link at all.",
+    "link_with_action": "Genuine messages point to the official app or a well-known official website, or carry no link at all.",
+    "deceptive_domain": "Official websites use the brand's real domain, not a look-alike spelling.",
+    "insecure_login_page": "Real login pages always use https://.",
+    "page_collects_secrets": "Official pages never ask for your OTP on a page you reached from a message.",
+    "page_posts_elsewhere": "Official forms send your details to the official site, not to another website.",
+    "page_impersonates_brand": "Official pages live on the brand's own domain.",
+    "new_domain": "Official websites have existed for years, not days.",
+}
+
+# Which genuine library format to show as the contrast example, by matched tactic.
+_GENUINE_EXAMPLE = [
+    ({"collect_request", "mistaken_transfer", "pay_to_receive"}, "gen-003"),
+    ({"asks_for_secret", "asks_card_details", "remote_access_app"}, "gen-007"),
+    ({"kyc_update_demand", "verify_account_demand", "account_threat", "move_money", "impersonation"}, "gen-002"),
+]
+
 REPORT_ACTION = ("If you shared details or lost money, call 1930 (National Cyber Crime Helpline) immediately and report at "
                  "cybercrime.gov.in. Report scam calls or messages on Chakshu at sancharsaathi.gov.in.")
 
@@ -104,6 +140,40 @@ def _similar_pattern(text: str, intents: set[str]) -> dict:
     status = {"CORRECT": "match", "AMBIGUOUS": "ambiguous", "INCORRECT": "none"}[grade]
     return {"status": status, "relevance": round(top, 3), "match": card(refined[0]) if grade == "CORRECT" and refined else None,
             "genuine_match": card(genuine[0]) if genuine else None}
+
+
+def _genuine_contrast(suspicious: list[dict], text: str, intents: set[str]) -> dict | None:
+    points, seen = [], set()
+    for e in suspicious:
+        instead = GENUINE_INSTEAD.get(e["intent"])
+        if instead and instead not in seen:
+            seen.add(instead)
+            points.append({"label": e["label"], "scam_phrase": e["phrase"], "genuine": instead})
+    if not points:
+        return None
+    example = None
+    try:
+        from app_service.rag.crag import AMBIGUOUS_MIN
+        from app_service.rag.retriever import get_retriever
+
+        retriever = get_retriever()
+        by_id = {e.id: e for e in retriever.entries}
+        lowered = text.lower()
+        wanted = next((gid for trig, gid in _GENUINE_EXAMPLE if intents & trig), None)
+        if any(w in lowered for w in ("electricity", "power cut", "bijli", "bill")):
+            wanted = "gen-005"
+        elif any(w in lowered for w in ("parcel", "courier", "delivery", "shipment")):
+            wanted = "gen-008"
+        entry = by_id.get(wanted) if wanted else None
+        if entry is None:
+            top = retriever.search(text, intents, top_k=1, kind="genuine")
+            entry = top[0].entry if top and top[0].relevance >= AMBIGUOUS_MIN else None
+        if entry is not None:
+            example = {"id": entry.id, "title": entry.title, "text": entry.transcript_body,
+                       "source_name": entry.source_name, "source_url": entry.source_url}
+    except Exception:
+        logger.warning("TrustLens genuine example unavailable", exc_info=True)
+    return {"points": points[:6], "example": example}
 
 
 def build_trustlens(*, text: str, verdict: str, scam_probability: float | None, threat_score: float | None,
@@ -199,6 +269,7 @@ def build_trustlens(*, text: str, verdict: str, scam_probability: float | None, 
         "journey": journey,
         "recommendations": recommendations,
         "similar_pattern": _similar_pattern(source, intents),
+        "genuine_contrast": _genuine_contrast(suspicious, source, intents) if is_scam else None,
         "uncertainty": {
             "conflicting": conflicts,
             "insufficient": insufficient,

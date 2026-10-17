@@ -24,6 +24,7 @@ export interface TrustLensReport {
   recommendations: { id: string; text: string }[];
   similar_pattern: { status: "match" | "ambiguous" | "none" | "unavailable"; match: TlPattern | null; genuine_match: TlPattern | null };
   uncertainty: { conflicting: boolean; insufficient: boolean; missing_context: string[]; may_be_wrong: string[] };
+  genuine_contrast: { points: { label: string; scam_phrase: string; genuine: string }[]; example: { title: string; text: string; source_name: string; source_url: string } | null } | null;
   disclaimer: string;
 }
 
@@ -47,6 +48,19 @@ function pattern(v: unknown): TlPattern | null {
     shared_tactics: strs(v.shared_tactics), shared_tactic_labels: strs(v.shared_tactic_labels), what_happens_next: str(v.what_happens_next), source_name: str(v.source_name),
     source_url: str(v.source_url),
   };
+}
+
+function contrast(v: unknown): TrustLensReport["genuine_contrast"] {
+  if (!isObj(v)) return null;
+  const points = arr(v.points)
+    .filter(isObj)
+    .map((p) => ({ label: str(p.label), scam_phrase: str(p.scam_phrase), genuine: str(p.genuine) }))
+    .filter((p) => p.label && p.genuine);
+  if (points.length === 0) return null;
+  const ex = isObj(v.example) && str(v.example.text) && str(v.example.source_url).startsWith("https://")
+    ? { title: str(v.example.title), text: str(v.example.text), source_name: str(v.example.source_name), source_url: str(v.example.source_url) }
+    : null;
+  return { points, example: ex };
 }
 
 /** Validate the backend payload. Returns null when it is missing or not a
@@ -86,6 +100,7 @@ export function parseTrustLens(raw: unknown): TrustLensReport | null {
       missing_context: strs(unc.missing_context),
       may_be_wrong: strs(unc.may_be_wrong),
     },
+    genuine_contrast: contrast(raw.genuine_contrast),
     disclaimer: str(raw.disclaimer),
   };
 }
