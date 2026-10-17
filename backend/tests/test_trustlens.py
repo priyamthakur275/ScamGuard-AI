@@ -123,3 +123,16 @@ def test_trustlens_failure_does_not_break_analysis(client):
     with patch("app_service.services.trustlens.build_trustlens", side_effect=RuntimeError("boom")):
         res = client.post("/api/v1/public/quick-check", json={"text": OTP_REQUEST})
     assert res.status_code == 200 and "trustlens" not in res.json()["metadata"] and res.json()["verdict"]
+
+
+def test_genuine_contrast_matches_the_evidence():
+    r, tl = _report(OTP_REQUEST)
+    gc = tl["genuine_contrast"]
+    if r.verdict != "legitimate":
+        assert gc and gc["points"]
+        assert {p["label"] for p in gc["points"]} <= {e["label"] for e in tl["evidence_for"]}
+        assert all(p["genuine"] and p["scam_phrase"] for p in gc["points"])
+        assert gc["example"] is None or gc["example"]["source_url"].startswith("https://")
+    _r, safe = _report(OTP_WARNING)
+    if safe["verdict"] == "legitimate":
+        assert safe["genuine_contrast"] is None

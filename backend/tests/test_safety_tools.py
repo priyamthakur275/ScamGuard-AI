@@ -102,3 +102,56 @@ def test_what_if_ignores_scan_annotation(client):
     a = client.post("/api/v1/tools/what-if", json={"text": text}).json()
     b = client.post("/api/v1/tools/what-if", json={"text": text + "\n\nDetected language/concepts (heuristic):\nDetected concepts: KYC, OTP."}).json()
     assert a == b
+
+
+WA_CHAT = """14/10/26, 9:01 pm - Messages and calls are end-to-end encrypted.
+14/10/26, 9:02 pm - Rahul: Sir your SBI account KYC is pending, it will be blocked today
+14/10/26, 9:03 pm - Me: what should I do
+14/10/26, 9:05 pm - Rahul: Share the OTP sent to your number to verify
+it is urgent
+14/10/26, 9:06 pm - Me: <Media omitted>
+14/10/26, 9:07 pm - Rahul: Also transfer Rs 5000 to this account to keep it safe"""
+
+
+def test_split_chat_formats():
+    msgs = st.split_chat(WA_CHAT)
+    assert [m["sender"] for m in msgs] == ["Rahul", "Me", "Rahul", "Rahul"]   # system lines and media dropped
+    assert msgs[2]["text"].endswith("it is urgent")                         # continuation line joined
+    assert [m["sender"] for m in st.split_chat("Asha: hi\nRavi: hello there")] == ["Asha", "Ravi"]
+    assert len(st.split_chat("first message\n\nsecond message\nstill second")) == 2
+    assert len(st.split_chat("one\ntwo\nthree")) == 3
+
+
+def test_timeline_finds_the_turning_point(client):
+    r = client.post("/api/v1/tools/timeline", json={"text": WA_CHAT}).json()
+    assert len(r["messages"]) == 4
+    assert all(0 <= m["risk_score"] <= 1 and m["verdict"] for m in r["messages"])
+    seen = r["stage_first_seen"]
+    if seen["ask"] is not None or seen["cashout"] is not None:
+        expected = min(i for i in (seen["ask"], seen["cashout"]) if i is not None)
+        assert r["turning_point"] == expected and "message" in r["summary"]
+    for m in r["messages"]:
+        assert set(m["stages"]) <= {"hook", "pressure", "ask", "cashout"}
+    assert r["overall"]["verdict"] and r["note"]
+
+
+def test_timeline_harmless_chat_and_validation(client):
+    r = client.post("/api/v1/tools/timeline", json={"text": "Asha: are we meeting at 6?\nRavi: yes, see you at the cafe"}).json()
+    assert r["turning_point"] is None and r["stages_reached"] == []
+    assert client.post("/api/v1/tools/timeline", json={"text": "just one single line here"}).status_code == 422
+    assert client.post("/api/v1/tools/timeline", json={"text": "x"}).status_code == 422
+
+
+def test_flashcards_come_from_the_cited_library(client):
+    import json
+    from pathlib import Path
+
+    kb = json.loads(Path("app_service/rag/knowledge_base.json").read_text())
+    r = client.get("/api/v1/public/flashcards").json()
+    scams = [e for e in kb if e.get("kind", "scam") == "scam"]
+    assert r["count"] == len(scams) == len(r["cards"])
+    for c in r["cards"]:
+        assert c["message"] and c["title"] and c["source_url"].startswith("https://")
+        assert c["tactics"] and all(t["label"] for t in c["tactics"])
+        assert len(c["actions"]) <= 3
+    assert not any(c["id"].startswith("gen-") for c in r["cards"])
