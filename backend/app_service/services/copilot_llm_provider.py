@@ -80,7 +80,7 @@ def _gemini_config(model: str, max_tokens: int) -> dict:
 class GeminiProvider(CopilotLlmProvider):
     """Google Gemini (has a free tier). COPILOT_LLM_PROVIDER=gemini."""
 
-    default_model = "gemini-3.8-flash"
+    default_model = "gemini-3.5-flash-lite"
 
     def complete(self, system: str, user: str, max_tokens: int = 400) -> str:
         settings = get_settings()
