@@ -76,7 +76,22 @@ jobs:
                   raise RuntimeError("Copilot answered with the built-in fallback, so the AI model is not answering")
               return "AI answer: " + " ".join(text.split())[:240]
 
+          def flashcards():
+              s, body = req(API + "/public/flashcards")
+              n = json.loads(body)["count"]
+              assert n > 0, "no cards"
+              return f"{n} flashcards"
+
+          def timeline():
+              chat = "Rahul: Sir your SBI account KYC is pending, it will be blocked today\nMe: what should I do\nRahul: Share the OTP sent to your number to verify"
+              s, body = req(API + "/tools/timeline", {"text": chat})
+              d = json.loads(body)
+              assert len(d["messages"]) == 3
+              return f"timeline turning point: message {None if d['turning_point'] is None else d['turning_point'] + 1}"
+
           step("Frontend", frontend)
+          step("Flashcards", flashcards)
+          step("Chat timeline", timeline)
           step("Captcha", captcha)
           step("Scan + TrustLens", scan)
           step("Copilot AI", copilot, tries=3)
