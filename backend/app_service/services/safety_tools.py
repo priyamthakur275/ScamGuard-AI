@@ -303,3 +303,102 @@ def what_if(text: str, max_parts: int = 8) -> dict:
     # Redundant: no single cue matters when removed, yet removing them all does.
     redundant = all(p["drop"] < 0.05 for p in parts) and base - baseline > 0.1
     return {"score": round(base, 4), "baseline": round(baseline, 4), "parts": parts, "redundant": redundant}
+
+
+# ---------------------------------------------------------------- chat timeline
+_WA_LINE = re.compile(
+    r"^\[?(?P<ts>\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4},?\s+\d{1,2}[:.]\d{2}(?:[:.]\d{2})?\s?(?:[APap]\.?[Mm]\.?)?)\]?\s*[-–]?\s*"
+    r"(?P<who>[^:]{1,40}):\s(?P<msg>.*)$"
+)
+_NAME_LINE = re.compile(r"^(?P<who>[A-Za-z][\w .'+()-]{0,30}):\s+(?P<msg>.+)$")
+_SKIP = re.compile(r"messages and calls are end-to-end encrypted|<media omitted>|this message was deleted|missed (voice|video) call", re.I)
+MAX_CHAT_CHARS = 8000
+MAX_CHAT_MESSAGES = 60
+STAGE_ORDER = ("hook", "pressure", "ask", "cashout")
+
+
+def split_chat(text: str) -> list[dict]:
+    """Split a pasted chat into messages. Understands WhatsApp exports
+    ("12/10/26, 9:41 pm - Name: text"), "Name: text" lines, and otherwise
+    blank-line- or line-separated messages."""
+    lines = [l.rstrip() for l in text.replace("\r\n", "\n").split("\n")]
+    out: list[dict] = []
+    structured = sum(1 for l in lines if _WA_LINE.match(l.strip()) or _NAME_LINE.match(l.strip()))
+    if structured >= 2:
+        for raw in lines:
+            line = raw.strip()
+            if not line:
+                continue
+            m = _WA_LINE.match(line) or _NAME_LINE.match(line)
+            if m:
+                out.append({"sender": m.group("who").strip(), "text": m.group("msg").strip()})
+            elif out:
+                out[-1]["text"] += " " + line  # continuation of a multi-line message
+    else:
+        blocks = [b.strip() for b in re.split(r"\n\s*\n", text) if b.strip()]
+        if len(blocks) < 2:
+            blocks = [l.strip() for l in lines if l.strip()]
+        out = [{"sender": "", "text": b} for b in blocks]
+    return [m for m in out if m["text"] and not _SKIP.search(m["text"])][:MAX_CHAT_MESSAGES]
+
+
+def chat_timeline(text: str) -> dict:
+    from app_service.services.message_service import get_in_process_prediction_service
+    from ml_service.inference.scam_xray import xray
+    from ml_service.services.prediction_service import PredictionRequest
+
+    svc = get_in_process_prediction_service()
+    messages = split_chat(text[:MAX_CHAT_CHARS])
+    if len(messages) < 2:
+        raise ValueError("Paste at least two messages: a WhatsApp export, 'Name: message' lines, or one message per line.")
+
+    first_seen: dict[str, int | None] = {s: None for s in STAGE_ORDER}
+    by_sender: dict[str, int] = {}
+    rows = []
+    for i, m in enumerate(messages):
+        res = svc.predict(PredictionRequest(text=m["text"], input_type="TEXT", metadata=None))
+        xr = xray(m["text"])
+        stages = [s for s in STAGE_ORDER if xr["stages"].get(s)]
+        signs = [label for s in STAGE_ORDER for label in xr["stages"].get(s, [])]
+        for s in stages:
+            if first_seen[s] is None:
+                first_seen[s] = i
+        if signs and m["sender"]:
+            by_sender[m["sender"]] = by_sender.get(m["sender"], 0) + len(signs)
+        rows.append({"index": i, "sender": m["sender"], "text": m["text"][:600], "risk_score": round(float(res.threat_score), 4),
+                     "verdict": res.verdict, "stages": stages, "signs": signs})
+
+    whole = " \n".join(m["text"] for m in messages)
+    overall = svc.predict(PredictionRequest(text=whole[:4000], input_type="TEXT", metadata=None))
+    turning = next((i for i in (first_seen["ask"], first_seen["cashout"]) if i is not None), None)
+    if first_seen["ask"] is not None and first_seen["cashout"] is not None:
+        turning = min(first_seen["ask"], first_seen["cashout"])
+    reached = [s for s in STAGE_ORDER if first_seen[s] is not None]
+    first_high = next((r["index"] for r in rows if r["risk_score"] >= 0.5), None)
+    suspected = max(by_sender, key=by_sender.get) if by_sender else None
+    if turning is not None:
+        summary = (f"The chat reaches the {'ask' if first_seen['ask'] == turning else 'cash-out'} stage at message {turning + 1}"
+                   f"{(' from ' + rows[turning]['sender']) if rows[turning]['sender'] else ''}: "
+                   "that is where it turns from talk into a request for something valuable.")
+    elif first_high is not None:
+        who = f" from {rows[first_high]['sender']}" if rows[first_high]["sender"] else ""
+        summary = (f"Message {first_high + 1}{who} is the first one scored as a likely scam"
+                   f"{', and the chat shows ' + ', '.join(reached) + ' signs' if reached else ''}, "
+                   "but no specific request phrase (OTP, payment, link) was matched. Read the flagged messages carefully.")
+    elif reached:
+        summary = "Scam signs appear, but no message asks for money, details or an action yet. Be careful with what comes next."
+    else:
+        summary = "No scam stage was matched and no message scored as a likely scam."
+    return {
+        "messages": rows,
+        "stage_first_seen": first_seen,
+        "stages_reached": reached,
+        "turning_point": turning,
+        "first_high_risk": first_high,
+        "suspected_sender": suspected,
+        "overall": {"risk_score": round(float(overall.threat_score), 4), "verdict": overall.verdict,
+                    "classifier_probability": round(float(overall.scam_probability), 4)},
+        "summary": summary,
+        "note": "Each message is scored on its own by the same engine as a normal scan; the overall score is for the whole chat. "
+                "Stages are marked only where a matching phrase was found.",
+    }

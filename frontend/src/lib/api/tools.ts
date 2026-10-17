@@ -28,3 +28,17 @@ export const getPayReasons = () => apiRequest<{ id: string; label: string }[]>("
 export const payCheck = (body: { upi_id: string; payee_name: string; expected_name: string; amount: string; reason: string }) =>
   apiRequest<ToolResult>("/tools/pay-check", { method: "POST", body, auth: false });
 export const whatIf = (text: string) => apiRequest<WhatIfResult>("/tools/what-if", { method: "POST", body: { text }, auth: false });
+
+export interface TimelineMessage { index: number; sender: string; text: string; risk_score: number; verdict: string; stages: string[]; signs: string[] }
+export interface TimelineResult {
+  messages: TimelineMessage[];
+  stage_first_seen: Record<"hook" | "pressure" | "ask" | "cashout", number | null>;
+  stages_reached: string[];
+  turning_point: number | null;
+  first_high_risk: number | null;
+  suspected_sender: string | null;
+  overall: { risk_score: number; verdict: string; classifier_probability: number };
+  summary: string;
+  note: string;
+}
+export const checkTimeline = (text: string) => apiRequest<TimelineResult>("/tools/timeline", { method: "POST", body: { text }, auth: false });

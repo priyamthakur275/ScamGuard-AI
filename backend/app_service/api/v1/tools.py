@@ -87,3 +87,16 @@ class WhatIfRequest(BaseModel):
 @limiter.limit("15/minute")
 def what_if(request: Request, payload: WhatIfRequest) -> dict:
     return st.what_if(payload.text)
+
+
+class TimelineRequest(BaseModel):
+    text: str = Field(min_length=10, max_length=st.MAX_CHAT_CHARS)
+
+
+@router.post("/timeline")
+@limiter.limit("10/minute")
+def timeline(request: Request, payload: TimelineRequest) -> dict:
+    try:
+        return st.chat_timeline(payload.text)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))

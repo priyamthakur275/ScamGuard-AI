@@ -19,6 +19,7 @@ retriever are unchanged. TrustLens only reads their outputs.
 | **Scam Journey Mapper**, evidence-for/against panel, uncertainty section | **New** |
 | **Evidence-driven safe-action recommendations** | **New** |
 | **Similar-pattern panel** with source link, shown only when the evaluator accepts the match | **New** |
+| **How a genuine message differs**: each matched tactic contrasted with genuine behaviour, plus a genuine library format | **New** |
 
 ## Architecture and data flow
 
@@ -33,6 +34,8 @@ text -> MessageService._run_pipeline
              |- journey           <- the 4 stages; detected only with matched phrases
              |- recommendations   <- fixed safety actions keyed by matched intents
              |- similar_pattern   <- HybridRetriever + grade_retrieval (CRAG rules)
+             |- genuine_contrast  <- matched tactics -> what a genuine message does instead,
+             |                       plus a genuine library format chosen by those tactics (scams only)
              '- uncertainty       <- conflicts, insufficient evidence, missing context,
                                      classifier/fused disagreement, short text
 frontend: components/analysis/trust-lens.tsx  <- lib/trustlens.ts parseTrustLens()
@@ -64,6 +67,7 @@ new endpoint was needed.
   "journey": [{"stage": "hook", "name": "Hook", "meaning": "...", "detected": false, "evidence": []}, ...],
   "recommendations": [{"id": "secret", "text": "..."}],
   "similar_pattern": {"status": "match|ambiguous|none|unavailable", "relevance": 0.71, "match": {...} | null, "genuine_match": {...} | null},
+  "genuine_contrast": {"points": [{"label": "...", "scam_phrase": "...", "genuine": "..."}], "example": {"title": "...", "text": "...", "source_url": "https://..."} | null} | null,
   "uncertainty": {"conflicting": false, "insufficient": false, "missing_context": ["..."], "may_be_wrong": ["..."]},
   "disclaimer": "This is a risk assessment ..."
 }
@@ -82,9 +86,10 @@ Modified: `backend/app_service/services/message_service.py` (attaches the report
 
 | Command | Result |
 |---|---|
-| `pytest tests` (backend) | 341 passed |
+| `pytest tests` (backend) | 348 passed |
 | `pytest ml_common/tests ml_training/tests ml_service/tests` | 307 passed |
 | `npm run typecheck`, `npm run lint`, `npm run build` | clean |
+| `npm test` (vitest, includes `parseTrustLens`) | 15 passed |
 | Browser check (Playwright, production build, local backend) | all scenarios below passed, no page errors |
 
 `tests/test_trustlens.py` covers: explicit OTP request; protective "do not share your OTP" warning; urgency
@@ -98,7 +103,7 @@ Browser scenarios: real scam message on desktop with keyboard expansion of a jou
 a 390 px phone screen (no horizontal scrolling); stubbed malformed TrustLens payload (fallback notice); stubbed
 server error and slow response (loading button, error message, no TrustLens shown).
 
-The frontend has no unit-test runner, so frontend states were verified in the browser rather than with unit tests.
+Frontend unit tests (vitest) cover the payload parser: missing/malformed reports, stages never marked without evidence, matches without an https source dropped, and the genuine-contrast section. Rendered states were verified in the browser.
 
 ## Demonstration walkthrough (example messages, labelled as examples)
 
@@ -123,4 +128,4 @@ The actual numbers shown come from the live model at the time of the check and m
 - The risk score is not a calibrated probability; TrustLens labels it as a score.
 - The pattern library has 52 entries (42 scam, 10 genuine); many real scams will show "No known scam pattern".
 - Recommendations are fixed texts chosen by matched evidence, not personalised advice.
-- English and some Hinglish only, as for the rest of the rule engine.
+- English and some Hinglish only, as for the rest of the rule engine. With the Hindi interface the headings and labels are Hindi; the detailed explanations stay in English.

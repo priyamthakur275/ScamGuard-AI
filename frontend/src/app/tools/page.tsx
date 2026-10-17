@@ -1,16 +1,19 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { AlertTriangle, CheckCircle2, FileWarning, Info, Loader2, QrCode, ShieldAlert, Upload, Wallet } from "lucide-react";
+import { AlertTriangle, CheckCircle2, FileWarning, Info, Loader2, MessagesSquare, QrCode, ShieldAlert, Upload, Wallet } from "lucide-react";
 import { PublicShell } from "@/components/layout/public-shell";
-import { checkFile, checkQr, getPayReasons, payCheck, type QrResult, type ToolFlag, type ToolResult } from "@/lib/api/tools";
+import { checkFile, checkQr, checkTimeline, getPayReasons, payCheck, type QrResult, type TimelineResult, type ToolFlag, type ToolResult } from "@/lib/api/tools";
+import { useLanguage } from "@/lib/i18n/language-context";
+import type { StringKey } from "@/lib/i18n/strings";
 import { cn, scamCategoryLabel } from "@/lib/utils";
 
-type Tab = "qr" | "pay" | "file";
-const TABS: { id: Tab; label: string; icon: typeof QrCode; blurb: string }[] = [
-  { id: "qr", label: "QR code check", icon: QrCode, blurb: "See who a QR code really pays, how much, or where its link goes, before you scan it in your UPI app." },
-  { id: "pay", label: "Before you pay", icon: Wallet, blurb: "Someone asked you to pay? Check the UPI ID and the reason against known payment scams." },
-  { id: "file", label: "File check", icon: FileWarning, blurb: "Got an attachment on WhatsApp or email? Find out what it really is before you open or install it." },
+type Tab = "qr" | "pay" | "file" | "chat";
+const TABS: { id: Tab; label: StringKey; icon: typeof QrCode; blurb: string }[] = [
+  { id: "qr", label: "tools.qr", icon: QrCode, blurb: "See who a QR code really pays, how much, or where its link goes, before you scan it in your UPI app." },
+  { id: "pay", label: "tools.pay", icon: Wallet, blurb: "Someone asked you to pay? Check the UPI ID and the reason against known payment scams." },
+  { id: "file", label: "tools.file", icon: FileWarning, blurb: "Got an attachment on WhatsApp or email? Find out what it really is before you open or install it." },
+  { id: "chat", label: "tools.chat", icon: MessagesSquare, blurb: "Paste a whole chat (a WhatsApp export or one message per line). Each message is checked, and you see where the conversation turned into a scam." },
 ];
 
 const FLAG_STYLE: Record<ToolFlag["level"], { icon: typeof Info; cls: string }> = {
@@ -30,11 +33,12 @@ const FACT_LABEL: Record<string, string> = {
 };
 
 function ResultView({ result }: { result: ToolResult }) {
+  const { t } = useLanguage();
   const facts = Object.entries(result.facts).filter(([k]) => k !== "virustotal_url");
   return (
     <div className="space-y-4" role="status">
       <div className={cn("rounded-2xl border px-5 py-4", RISK_STYLE[result.risk])}>
-        <p className="text-xs font-semibold uppercase tracking-wider opacity-80">{result.risk} risk</p>
+        <p className="text-xs font-semibold uppercase tracking-wider opacity-80">{t(`tools.risk.${result.risk}` as StringKey)}</p>
         <p className="text-lg font-semibold">{result.summary}</p>
       </div>
       <ul className="space-y-2">
@@ -182,21 +186,99 @@ function FileTool() {
   );
 }
 
+const STAGE_NAME: Record<string, string> = { hook: "Hook", pressure: "Pressure", ask: "Ask", cashout: "Cash-out" };
+const SAMPLE_CHAT = `14/10/26, 9:02 pm - Rahul: Sir your SBI account KYC is pending, it will be blocked today
+14/10/26, 9:03 pm - Me: what should I do
+14/10/26, 9:05 pm - Rahul: Share the OTP sent to your number to verify
+14/10/26, 9:07 pm - Rahul: Also transfer Rs 5000 to this account to keep it safe`;
+
+function TimelineTool() {
+  const [text, setText] = useState("");
+  const { busy, error, data, run } = useRun<TimelineResult>();
+  const submit = (e: FormEvent) => { e.preventDefault(); if (text.trim().length >= 10) void run(() => checkTimeline(text)); };
+  return (
+    <div className="space-y-5">
+      <form onSubmit={submit} className="space-y-3">
+        <label className="block space-y-1 text-sm">
+          <span className="font-medium">The chat</span>
+          <textarea value={text} onChange={(e) => setText(e.target.value.slice(0, 8000))} rows={8}
+            placeholder={"12/10/26, 9:41 pm - Name: message\nor\nName: message\n(one message per line)"}
+            className="w-full rounded-xl border border-border bg-background px-3 py-2 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+        </label>
+        <div className="flex flex-wrap gap-2">
+          <button type="submit" disabled={busy || text.trim().length < 10}
+            className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 font-medium text-primary-foreground disabled:opacity-60">
+            {busy && <Loader2 className="h-4 w-4 animate-spin" />} Check the chat
+          </button>
+          <button type="button" onClick={() => setText(SAMPLE_CHAT)} className="rounded-xl border border-border px-4 py-2.5 text-sm hover:border-primary">
+            Use an example chat
+          </button>
+        </div>
+        <p className="text-xs text-muted-foreground">WhatsApp: open the chat, ⋮ → More → Export chat → Without media, then paste the text here. Nothing is stored.</p>
+      </form>
+      <ErrorNote error={error} />
+      {data && (
+        <div className="space-y-4" role="status">
+          <div className={cn("rounded-2xl border px-5 py-4", data.overall.verdict === "legitimate" ? RISK_STYLE.low : data.overall.risk_score >= 0.7 ? RISK_STYLE.high : RISK_STYLE.medium)}>
+            <p className="text-xs font-semibold uppercase tracking-wider opacity-80">Whole chat · {Math.round(data.overall.risk_score * 100)}% risk</p>
+            <p className="font-semibold">{data.summary}</p>
+          </div>
+          <div className="flex flex-wrap gap-2 text-xs" aria-label="Stages reached">
+            {(["hook", "pressure", "ask", "cashout"] as const).map((s) => {
+              const at = data.stage_first_seen[s];
+              return (
+                <span key={s} className={cn("rounded-full border px-3 py-1", at === null ? "border-dashed border-border text-muted-foreground" : "border-destructive/50 bg-destructive/10")}>
+                  {STAGE_NAME[s]}: {at === null ? "not detected" : `from message ${at + 1}`}
+                </span>
+              );
+            })}
+          </div>
+          <ol className="space-y-2">
+            {data.messages.map((m) => {
+              const isTurn = m.index === data.turning_point;
+              const isFirstHigh = data.turning_point === null && m.index === data.first_high_risk;
+              return (
+                <li key={m.index} className={cn("rounded-xl border p-3 text-sm",
+                  isTurn || isFirstHigh ? "border-destructive bg-destructive/10" : m.risk_score >= 0.5 ? "border-destructive/40" : "border-border")}>
+                  <div className="mb-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    <span className="font-semibold text-foreground">{m.index + 1}. {m.sender || "Message"}</span>
+                    <span className="font-mono">{Math.round(m.risk_score * 100)}% risk</span>
+                    {m.stages.map((s) => <span key={s} className="rounded-full bg-destructive/15 px-2 py-0.5 text-destructive">{STAGE_NAME[s]}</span>)}
+                    {isTurn && <span className="rounded-full bg-destructive px-2 py-0.5 font-semibold text-destructive-foreground">Turning point</span>}
+                    {isFirstHigh && <span className="rounded-full bg-destructive px-2 py-0.5 font-semibold text-destructive-foreground">First flagged message</span>}
+                  </div>
+                  <p className="whitespace-pre-wrap break-words">{m.text}</p>
+                  {m.signs.length > 0 && <p className="mt-1 text-xs text-muted-foreground">Signs: {m.signs.join(", ")}</p>}
+                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted" aria-hidden>
+                    <div className={cn("h-full rounded-full", m.risk_score >= 0.5 ? "bg-destructive/80" : "bg-emerald-500/70")} style={{ width: `${Math.max(2, m.risk_score * 100)}%` }} />
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+          <p className="text-xs text-muted-foreground">{data.note}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ToolsPage() {
+  const { t } = useLanguage();
   const [tab, setTab] = useState<Tab>("qr");
   const active = TABS.find((t) => t.id === tab)!;
-  const panels: Record<Tab, ReactNode> = { qr: <QrTool />, pay: <PayTool />, file: <FileTool /> };
+  const panels: Record<Tab, ReactNode> = { qr: <QrTool />, pay: <PayTool />, file: <FileTool />, chat: <TimelineTool /> };
   return (
     <PublicShell>
       <div className="mx-auto max-w-3xl px-4 py-10 sm:py-14">
-        <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">Safety tools</h1>
-        <p className="mt-2 text-muted-foreground">Check a QR code, a payment request or a file before it costs you money. No sign-up, nothing stored.</p>
-        <div role="tablist" aria-label="Safety tools" className="mt-8 grid grid-cols-3 gap-2">
+        <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">{t("tools.title")}</h1>
+        <p className="mt-2 text-muted-foreground">{t("tools.subtitle")}</p>
+        <div role="tablist" aria-label="Safety tools" className="mt-8 grid grid-cols-2 gap-2 sm:grid-cols-4">
           {TABS.map(({ id, label, icon: Icon }) => (
             <button key={id} role="tab" type="button" aria-selected={tab === id} aria-controls={`panel-${id}`} id={`tab-${id}`} onClick={() => setTab(id)}
               className={cn("flex flex-col items-center gap-1.5 rounded-2xl border px-2 py-3 text-xs font-medium sm:flex-row sm:justify-center sm:text-sm",
                 tab === id ? "border-primary bg-primary/10 text-primary" : "border-border hover:border-primary/50")}>
-              <Icon className="h-5 w-5" aria-hidden /> {label}
+              <Icon className="h-5 w-5" aria-hidden /> {t(label)}
             </button>
           ))}
         </div>

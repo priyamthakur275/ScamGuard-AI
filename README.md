@@ -17,11 +17,11 @@ Hosted on Render's free tier (frontend + `app_service` + PostgreSQL). The backen
 **Check anything** — SMS/WhatsApp text, links, emails, screenshots (WhatsApp chat-aware OCR, dark mode supported), PDFs, QR codes and voice calls (live captions or private on-device Whisper transcription, Hindi→English).
 
 **Explain the verdict**
-- **TrustLens** — for every result: the classifier probability and the final risk score side by side, a Scam Journey Mapper (only stages with matched phrases are marked), evidence for and against, evidence-based safety actions, a similar known pattern with its source (only when the retrieval evaluator accepts it) and an honest "why this may be wrong" section. It adds no score of its own; see `docs/TRUSTLENS.md`.
+- **TrustLens** — for every result: the classifier probability and the final risk score side by side, a Scam Journey Mapper (only stages with matched phrases are marked), evidence for and against, evidence-based safety actions, a similar known pattern with its source (only when the retrieval evaluator accepts it) and an honest "why this may be wrong" section. It also shows **how a genuine message differs**, tactic by tactic, with a real example format. It adds no score of its own; see `docs/TRUSTLENS.md`.
 - **Scam X-Ray** — highlights the exact trap phrases in the message and maps them onto the four stages of a scam: hook, pressure, the ask, cash-out.
 - **Scam likelihood** — an SVM model (v3, trained on the SMS Spam Collection + a documented Indian scam supplement) fused with an intent-based risk engine; the model's own probability is always shown alongside. Unseen-set accuracy: 87.5% (see `backend/ml_training/datasets/README.md`).
 - **Website trust score** — domain age from RDAP, HTTPS, link signals and a live inspection of the page (password/OTP/card forms, forms posting elsewhere, brand impersonation).
-- **Ask ScamGuard** — answers "is this a scam?", "I already paid, what now?", "how do I report it?" (English/Hindi), optionally backed by Gemini/Anthropic/OpenAI via env vars.
+- **Ask ScamGuard** — answers "is this a scam?", "I already paid, what now?", "how do I report it?" (English/Hindi), backed by Gemini (or Groq/Anthropic/OpenAI) via env vars, with per-visitor and daily caps that fall back to built-in answers.
 
 **Act on it**
 - One-tap reporting to **Chakshu** (Sanchar Saathi) or **1930 / cybercrime.gov.in**, with a ready-to-paste complaint.
@@ -31,6 +31,8 @@ Hosted on Render's free tier (frontend + `app_service` + PostgreSQL). The backen
 
 **Learn and reach people**
 - **ScamGuard Copilot** — a streaming chat that checks pasted messages, links and call transcripts with corrective retrieval over 42 Indian scam patterns and 10 genuine message formats, citing official sources.
+- **Scam flashcards** — one card per pattern in the cited library (42 scams): read the message, flip for the warning signs, what happens next, what to do and the source; "Review again" brings missed cards back, progress is kept in the browser.
+- **Safety tools** — QR code payment check, "before you pay" UPI check, attachment/APK check and a **chat timeline** that scores every message of a pasted WhatsApp chat and marks the turning point where it moves from talk to a request.
 - **Scam simulator** — five scripted scams (bank KYC, task job, digital arrest, UPI refund, electricity cut); every scammer line is checked live by the real engine, and wrong answers show the money you would have lost.
 - **Public scam trends** (anonymous aggregates), **English/Hindi interface**, installable **PWA with Android share target**, and a **Chrome/Edge/Brave extension** (`browser-extension/`).
 
