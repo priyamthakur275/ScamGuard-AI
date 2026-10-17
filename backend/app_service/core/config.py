@@ -104,6 +104,7 @@ class Settings(BaseSettings):
     # external LLM. See copilot_llm_provider.py.
     COPILOT_LLM_PROVIDER: str | None = None
     COPILOT_LLM_API_KEY: str | None = None
+    COPILOT_LLM_DAILY_LIMIT: int = 900  # AI answers per UTC day across all visitors (0 = no cap)
     COPILOT_LLM_MODEL: str | None = None  # optional override of the provider's default model
 
     # CORS

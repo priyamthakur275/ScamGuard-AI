@@ -25,7 +25,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
 
-from app_service.core.rate_limit import limiter
+from app_service.core.rate_limit import get_client_ip, limiter
 from app_service.db.session import get_db
 from app_service.rag.crag import CragVerdict, analyze_evidence
 from app_service.schemas.message import AnalysisResult
@@ -117,7 +117,7 @@ COPILOT_PERSONA = (
 )
 
 
-def ai_stream(message: str, history: list[ChatTurn], scan_context: str | None = None):
+def ai_stream(message: str, history: list[ChatTurn], scan_context: str | None = None, visitor: str = "anonymous"):
     """An iterator over the configured LLM's answer as it is written, or None
     when no LLM is configured (the caller then uses the built-in answers).
     Nothing is sent until the iterator is first advanced."""
@@ -126,6 +126,12 @@ def ai_stream(message: str, history: list[ChatTurn], scan_context: str | None = 
     try:
         provider = get_configured_provider()
     except CopilotLlmUnavailableError:
+        return None
+    from app_service.core.config import get_settings
+    from app_service.services import llm_budget
+
+    if not llm_budget.allow(visitor, get_settings().COPILOT_LLM_DAILY_LIMIT):
+        logger.info("Copilot LLM cap reached; using built-in answers")
         return None
     convo = "\n".join(f"{'User' if t.role == 'user' else 'Copilot'}: {t.content[:1500]}" for t in history[-8:])
     parts = []
@@ -185,12 +191,12 @@ def chat(request: Request, payload: ChatRequest, db: Session = Depends(get_db)) 
             previous = next((t.content for t in reversed(payload.history) if t.role == "user" and looks_like_evidence(t.content)), None)
             if previous is None:
                 answer = GUIDANCE
-                llm = ai_stream(payload.message, payload.history)
+                llm = ai_stream(payload.message, payload.history, visitor=get_client_ip(request))
             else:
                 kind = "follow_up"
                 outcome = analyze_evidence(db, previous)
                 answer = get_answer(payload.message, outcome.analysis).answer
-                llm = ai_stream(payload.message, payload.history, outcome.answer)
+                llm = ai_stream(payload.message, payload.history, outcome.answer, visitor=get_client_ip(request))
     except Exception:
         logger.exception("Copilot chat failed")
         failure = _sse("error", {"message": "The analysis failed on the server. Please try again in a moment.", "retryable": True})

@@ -158,3 +158,11 @@ def _no_live_rdap(monkeypatch, request):
         return
     from app_service.services import domain_trust
     monkeypatch.setattr(domain_trust, "lookup_domain_age", lambda *a, **k: None)
+
+
+@pytest.fixture(autouse=True)
+def _reset_llm_budget():
+    from app_service.services import llm_budget
+
+    llm_budget.reset()
+    yield
