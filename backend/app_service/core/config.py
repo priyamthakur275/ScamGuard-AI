@@ -128,8 +128,8 @@ class Settings(BaseSettings):
 
     # Keep-alive (see services/keep_alive.py). Production only.
     KEEPALIVE_ENABLED: bool = True
-    KEEPALIVE_URL: str = "https://scamguard-frontend-r6t7.onrender.com/backend-api/api/v1/health"
-    KEEPALIVE_WINDOW_IST: str = "07:00-23:00"
+    KEEPALIVE_URL: str = "https://scamguard-ai-ecnj.onrender.com/api/v1/health"
+    KEEPALIVE_WINDOW_IST: str = "06:00-01:00"
     RATE_LIMIT_AUTH: str = "10/minute"
 
     # ---- Logging ----

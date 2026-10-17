@@ -1,42 +1,57 @@
-name: Keep frontend and backend warm
+name: Keep backend awake
 
-# Render's free tier spins the app_service container down after 15 minutes
-# of inactivity, which is what causes the "Cloud backend is waking from
-# standby" delay users see on first login of the day. This workflow pings
-# the real health endpoint often enough that Render never sees 15 idle
-# minutes, so the delay never happens in the first place.
+# The backend keeps itself awake from 06:00 to 01:00 IST
+# (app_service/services/keep_alive.py). This workflow is the outside safety
+# net: it checks the backend's health and, if it is down, restarts it.
 #
-# This costs nothing extra: GitHub Actions on a public repo is free, and a
-# GET to /api/v1/health does no DB writes and no ML inference.
-
-# GitHub runs scheduled workflows on a best-effort basis (in practice every
-# few hours, not every 10 minutes), so this is only the *wake-up call*: once
-# the backend is up it keeps itself and the frontend awake from 08:00 to
-# 22:00 IST (app_service/services/keep_alive.py). Several morning entries
-# make it likely at least one fires near the start of the day.
+# Why a restart: waking a sleeping free Render service has proved unreliable
+# here (hours of 502/429 with the container never starting), while a deploy
+# always brings it back. Set the repository secret RENDER_DEPLOY_HOOK to the
+# backend's Deploy Hook URL (Render dashboard -> ScamGuard-AI -> Settings ->
+# Deploy Hook) and this workflow redeploys the backend whenever it is down.
+#
+# It pings the backend directly, never the frontend, so the frontend only
+# uses free instance-hours when people visit it (750 h/month per workspace).
+# GitHub runs schedules on a best-effort basis, so the morning entries make
+# sure at least one check lands near the start of the day.
 on:
   schedule:
     - cron: "*/10 * * * *"
-    - cron: "17 2 * * *"   # 07:47 IST
-    - cron: "37 2 * * *"   # 08:07 IST
-    - cron: "7 3 * * *"    # 08:37 IST
-    - cron: "47 3 * * *"   # 09:17 IST
+    - cron: "25 0 * * *"   # 05:55 IST
+    - cron: "45 0 * * *"   # 06:15 IST
+    - cron: "15 1 * * *"   # 06:45 IST
+    - cron: "15 2 * * *"   # 07:45 IST
   workflow_dispatch: {}
 
 jobs:
   ping:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - name: Wake frontend and backend (retry until healthy)
+      - name: Check the backend, restart it if it is down
+        env:
+          DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
         run: |
-          # One request through the live frontend's /backend-api proxy wakes
-          # both Render services. A cold start can take a minute and Render
-          # sometimes answers 429/502 meanwhile, so keep trying for ~8 min.
-          url="https://scamguard-frontend-r6t7.onrender.com/backend-api/api/v1/health"
-          for i in $(seq 1 16); do
-            status=$(curl -s -o /tmp/health.json -w "%{http_code}" --max-time 120 "$url" || echo "000")
-            echo "attempt $i: HTTP $status"
-            if [ "$status" = "200" ]; then cat /tmp/health.json; echo; exit 0; fi
-            sleep 30
-          done
-          echo "::warning::Site did not become healthy after ~8 minutes (last status $status)."
+          url="https://scamguard-ai-ecnj.onrender.com/api/v1/health"
+          healthy() {
+            for i in $(seq 1 "$1"); do
+              status=$(curl -s -o /tmp/health.json -w "%{http_code}" --max-time 90 "$url" || echo "000")
+              echo "attempt $i: HTTP $status"
+              if [ "$status" = "200" ]; then cat /tmp/health.json; echo; return 0; fi
+              sleep 20
+            done
+            return 1
+          }
+          # A normal wake from sleep takes about a minute; allow ~3.
+          if healthy 8; then exit 0; fi
+          if [ -z "$DEPLOY_HOOK" ]; then
+            echo "::error::Backend is down (last HTTP $status) and RENDER_DEPLOY_HOOK is not set, so it cannot be restarted automatically."
+            exit 1
+          fi
+          echo "Backend is down (last HTTP $status); triggering a redeploy."
+          curl -s -o /dev/null -w "deploy hook: HTTP %{http_code}\n" -X POST "$DEPLOY_HOOK"
+          # Build and start take about 2-4 minutes.
+          sleep 90
+          if healthy 20; then echo "Backend is back after the redeploy."; exit 0; fi
+          echo "::error::Backend still down after the redeploy (last HTTP $status)."
+          exit 1

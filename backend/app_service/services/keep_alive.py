@@ -1,17 +1,16 @@
-"""Keeps the Render free-tier services awake during presentation hours.
+"""Keeps the backend awake on Render's free plan.
 
 Render spins a free web service down after 15 minutes without inbound
-traffic, and the GitHub Actions cron meant to prevent that is only run
-every few hours in practice (scheduled workflows are best-effort). So the
-backend keeps *itself* awake: every 9 minutes inside the configured window
-it calls the public frontend URL's /backend-api health route. That one
-request is inbound traffic for both services (frontend proxy -> backend),
-so neither goes to sleep while the window is open.
+traffic, and waking a sleeping backend has proved unreliable (requests got
+502/429 for hours and the container never started). So the backend keeps
+*itself* awake: every 9 minutes inside the configured window it requests its
+own public /api/v1/health URL, which is inbound traffic through Render's edge.
 
-The window exists because Render's free plan gives 750 instance-hours per
-month across all free services; two services awake 24/7 would use ~1,490.
-08:00-22:00 IST for both services is ~28 h/day, which fits the budget.
-Outside the window the services sleep normally and wake on the first visit.
+It pings the backend directly, not through the frontend, so the frontend is
+awake only while people actually use it. Render's free plan gives 750
+instance-hours per month for the whole workspace and suspends every free
+service when they run out: the backend awake 19 h/day (06:00-01:00 IST) is
+~590 h, leaving room for the frontend's real visits.
 """
 
 from __future__ import annotations
