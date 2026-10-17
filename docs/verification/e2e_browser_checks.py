@@ -2,6 +2,7 @@ import re, sys, time, json, os
 from playwright.sync_api import sync_playwright, expect
 BASE=os.environ.get("BASE","http://127.0.0.1:3000")
 SHOTS=os.environ.get("SHOTS","/tmp/shots")
+FX=os.environ.get("FX","/tmp/fx")
 os.makedirs(SHOTS,exist_ok=True)
 EMAIL=f"e2e{int(time.time())}@example.com"; PW="Str0ngPassw0rd"
 results=[]; errors=[]
@@ -101,9 +102,9 @@ with sync_playwright() as p:
         page.get_by_role("button",name=re.compile("Analyze evidence")).click()
         wait_verdict(page,90000)
         page.screenshot(path=f"{SHOTS}/{shot}.png",full_page=True)
-    check("image OCR scan -> verdict",lambda: file_scan("Image","/tmp/fx/scam.png","09_image"))
-    check("PDF scan -> verdict",lambda: file_scan("^PDF$","/tmp/fx/scam.pdf","10_pdf"))
-    check("QR scan -> verdict",lambda: file_scan("QR","/tmp/fx/qr.png","11_qr"))
+    check("image OCR scan -> verdict",lambda: file_scan("Screenshot",FX+"/scam.png","09_image"))
+    check("PDF scan -> verdict",lambda: file_scan("^PDF$",FX+"/scam.pdf","10_pdf"))
+    check("QR scan -> verdict",lambda: file_scan("QR",FX+"/qr.png","11_qr"))
     def voice():
         page.goto(BASE+"/analyze"); page.wait_for_load_state("networkidle")
         go_tab(page,"Voice")
@@ -114,12 +115,7 @@ with sync_playwright() as p:
         wait_verdict(page)
         page.screenshot(path=f"{SHOTS}/13_voice_verdict.png",full_page=True)
     check("voice transcript -> verdict",voice)
-    def camera_tab():
-        page.goto(BASE+"/analyze"); page.wait_for_load_state("networkidle")
-        go_tab(page,"Camera"); page.wait_for_timeout(1500)
-        page.screenshot(path=f"{SHOTS}/14_camera_tab.png",full_page=True)
-    check("camera tab renders (no device)",camera_tab)
-    for name,path,shot in [("dashboard","/dashboard","15_dashboard"),("history","/history","16_history"),("analytics","/analytics","17_analytics"),("cases","/cases","18_cases"),("settings","/settings","19_settings"),("demo","/demo","20_demo")]:
+    for name,path,shot in [("dashboard","/dashboard","15_dashboard"),("history","/history","16_history"),("analytics","/analytics","17_analytics"),("settings","/settings","19_settings"),("trends","/trends","20_trends")]:
         def pg(path=path,shot=shot):
             page.goto(BASE+path); page.wait_for_load_state("networkidle"); page.wait_for_timeout(800)
             page.screenshot(path=f"{SHOTS}/{shot}.png",full_page=True)
@@ -146,30 +142,6 @@ with sync_playwright() as p:
         p3.get_by_role("button",name=re.compile("Create account")).click()
         p3.wait_for_url("**/dashboard",timeout=30000); c3.close()
     check("wrong CAPTCHA -> new challenge -> register succeeds",wrong_captcha)
-    def case_flow():
-        page.goto(BASE+"/analyze"); page.wait_for_load_state("networkidle")
-        page.get_by_label("text evidence").fill(SCAM)
-        page.get_by_role("button",name=re.compile("Analyze evidence")).click(); wait_verdict(page)
-        page.get_by_role("button",name="Create case").click()
-        page.wait_for_url(re.compile(r"/cases/[0-9a-f-]+"),timeout=20000); page.wait_for_load_state("networkidle")
-        page.get_by_role("button",name=re.compile("^investigating$",re.I)).click(); page.wait_for_timeout(1200)
-        assert page.get_by_role("button",name=re.compile("^investigating$",re.I)).get_attribute("aria-pressed")=="true"
-        page.get_by_label("Investigation note").fill("Called bank; number is not official.")
-        page.get_by_role("button",name="Add note").click()
-        page.locator("li", has_text="Called bank; number is not official.").first.wait_for(timeout=10000)
-        assert page.get_by_label("Investigation note").input_value()==""
-        page.screenshot(path=f"{SHOTS}/27_case_detail.png",full_page=True)
-        page.get_by_role("button",name="Export report").click()
-        with page.expect_download(timeout=30000) as d:
-            page.get_by_role("menuitem",name="PDF",exact=True).click()
-        pth=d.value.path(); assert open(pth,"rb").read(4)==b"%PDF"
-        page.get_by_role("button",name="Export report").click()
-        with page.expect_download(timeout=30000) as d:
-            page.get_by_role("menuitem",name="JSON",exact=True).click()
-        json.load(open(d.value.path()))
-        page.goto(BASE+"/cases"); page.wait_for_load_state("networkidle"); page.wait_for_timeout(600)
-        page.screenshot(path=f"{SHOTS}/28_cases_list.png",full_page=True)
-    check("case: create from scan, status, note, PDF+JSON report",case_flow)
     def history_ops():
         page.goto(BASE+"/history"); page.wait_for_load_state("networkidle"); page.wait_for_timeout(600)
         sw=page.evaluate("(()=>{const el=document.querySelector('table').parentElement;return [el.scrollWidth, el.clientWidth]})()")
@@ -188,25 +160,54 @@ with sync_playwright() as p:
         page.get_by_role("button",name="Delete entry").first.click()
         page.get_by_text("Scan deleted").wait_for(timeout=10000)
     check("history: fits width, threat filter, CSV export, expand, delete",history_ops)
-    def copilot_width():
+    def ask_free_text():
         page.goto(BASE+"/analyze"); page.wait_for_load_state("networkidle")
         page.get_by_label("text evidence").fill(SCAM)
         page.get_by_role("button",name=re.compile("Analyze evidence")).click(); wait_verdict(page)
-        box=page.get_by_label("Ask Copilot a question").bounding_box(); panel=page.locator("[id^=copilot-]").first.bounding_box()
-        assert box["width"]>panel["width"]*0.6, (box,panel)
-        page.get_by_label("Ask Copilot a question").fill("What should I do?"); page.keyboard.press("Enter")
-        page.locator("text=/Evidence template|LLM/").first.wait_for(timeout=15000)
-        page.locator("[id^=copilot-]").first.screenshot(path=f"{SHOTS}/30_copilot.png")
-    check("copilot: free-text question, full-width input",copilot_width)
+        box=page.get_by_label("Ask ScamGuard a question"); box.fill("What should I do?"); box.press("Enter")
+        page.locator("text=/1930|cybercrime/").first.wait_for(timeout=20000)
+    check("ask a free-text question about a scan",ask_free_text)
     def dark():
         page.goto(BASE+"/dashboard"); page.wait_for_load_state("networkidle")
-        page.get_by_role("button",name=re.compile("theme|dark|light",re.I)).first.click(); page.wait_for_timeout(500)
-        assert page.evaluate("document.documentElement.classList.contains('dark')")
-        page.screenshot(path=f"{SHOTS}/31_dashboard_dark.png",full_page=True)
-        page.goto(BASE+"/analytics"); page.wait_for_load_state("networkidle"); page.wait_for_timeout(1500)
-        page.screenshot(path=f"{SHOTS}/32_analytics_dark.png",full_page=True)
-        page.get_by_role("button",name=re.compile("theme|dark|light",re.I)).first.click(); page.wait_for_timeout(300)
-    check("dark theme toggle",dark)
+        before=page.evaluate("document.documentElement.classList.contains('dark')")
+        page.get_by_role("button",name=re.compile("Switch to (dark|light) mode")).first.click(); page.wait_for_timeout(500)
+        assert page.evaluate("document.documentElement.classList.contains('dark')")!=before
+        page.screenshot(path=f"{SHOTS}/31_dashboard_toggled.png",full_page=True)
+        page.get_by_role("button",name=re.compile("Switch to (dark|light) mode")).first.click(); page.wait_for_timeout(300)
+        assert page.evaluate("document.documentElement.classList.contains('dark')")==before
+    check("theme toggle switches and switches back",dark)
+    def copilot_chat():
+        c4=b.new_context(viewport={"width":1280,"height":860}); p4=c4.new_page(); p4.goto(BASE); p4.wait_for_load_state("networkidle")
+        p4.get_by_role("button",name="Open ScamGuard Copilot").click()
+        box=p4.get_by_label("Message for ScamGuard Copilot"); box.fill(SCAM); box.press("Enter")
+        p4.get_by_role("meter").first.wait_for(timeout=60000)
+        p4.wait_for_timeout(400); p4.get_by_role("button",name="Stop").wait_for(state="detached",timeout=60000)
+        assert "This looks like a scam" in p4.get_by_role("dialog").inner_text()
+        box.fill("I already paid, what now?"); box.press("Enter")
+        p4.wait_for_timeout(400); p4.get_by_role("button",name="Stop").wait_for(state="detached",timeout=60000)
+        assert "1930" in p4.get_by_role("dialog").inner_text()
+        p4.get_by_role("dialog").screenshot(path=f"{SHOTS}/40_copilot_chat.png"); c4.close()
+    check("Copilot chat: streamed verdict with citations, then a follow-up",copilot_chat)
+    def genuine_salary():
+        c5=b.new_context(); p5=c5.new_page(); p5.goto(BASE); p5.wait_for_load_state("networkidle")
+        qc=p5.locator("#quick-check"); qc.locator("textarea").fill("Dear Customer, your A/c XX4417 is credited with INR 52,300.00 on 01-10-2026 towards SALARY FOR SEP 2026. Avl Bal: INR 61,882.40")
+        qc.get_by_role("button").filter(has_text=re.compile("Check",re.I)).first.click()
+        p5.get_by_text("Looks genuine").first.wait_for(timeout=60000); c5.close()
+    check("genuine salary credit SMS is not flagged",genuine_salary)
+    def simulator():
+        c6=b.new_context(); p6=c6.new_page(); p6.goto(BASE+"/simulator"); p6.wait_for_load_state("networkidle")
+        p6.get_by_role("tab",name="Bank KYC call").click()
+        p6.get_by_text("fraud index").first.wait_for(timeout=60000)
+        p6.get_by_role("button",name="Okay, please help me update it quickly.").click()
+        p6.get_by_role("button",name="Reads out the OTP.").click()
+        p6.get_by_role("button",name="Hang up, block the number and report it on Chakshu.").click()
+        p6.get_by_text("would have taken Rs 49,999").wait_for(timeout=10000); c6.close()
+    check("scam simulator: engine reading, scoring and money lost",simulator)
+    def retired_routes():
+        for old,new in [("/family","/dashboard"),("/trainer","/simulator")]:
+            r=page.request.get(BASE+old,max_redirects=0)
+            assert r.status==308 and r.headers.get("location","").endswith(new),(old,r.status,r.headers.get("location"))
+    check("retired pages redirect permanently",retired_routes)
     # mobile
     CLIP_JS = """() => {
       const W = window.innerWidth, bad = [];
@@ -227,7 +228,7 @@ with sync_playwright() as p:
         m=b.new_context(viewport={"width":390,"height":844}, storage_state=ctx.storage_state())
         mp=m.new_page()
         problems=[]
-        for path,shot in [("/","22_m_landing"),("/dashboard","23_m_dashboard"),("/analyze","24_m_analyze"),("/history","25_m_history"),("/analytics","33_m_analytics"),("/cases","34_m_cases"),("/settings","35_m_settings"),("/demo","36_m_demo")]:
+        for path,shot in [("/","22_m_landing"),("/dashboard","23_m_dashboard"),("/analyze","24_m_analyze"),("/history","25_m_history"),("/analytics","33_m_analytics"),("/settings","35_m_settings"),("/simulator","36_m_simulator")]:
             mp.goto(BASE+path); mp.wait_for_load_state("networkidle"); mp.wait_for_timeout(900)
             sw=mp.evaluate("document.documentElement.scrollWidth")
             if sw>390: problems.append(f"{path} page overflow {sw}")
@@ -243,7 +244,7 @@ with sync_playwright() as p:
         mp.screenshot(path=f"{SHOTS}/37_m_verdict.png",full_page=True)
         m.close()
         assert not problems, problems
-    check("mobile 390px: no page overflow or clipped elements (8 pages + verdict)",mobile)
+    check("mobile 390px: no page overflow or clipped elements (7 pages + verdict)",mobile)
     def logout():
         page.goto(BASE+"/dashboard"); page.wait_for_load_state("networkidle")
         page.get_by_role("button",name=re.compile("Sign out|Log out|Logout",re.I)).first.click()
