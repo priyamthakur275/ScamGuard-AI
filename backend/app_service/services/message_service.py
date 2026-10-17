@@ -165,6 +165,13 @@ class MessageService:
             metadata = {**metadata, "xray": xray(original_text)}
         except Exception:
             logger.warning("Scam X-Ray failed", exc_info=True)
+        try:
+            from app_service.services.trustlens import build_trustlens
+            metadata = {**metadata, "trustlens": build_trustlens(
+                text=original_text, verdict=str(data.get("verdict", "")), scam_probability=data.get("scam_probability"),
+                threat_score=data.get("threat_score"), risk_level=data.get("risk_level"), xray=metadata.get("xray"))}
+        except Exception:
+            logger.warning("TrustLens failed", exc_info=True)
         if float(data.get("threat_score", 0)) >= 0.5:
             try:
                 from app_service.services.campaigns import fingerprint

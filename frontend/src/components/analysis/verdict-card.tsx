@@ -29,6 +29,7 @@ import { ReportScam } from "@/components/analysis/report-scam";
 import { ChatPanel } from "@/components/analysis/chat-panel";
 import { ScamXray, type XrayData } from "@/components/analysis/scam-xray";
 import { WhatIf } from "@/components/analysis/what-if";
+import { TrustLens } from "@/components/analysis/trust-lens";
 import { CommunityReports } from "@/components/analysis/community-reports";
 
 interface VerdictCardProps {
@@ -130,6 +131,7 @@ export function VerdictCard({ result, onFeedback }: VerdictCardProps) {
             {isDemo && <div className="-mt-4 flex flex-wrap items-center gap-3 border-b border-border pb-6">{result.verdict !== "legitimate" && <ShareWarning result={result} />}<GoldenHourButton result={result} /></div>}
             <CampaignFingerprint result={result} />
             <ScamXray xray={(result.metadata?.xray as XrayData | undefined) ?? null} />
+            <TrustLens result={result} />
             <WhatIf result={result} />
             <ScamForecast result={result} />
             {result.verdict !== "legitimate" && <ReportScam result={result} />}
