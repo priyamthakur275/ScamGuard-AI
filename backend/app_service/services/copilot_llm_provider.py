@@ -64,7 +64,17 @@ def _user_prompt(question: str, grounding_context: str) -> str:
 def _http_client():
     import httpx
 
-    return httpx.Client(timeout=20.0)
+    # Thinking models can take a while before the first token.
+    return httpx.Client(timeout=httpx.Timeout(60.0, connect=10.0))
+
+
+def _gemini_config(model: str, max_tokens: int) -> dict:
+    """Gemini 2.x turns thinking off with thinkingBudget=0. Gemini 3.x has no
+    'off' and counts thinking tokens against maxOutputTokens, so it gets a low
+    thinking level and extra room, or the visible answer can come back empty."""
+    if model.startswith("gemini-2"):
+        return {"maxOutputTokens": max_tokens, "temperature": 0.3, "thinkingConfig": {"thinkingBudget": 0}}
+    return {"maxOutputTokens": max_tokens + 2048, "temperature": 0.3, "thinkingConfig": {"thinkingLevel": "low"}}
 
 
 class GeminiProvider(CopilotLlmProvider):
@@ -82,10 +92,7 @@ class GeminiProvider(CopilotLlmProvider):
                 json={
                     "system_instruction": {"parts": [{"text": system}]},
                     "contents": [{"role": "user", "parts": [{"text": user}]}],
-                    # 2.5 models spend output tokens on hidden "thinking" unless the
-                    # budget is 0, which can leave the visible answer empty.
-                    "generationConfig": {"maxOutputTokens": max_tokens, "temperature": 0.3,
-                                         "thinkingConfig": {"thinkingBudget": 0}},
+                    "generationConfig": _gemini_config(model, max_tokens),
                 },
             )
             resp.raise_for_status()
@@ -105,7 +112,7 @@ class GeminiProvider(CopilotLlmProvider):
             json={
                 "system_instruction": {"parts": [{"text": system}]},
                 "contents": [{"role": "user", "parts": [{"text": user}]}],
-                "generationConfig": {"maxOutputTokens": max_tokens, "temperature": 0.3, "thinkingConfig": {"thinkingBudget": 0}},
+                "generationConfig": _gemini_config(model, max_tokens),
             },
         ) as resp:
             resp.raise_for_status()
@@ -255,8 +262,14 @@ def self_check() -> str:
         return f"Copilot LLM not configured: {exc}"
     name = type(provider).__name__
     try:
-        reply = provider.complete("Reply with the single word OK.", "ping", max_tokens=5)
-        return f"Copilot LLM check OK ({name}): replied {reply[:20]!r}"
+        import time as _time
+
+        started = _time.monotonic()
+        reply = provider.complete("Reply with the single word OK.", "ping", max_tokens=20)
+        took = _time.monotonic() - started
+        if not reply.strip():
+            return f"Copilot LLM check FAILED ({name}): empty reply after {took:.1f}s"
+        return f"Copilot LLM check OK ({name}): replied {reply[:20]!r} in {took:.1f}s"
     except Exception as exc:  # noqa: BLE001 - report any failure in the log
         detail = ""
         resp = getattr(exc, "response", None)

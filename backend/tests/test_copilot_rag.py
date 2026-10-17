@@ -354,3 +354,18 @@ def test_llm_self_check_reports_without_key():
         assert prov.self_check().startswith("Copilot LLM check OK")
     with patch.object(prov, "get_configured_provider", return_value=_FakeLLM(fail=True)):
         assert "FAILED" in prov.self_check()
+
+
+def test_gemini_config_per_generation():
+    from app_service.services.copilot_llm_provider import _gemini_config
+
+    assert _gemini_config("gemini-2.5-flash", 900)["thinkingConfig"] == {"thinkingBudget": 0}
+    g3 = _gemini_config("gemini-3.8-flash", 900)
+    assert g3["thinkingConfig"] == {"thinkingLevel": "low"} and g3["maxOutputTokens"] > 900
+
+
+def test_llm_self_check_flags_empty_reply():
+    from app_service.services import copilot_llm_provider as prov
+
+    with patch.object(prov, "get_configured_provider", return_value=_FakeLLM("")):
+        assert "empty reply" in prov.self_check()
