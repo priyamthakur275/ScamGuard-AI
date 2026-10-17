@@ -31,11 +31,3 @@ export function getTrends(days: 7 | 30): Promise<ScamTrends> {
 }
 
 
-export interface Flashcard {
-  id: string; title: string; scam_type: string; message: string;
-  tactics: { id: string; label: string; stage: string; why: string }[];
-  what_happens_next: string; actions: string[]; source_name: string; source_url: string;
-}
-export function getFlashcards(): Promise<{ cards: Flashcard[]; count: number }> {
-  return apiRequest<{ cards: Flashcard[]; count: number }>("/public/flashcards", { auth: false });
-}

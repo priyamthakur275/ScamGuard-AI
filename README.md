@@ -31,7 +31,6 @@ Hosted on Render's free tier (frontend + `app_service` + PostgreSQL). The backen
 
 **Learn and reach people**
 - **ScamGuard Copilot** — a streaming chat that checks pasted messages, links and call transcripts with corrective retrieval over 42 Indian scam patterns and 10 genuine message formats, citing official sources.
-- **Scam flashcards** — one card per pattern in the cited library (42 scams): read the message, flip for the warning signs, what happens next, what to do and the source; "Review again" brings missed cards back, progress is kept in the browser.
 - **Safety tools** — QR code payment check, "before you pay" UPI check, attachment/APK check and a **chat timeline** that scores every message of a pasted WhatsApp chat and marks the turning point where it moves from talk to a request.
 - **Scam simulator** — five scripted scams (bank KYC, task job, digital arrest, UPI refund, electricity cut); every scammer line is checked live by the real engine, and wrong answers show the money you would have lost.
 - **Public scam trends** (anonymous aggregates), **English/Hindi interface**, installable **PWA with Android share target**, and a **Chrome/Edge/Brave extension** (`browser-extension/`).

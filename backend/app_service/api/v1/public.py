@@ -104,36 +104,3 @@ def trends(request: Request, days: int = 30, db: Session = Depends(get_db)) -> d
     return data
 
 
-
-# --------------------------------------------------------------------------
-# Scam flashcards: one card per known scam pattern in the cited knowledge base
-# (app_service/rag/knowledge_base.json). Static content, cached in memory.
-# --------------------------------------------------------------------------
-_FLASHCARDS: list[dict] | None = None
-
-
-def build_flashcards() -> list[dict]:
-    from app_service.rag.retriever import load_knowledge_base
-    from app_service.services.trustlens import _ACTIONS
-    from ml_service.inference.scam_xray import INTENT_INFO
-
-    cards = []
-    for e in load_knowledge_base():
-        if e.kind != "scam":
-            continue
-        tactics = [{"id": t, "label": INTENT_INFO.get(t, ("", t.replace("_", " ")))[1],
-                    "stage": INTENT_INFO.get(t, ("",))[0], "why": INTENT_INFO.get(t, ("", "", ""))[2]} for t in e.tactics]
-        actions = [text for trig, _k, text in _ACTIONS if trig & set(e.tactics)][:3]
-        cards.append({"id": e.id, "title": e.title, "scam_type": e.scam_type, "message": e.transcript_body,
-                      "tactics": tactics, "what_happens_next": e.what_happens_next, "actions": actions,
-                      "source_name": e.source_name, "source_url": e.source_url})
-    return cards
-
-
-@router.get("/flashcards")
-@limiter.limit("30/minute")
-def flashcards(request: Request) -> dict:
-    global _FLASHCARDS
-    if _FLASHCARDS is None:
-        _FLASHCARDS = build_flashcards()
-    return {"cards": _FLASHCARDS, "count": len(_FLASHCARDS)}
