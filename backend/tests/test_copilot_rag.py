@@ -369,3 +369,32 @@ def test_llm_self_check_flags_empty_reply():
 
     with patch.object(prov, "get_configured_provider", return_value=_FakeLLM("")):
         assert "empty reply" in prov.self_check()
+
+
+def test_llm_budget_caps_per_visitor_and_per_day():
+    from app_service.services import llm_budget
+
+    llm_budget.reset()
+    t = 1_800_000_000.0
+    assert all(llm_budget.allow("a", 0, t + i) for i in range(llm_budget.PER_VISITOR))
+    assert not llm_budget.allow("a", 0, t + 20)                       # visitor over the cap
+    assert llm_budget.allow("b", 0, t + 20)                           # others unaffected
+    assert llm_budget.allow("a", 0, t + llm_budget.PER_VISITOR_WINDOW + 10)  # window slides
+    llm_budget.reset()
+    assert llm_budget.allow("x", 2, t) and llm_budget.allow("y", 2, t) and not llm_budget.allow("z", 2, t)
+    assert llm_budget.allow("z", 2, t + 86_400)                      # new day
+    llm_budget.reset()
+
+
+def test_chat_falls_back_when_llm_cap_reached(client):
+    from app_service.services import llm_budget
+
+    llm_budget.reset()
+    fake = _FakeLLM("AI answer")
+    with patch("app_service.services.copilot_llm_provider.get_configured_provider", return_value=fake), \
+         patch.object(llm_budget, "PER_VISITOR", 1):
+        first = _events(client.post("/api/v1/copilot/chat", json={"message": "what is phishing?"}).text)
+        second = _events(client.post("/api/v1/copilot/chat", json={"message": "what is vishing?"}).text)
+    assert "".join(d["text"] for n, d in first if n == "token") == "AI answer"
+    assert "Paste the message" in "".join(d["text"] for n, d in second if n == "token")
+    llm_budget.reset()

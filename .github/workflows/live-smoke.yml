@@ -1,0 +1,84 @@
+name: Live site smoke test
+
+# Checks the deployed site end to end: the frontend loads, the backend answers
+# through the frontend's /backend-api proxy, the sign-in captcha loads, a scan
+# returns a verdict with its TrustLens report, and the Copilot gives a real AI
+# answer. Runs every morning after the 06:02 IST backend restart, and on demand.
+on:
+  schedule:
+    - cron: "50 0 * * *"   # 06:20 IST
+  workflow_dispatch: {}
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check the live site
+        run: |
+          python3 - <<'PY'
+          import json, sys, time, urllib.request
+
+          SITE = "https://scamguard-frontend-r6t7.onrender.com"
+          API = SITE + "/backend-api/api/v1"
+          failed = []
+
+          def req(url, body=None, timeout=120):
+              data = None if body is None else json.dumps(body).encode()
+              r = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"} if data else {})
+              with urllib.request.urlopen(r, timeout=timeout) as resp:
+                  return resp.status, resp.read().decode("utf-8", "replace")
+
+          def step(name, fn, tries=6):
+              for i in range(tries):
+                  try:
+                      msg = fn()
+                      print(f"::notice title={name}::{msg}")
+                      return
+                  except Exception as e:  # noqa: BLE001
+                      last = e
+                      time.sleep(20)
+              failed.append(name)
+              print(f"::error title={name}::{type(last).__name__}: {str(last)[:300]}")
+
+          def frontend():
+              s, body = req(SITE + "/")
+              assert s == 200 and "ScamGuard" in body, f"HTTP {s}"
+              return "frontend loads"
+
+          def captcha():
+              s, body = req(API + "/auth/captcha")
+              q = json.loads(body)["question"]
+              return f"captcha loads ({q})"
+
+          def scan():
+              text = "Dear customer your SBI account will be blocked today. Share the OTP sent to your phone at http://sbi-kyc.xyz"
+              s, body = req(API + "/public/quick-check", {"text": text})
+              d = json.loads(body)
+              tl = d["metadata"]["trustlens"]
+              stages = [j["name"] for j in tl["journey"] if j["detected"]]
+              return f"verdict {d['verdict']} at {d['threat_score']:.2f}; TrustLens stages: {', '.join(stages)}"
+
+          def copilot():
+              s, body = req(API + "/copilot/chat", {"message": "In two sentences, what is a digital arrest scam?"})
+              events = [b for b in body.split("\n\n") if b.startswith("event:")]
+              text, err = "", None
+              for ev in events:
+                  name = ev.split("\n", 1)[0][6:].strip()
+                  payload = json.loads(ev.split("data:", 1)[1]) if "data:" in ev else {}
+                  if name == "token":
+                      text += payload.get("text", "")
+                  if name == "error":
+                      err = payload.get("message")
+              assert not err, f"error event: {err}"
+              assert text.strip(), "empty answer"
+              if text.startswith("Paste the message"):
+                  raise RuntimeError("Copilot answered with the built-in fallback, so the AI model is not answering")
+              return "AI answer: " + " ".join(text.split())[:240]
+
+          step("Frontend", frontend)
+          step("Captcha", captcha)
+          step("Scan + TrustLens", scan)
+          step("Copilot AI", copilot, tries=3)
+          sys.exit(1 if failed else 0)
+          PY
