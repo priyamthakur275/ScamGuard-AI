@@ -12,6 +12,7 @@ import type { AnalysisResult } from "@/types";
 import { useLanguage } from "@/lib/i18n/language-context";
 import { ScamXray, type XrayData } from "@/components/analysis/scam-xray";
 import { WhatIf } from "@/components/analysis/what-if";
+import { TrustLens } from "@/components/analysis/trust-lens";
 import { analyzeWithCopilot } from "@/lib/copilot/stream";
 import type { CragVerdict } from "@/lib/copilot/types";
 import { RagVerdict } from "@/components/copilot/rag-verdict";
@@ -166,6 +167,9 @@ export function QuickCheck({ initialText = "", autoRun = false, heading }: Quick
 
             <div className="mt-4">
               <ScamXray compact xray={(result.metadata?.xray as XrayData | undefined) ?? null} />
+            </div>
+            <div className="mt-4">
+              <TrustLens result={result} collapsible />
             </div>
             <div className="mt-4">
               <WhatIf result={result} />

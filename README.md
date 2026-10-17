@@ -17,6 +17,7 @@ Hosted on Render's free tier (frontend + `app_service` + PostgreSQL). The backen
 **Check anything** — SMS/WhatsApp text, links, emails, screenshots (WhatsApp chat-aware OCR, dark mode supported), PDFs, QR codes and voice calls (live captions or private on-device Whisper transcription, Hindi→English).
 
 **Explain the verdict**
+- **TrustLens** — for every result: the classifier probability and the final risk score side by side, a Scam Journey Mapper (only stages with matched phrases are marked), evidence for and against, evidence-based safety actions, a similar known pattern with its source (only when the retrieval evaluator accepts it) and an honest "why this may be wrong" section. It adds no score of its own; see `docs/TRUSTLENS.md`.
 - **Scam X-Ray** — highlights the exact trap phrases in the message and maps them onto the four stages of a scam: hook, pressure, the ask, cash-out.
 - **Scam likelihood** — an SVM model (v3, trained on the SMS Spam Collection + a documented Indian scam supplement) fused with an intent-based risk engine; the model's own probability is always shown alongside. Unseen-set accuracy: 87.5% (see `backend/ml_training/datasets/README.md`).
 - **Website trust score** — domain age from RDAP, HTTPS, link signals and a live inspection of the page (password/OTP/card forms, forms posting elsewhere, brand impersonation).
