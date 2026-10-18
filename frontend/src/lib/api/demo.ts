@@ -1,4 +1,5 @@
 import { apiRequest } from "@/lib/api/client";
+import { invalidate } from "@/lib/api/cache";
 import type { AnalysisResult } from "@/types";
 
 export interface DemoExampleSummary {
@@ -13,5 +14,5 @@ export function listDemoExamples(): Promise<DemoExampleSummary[]> {
 }
 
 export function runDemoExample(exampleId: string): Promise<AnalysisResult> {
-  return apiRequest<AnalysisResult>(`/demo/examples/${exampleId}/run`, { method: "POST" });
+  return apiRequest<AnalysisResult>(`/demo/examples/${exampleId}/run`, { method: "POST" }).finally(() => invalidate("history:", "analytics:"));
 }

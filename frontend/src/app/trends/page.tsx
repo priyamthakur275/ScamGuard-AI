@@ -1,11 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import dynamic from "next/dynamic";
 import { PublicShell } from "@/components/layout/public-shell";
 import { getTrends, type ScamTrends } from "@/lib/api/public";
 import { cn, inputTypeLabel, scamCategoryLabel } from "@/lib/utils";
 import { useLanguage } from "@/lib/i18n/language-context";
+
+// The chart library is ~100 KB; load it after the page so the numbers appear first.
+const DailyChart = dynamic(() => import("@/components/trends/daily-chart"), {
+  ssr: false,
+  loading: () => <div className="h-full w-full animate-pulse rounded bg-muted" aria-label="Loading chart" />,
+});
 
 export default function TrendsPage() {
   const { t } = useLanguage();
@@ -108,16 +114,7 @@ export default function TrendsPage() {
           <section className="mt-6 border border-border p-5">
             <h2 className="text-base font-semibold">{t("td.daily")}</h2>
             <div className="mt-4 h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={data.daily.map((d) => ({ ...d, label: d.date.slice(5) }))}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="label" fontSize={11} stroke="hsl(var(--muted-foreground))" />
-                  <YAxis allowDecimals={false} fontSize={11} stroke="hsl(var(--muted-foreground))" />
-                  <Tooltip contentStyle={{ background: "hsl(var(--background))", border: "1px solid hsl(var(--border))" }} />
-                  <Line type="monotone" dataKey="total" name="Checked" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
-                  <Line type="monotone" dataKey="flagged" name="Scams" stroke="hsl(var(--destructive))" strokeWidth={2} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
+              <DailyChart daily={data.daily} />
             </div>
           </section>
         </>

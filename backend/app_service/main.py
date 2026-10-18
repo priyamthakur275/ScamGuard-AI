@@ -181,6 +181,9 @@ app.add_middleware(
 app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(BodySizeLimitMiddleware)
+from app_service.core.compression import SelectiveGZipMiddleware  # noqa: E402
+
+app.add_middleware(SelectiveGZipMiddleware, minimum_size=1000)
 
 # --- Global exception handling --------------------------------------------
 register_exception_handlers(app)

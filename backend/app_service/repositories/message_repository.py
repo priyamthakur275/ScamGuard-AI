@@ -2,7 +2,7 @@ import hashlib
 import uuid
 
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, contains_eager
 
 from app_service.db.postgres.models import Message, Prediction
 from app_service.repositories.base import BaseRepository
@@ -26,6 +26,10 @@ class PredictionRepository(BaseRepository[Prediction]):
         stmt = (
             select(Prediction)
             .join(Message)
+            # Load each prediction's message in the same query: without this,
+            # reading prediction.message issued one extra query per row
+            # (51 round trips for a 50-item history page).
+            .options(contains_eager(Prediction.message))
             .where(Message.user_id == user_id)
             .order_by(Prediction.created_at.desc())
             .offset(skip)
@@ -37,6 +41,7 @@ class PredictionRepository(BaseRepository[Prediction]):
         stmt = (
             select(Prediction)
             .join(Message)
+            .options(contains_eager(Prediction.message))
             .where(Prediction.id == prediction_id, Message.user_id == user_id)
         )
         return self.db.scalars(stmt).first()
