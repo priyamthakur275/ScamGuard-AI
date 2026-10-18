@@ -241,7 +241,7 @@ def compose_answer(v: CragVerdict) -> str:
     return " ".join(parts)
 
 
-def analyze_evidence(db: Session, raw_text: str) -> CragOutcome:
+def analyze_evidence(db: Session, raw_text: str, llm_review: bool = True) -> CragOutcome:
     from app_service.services.extraction import ExtractionService
     from app_service.services.message_service import MessageService
 
@@ -285,6 +285,8 @@ def analyze_evidence(db: Session, raw_text: str) -> CragOutcome:
     from app_service.services.copilot_llm_provider import CopilotLlmUnavailableError
 
     try:
+        if not llm_review:
+            raise CopilotLlmUnavailableError("LLM review not requested")
         verdict = _llm_review(raw_text, verdict)
     except CopilotLlmUnavailableError:
         pass

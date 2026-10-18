@@ -1,26 +1,36 @@
 import { apiRequest, ApiError } from "@/lib/api/client";
+import { cached, invalidate } from "@/lib/api/cache";
 import type { AnalysisResult } from "@/types";
 
+/** Anything that changes the user's scans clears the cached reads. */
+async function writes<T>(p: Promise<T>): Promise<T> {
+  try {
+    return await p;
+  } finally {
+    invalidate("history:", "analytics:");
+  }
+}
+
 export function getHistory(skip = 0, limit = 50): Promise<AnalysisResult[]> {
-  return apiRequest<AnalysisResult[]>(`/messages/history?skip=${skip}&limit=${limit}`);
+  return cached(`history:${skip}:${limit}`, () => apiRequest<AnalysisResult[]>(`/messages/history?skip=${skip}&limit=${limit}`));
 }
 export function clearHistory(): Promise<void> {
-  return apiRequest<void>("/messages/history", { method: "DELETE" });
+  return writes(apiRequest<void>("/messages/history", { method: "DELETE" }));
 }
 export function deleteMessage(id: string): Promise<void> {
-  return apiRequest<void>(`/messages/${id}`, { method: "DELETE" });
+  return writes(apiRequest<void>(`/messages/${id}`, { method: "DELETE" }));
 }
 export function submitFeedback(predictionId: string, isAccurate: boolean): Promise<AnalysisResult> {
-  return apiRequest<AnalysisResult>(`/messages/${predictionId}/feedback`, {
+  return writes(apiRequest<AnalysisResult>(`/messages/${predictionId}/feedback`, {
     method: "PATCH", body: { is_accurate: isAccurate },
-  });
+  }));
 }
 export function scanFile(file: File | null, text: string | null, inputType: string): Promise<AnalysisResult> {
   const body = new FormData();
   body.append("input_type", inputType);
   if (file) body.append("file", file);
   if (text) body.append("text", text);
-  return apiRequest<AnalysisResult>("/messages/scan", { method: "POST", body });
+  return writes(apiRequest<AnalysisResult>("/messages/scan", { method: "POST", body }));
 }
 export { ApiError };
 

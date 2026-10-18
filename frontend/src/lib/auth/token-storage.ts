@@ -1,4 +1,5 @@
 import type { TokenPair, User } from "@/types";
+import { invalidate } from "@/lib/api/cache";
 
 const ACCESS_TOKEN_KEY = "scam_detection_access_token";
 const REFRESH_TOKEN_KEY = "scam_detection_refresh_token";
@@ -55,6 +56,7 @@ export function clearCachedUser(): void {
 
 export function setTokens(pair: TokenPair): void {
   if (!isBrowser()) return;
+  invalidate(); // new session or rotated tokens: never reuse cached reads
   window.localStorage.setItem(ACCESS_TOKEN_KEY, pair.access_token);
   window.localStorage.setItem(REFRESH_TOKEN_KEY, pair.refresh_token);
   setSessionFlagCookie();
@@ -62,6 +64,7 @@ export function setTokens(pair: TokenPair): void {
 
 export function clearTokens(): void {
   if (!isBrowser()) return;
+  invalidate();
   window.localStorage.removeItem(ACCESS_TOKEN_KEY);
   window.localStorage.removeItem(REFRESH_TOKEN_KEY);
   clearCachedUser();

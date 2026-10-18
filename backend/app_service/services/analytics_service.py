@@ -19,14 +19,10 @@ class AnalyticsService:
                 f"Invalid range '{range_key}'. Must be one of: {', '.join(sorted(VALID_RANGES))}."
             )
 
-        total = self.repo.total_scans(user_id, range_key)
-        verdict_dist = self.repo.group_counts(user_id, range_key, Prediction.verdict)
-        risk_dist = self.repo.group_counts(user_id, range_key, Prediction.risk_level)
-        category_dist = self.repo.group_counts(user_id, range_key, Prediction.scam_category)
-        input_type_dist = self.repo.group_counts(user_id, range_key, Prediction.input_type)
-        feedback = self.repo.feedback_counts(user_id, range_key)
-        high_risk = self.repo.high_risk_count(user_id, range_key)
-        avg_confidence, avg_threat = self.repo.averages(user_id, range_key)
+        d = self.repo.combined(user_id, range_key)
+        total, verdict_dist, risk_dist = d["total"], d["verdict"], d["risk"]
+        category_dist, input_type_dist, feedback = d["category"], d["input_type"], d["feedback"]
+        high_risk, avg_confidence, avg_threat = d["high_risk"], d["avg_confidence"], d["avg_threat"]
 
         return AnalyticsSummary(
             range=range_key,

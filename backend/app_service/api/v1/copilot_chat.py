@@ -169,7 +169,9 @@ GUIDANCE = (
 @router.post("/analyze", response_model=AnalyzeResponse)
 @limiter.limit("20/minute")
 def analyze(request: Request, payload: AnalyzeRequest, db: Session = Depends(get_db)) -> AnalyzeResponse:
-    outcome = analyze_evidence(db, payload.text)
+    # The quick check answers from the detection engine alone (no LLM round
+    # trip), so the homepage verdict is fast and is the research pipeline's.
+    outcome = analyze_evidence(db, payload.text, llm_review=False)
     return AnalyzeResponse(verdict=outcome.verdict, analysis=outcome.analysis, answer=outcome.answer)
 
 
@@ -194,7 +196,7 @@ def chat(request: Request, payload: ChatRequest, db: Session = Depends(get_db)) 
                 llm = ai_stream(payload.message, payload.history, visitor=get_client_ip(request))
             else:
                 kind = "follow_up"
-                outcome = analyze_evidence(db, previous)
+                outcome = analyze_evidence(db, previous, llm_review=False)  # context only
                 answer = get_answer(payload.message, outcome.analysis).answer
                 llm = ai_stream(payload.message, payload.history, outcome.answer, visitor=get_client_ip(request))
     except Exception:
