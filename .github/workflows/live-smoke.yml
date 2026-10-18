@@ -83,7 +83,21 @@ jobs:
               assert len(d["messages"]) == 3
               return f"timeline turning point: message {None if d['turning_point'] is None else d['turning_point'] + 1}"
 
+          def dashboard_speed():
+              s, body = req(API + "/auth/demo-login", {})
+              tok = json.loads(body)["access_token"]
+              out = []
+              for path in ("/messages/history", "/analytics/summary?range=all"):
+                  r = urllib.request.Request(API + path, headers={"Authorization": "Bearer " + tok, "Accept-Encoding": "gzip"})
+                  t = time.time()
+                  with urllib.request.urlopen(r, timeout=60) as resp:
+                      data = resp.read()
+                      enc = resp.headers.get("Content-Encoding", "none")
+                  out.append(f"{path.split('?')[0]} {int((time.time() - t) * 1000)} ms, {len(data) // 1024} KB ({enc})")
+              return "; ".join(out)
+
           step("Frontend", frontend)
+          step("Dashboard speed", dashboard_speed)
           step("Chat timeline", timeline)
           step("Captcha", captcha)
           step("Scan + TrustLens", scan)
