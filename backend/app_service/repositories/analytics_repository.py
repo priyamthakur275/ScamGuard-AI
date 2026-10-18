@@ -97,3 +97,41 @@ class AnalyticsRepository:
         )
         avg_confidence, avg_threat = self.db.execute(stmt).one()
         return float(avg_confidence or 0.0), float(avg_threat or 0.0)
+
+    def combined(self, user_id: uuid.UUID, range_key: str) -> dict:
+        """Everything the summary needs in ONE query (one row per distinct
+        verdict/risk/category/input/feedback combination, with counts and
+        sums), aggregated here. Same results as the separate methods above,
+        which cost one database round trip each."""
+        stmt = (
+            select(
+                Prediction.verdict, Prediction.risk_level, Prediction.scam_category, Prediction.input_type,
+                Prediction.user_feedback, func.count(Prediction.id),
+                func.sum(Prediction.confidence_score), func.count(Prediction.confidence_score),
+                func.sum(Prediction.threat_score), func.count(Prediction.threat_score),
+            )
+            .join(Message)
+            .where(*self._base_filters(user_id, range_key))
+            .group_by(Prediction.verdict, Prediction.risk_level, Prediction.scam_category, Prediction.input_type,
+                      Prediction.user_feedback)
+        )
+
+        def label(key) -> str:
+            return key.value if hasattr(key, "value") else (key or "unknown")
+
+        out = {"total": 0, "verdict": {}, "risk": {}, "category": {}, "input_type": {},
+               "feedback": {"accurate": 0, "inaccurate": 0, "pending": 0}, "high_risk": 0}
+        conf_sum = conf_n = threat_sum = threat_n = 0.0
+        for verdict, risk, category, input_type, feedback, n, c_sum, c_n, t_sum, t_n in self.db.execute(stmt).all():
+            out["total"] += n
+            for bucket, key in (("verdict", verdict), ("risk", risk), ("category", category), ("input_type", input_type)):
+                k = label(key)
+                out[bucket][k] = out[bucket].get(k, 0) + n
+            out["feedback"]["accurate" if feedback is True else "inaccurate" if feedback is False else "pending"] += n
+            if label(risk) == "high":
+                out["high_risk"] += n
+            conf_sum += float(c_sum or 0); conf_n += c_n or 0
+            threat_sum += float(t_sum or 0); threat_n += t_n or 0
+        out["avg_confidence"] = conf_sum / conf_n if conf_n else 0.0
+        out["avg_threat"] = threat_sum / threat_n if threat_n else 0.0
+        return out
