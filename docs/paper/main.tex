@@ -16,6 +16,7 @@
 \usetikzlibrary{arrows.meta,positioning,fit,shapes.geometric}
 \usepackage[hidelinks]{hyperref}
 \usepackage{xcolor}
+\usepackage{balance}
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{\sc e}\kern-.125emX}}
 
@@ -167,7 +168,7 @@ Total & 5,608 & 5,791 & 11,399 rows \\
 \end{table}
 
 \subsection{Normalisation of anonymised entities}
-IMC~2025 replaces entities with tags such as \texttt{<URL>}, \texttt{<PHONE\_NUMBER>} and \texttt{<DATE\_TIME>}. If left in place, the tags occur only in the scam class and give the model a shortcut. We replace them with neutral surface forms (\texttt{http://link.example/x}, a ten-digit number, a date) that the text cleaner maps to the same tokens as real links, numbers and dates.
+IMC~2025 replaces entities with tags such as \textless URL\textgreater{}, \textless PHONE\_NUMBER\textgreater{} and \textless DATE\_TIME\textgreater{}. If left in place, the tags occur only in the scam class and give the model a shortcut. We replace them with neutral surface forms (\texttt{http://link.example/x}, a ten-digit number, a date) that the text cleaner maps to the same tokens as real links, numbers and dates.
 
 \subsection{Label audit}
 Each R1 message is grouped into a campaign (Section~\ref{sec:campaigns}), and each of the 2,922 campaigns is labelled in one of three ways. A rule set independent of the deployed detector confirms 1,253 campaigns as scams when they contain a strong fraud cue (for example, an account threat combined with a KYC, PAN or call instruction, a prize combined with a fee, or a request to share an OTP) and no genuine cue; a spot check of 40 of these found no error. The remaining 1,669 campaigns were read by hand: 583 were labelled scam, 867 genuine and 219 dropped as unclear (aggressive debt collection, collect requests whose origin cannot be judged from the text, truncated messages). A second pass followed confident learning~\cite{northcutt2021confident}: a five-fold, campaign-grouped model flagged 44 rows whose label it strongly contradicted, and each was re-read, giving 19 corrections and 7 removals. R2 promotions were audited the same way, which moved 6 disguised scams (fake part-time jobs, ``winning parcel'' messages) to the scam class.
@@ -427,6 +428,7 @@ We studied SMS scam detection for Indian users with a corpus built for that purp
 \section*{Data and Code Availability}
 The corpus, audit files, build script and experiment code are in the project repository (\url{https://github.com/priyamthakur275/ScamGuard-AI}, directory \texttt{backend/ml\_training}). Raw source files can be downloaded with the included script.
 
+\balance
 \begin{thebibliography}{99}
 
 \bibitem{agarwal2025fishing}
