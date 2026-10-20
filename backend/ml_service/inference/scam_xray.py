@@ -53,6 +53,10 @@ PROTECTIVE_INFO = {
     "awareness_warning": "Warns about a scam instead of asking you to do anything.",
     "status_update": "Just confirms something that already happened.",
     "transaction_alert": "Looks like a normal bank alert: masked account number and amount, nothing to do.",
+    "official_report_channel": "Tells you how to report spam or fraud to an official channel (1909, 1930, cybercrime.gov.in, Chakshu).",
+    "delivery_otp": "A delivery or ride OTP meant to be shared in person only at handover, not with a caller.",
+    "block_instruction": "Tells you how to block your own card through the bank's official SMS number.",
+    "official_app": "Points you to the official app or portal instead of a link or a number to call.",
 }
 
 
@@ -69,9 +73,11 @@ def xray(text: str, max_chars: int = 1500) -> dict:
             spans.append({"start": m.start(), "end": m.end(), "intent": name, "stage": info[0], "label": info[1], "why": info[2]})
     protective = {n for n, _w, rx in _PROTECTIVE if rx.search(text)}
     reassuring = [PROTECTIVE_INFO[n] for n, _w, _rx in _PROTECTIVE if n in protective and n in PROTECTIVE_INFO]
-    from ml_service.inference.threat_scorer import ThreatScorer, is_genuine_transaction
+    from ml_service.inference.threat_scorer import ThreatScorer, is_genuine_notice, is_genuine_transaction
 
     found, prot_weights = ThreatScorer.intents(text)
+    if is_genuine_notice(text, found, prot_weights) and not is_genuine_transaction(text, found, prot_weights):
+        reassuring.insert(0, "Reads like a genuine service notice: it reports something or points to an official channel, and asks for no money, details or installs.")
     if is_genuine_transaction(text, found, prot_weights):
         reassuring = [r for r in reassuring if r != PROTECTIVE_INFO.get("transaction_alert")]
         reassuring.insert(0, "Reads like a genuine bank transaction alert: masked account number, no request, no link and no number to call.")

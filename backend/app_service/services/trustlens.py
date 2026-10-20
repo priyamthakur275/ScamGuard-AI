@@ -180,7 +180,7 @@ def build_trustlens(*, text: str, verdict: str, scam_probability: float | None, 
                     risk_level: str | None, xray: dict | None) -> dict:
     """Assemble the TrustLens report from values the pipeline already computed."""
     from ml_service.inference.scam_xray import xray as run_xray
-    from ml_service.inference.threat_scorer import ThreatScorer, is_genuine_transaction
+    from ml_service.inference.threat_scorer import ThreatScorer, is_genuine_notice, is_genuine_transaction
 
     xr = xray if isinstance(xray, dict) and isinstance(xray.get("spans"), list) else run_xray(text)
     source = xr.get("text") or text
@@ -198,6 +198,7 @@ def build_trustlens(*, text: str, verdict: str, scam_probability: float | None, 
     protective = _protective_evidence(source)
     found, prot_weights = ThreatScorer.intents(source)
     genuine_txn = is_genuine_transaction(source, found, prot_weights)
+    genuine_notice = not genuine_txn and is_genuine_notice(source, found, prot_weights)
     intents = {e["intent"] for e in suspicious} | set(found)
 
     journey = []
@@ -218,7 +219,9 @@ def build_trustlens(*, text: str, verdict: str, scam_probability: float | None, 
         recommendations.append({"id": "genuine_txn", "text": "If you do not recognise this transaction, contact your bank through its official app or the number on your card."})
 
     # ---------------- uncertainty
-    conflicts = bool(suspicious) and bool(protective)
+    # A recognised genuine notice is not "mixed evidence": its link or wording
+    # was weighed and explained by the guard.
+    conflicts = bool(suspicious) and bool(protective) and not genuine_notice
     insufficient = not suspicious and not protective
     missing_context = ["Who actually sent the message (sender IDs and numbers can be spoofed)."]
     if any("link" in e["intent"] or e["intent"] in ("deceptive_domain", "new_domain") for e in suspicious):
@@ -251,6 +254,8 @@ def build_trustlens(*, text: str, verdict: str, scam_probability: float | None, 
         summary = f"{len(suspicious)} scam sign{'s' if len(suspicious) != 1 else ''} matched across {sum(j['detected'] for j in journey)} stage(s) of a typical scam."
     elif genuine_txn:
         summary = "It reads like a genuine transaction alert: no request, no link and no number to call."
+    elif genuine_notice and not is_scam:
+        summary = "It reads like a genuine service notice: it reports something or points to an official channel and asks for no money, details or installs."
     elif protective:
         summary = "No scam signs were matched, and it contains reassuring phrases typical of genuine messages."
     else:
