@@ -96,7 +96,17 @@ jobs:
                   out.append(f"{path.split('?')[0]} {int((time.time() - t) * 1000)} ms, {len(data) // 1024} KB ({enc})")
               return "; ".join(out)
 
+          def genuine_not_flagged():
+              # Real Airtel notice once wrongly flagged at 100%.
+              text = ("Alert: On receiving any unwanted SMS , please complain by calling 1909 or send SMS to 1909 in format "
+                      "'SMS Content, Sender No, dd/mm/yy' or visit bit.ly/2qBK0vp to report through Airtel Thanks App.")
+              s, body = req(API + "/public/quick-check", {"text": text})
+              d = json.loads(body)
+              assert d["verdict"] == "legitimate", f"genuine Airtel notice flagged at {d['threat_score']:.2f}"
+              return f"genuine Airtel 1909 notice: legitimate at {d['threat_score']:.2f}"
+
           step("Frontend", frontend)
+          step("Genuine notice", genuine_not_flagged)
           step("Dashboard speed", dashboard_speed)
           step("Chat timeline", timeline)
           step("Captcha", captcha)

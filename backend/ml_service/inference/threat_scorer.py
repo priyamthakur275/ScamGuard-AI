@@ -131,7 +131,21 @@ _PROTECTIVE: tuple[tuple[str, float, re.Pattern[str]], ...] = tuple(
         # still carry their own ask (sent-by-mistake, collect request, OTP).
         ("transaction_alert", 0.4, r"\b(debited|credited|withdrawn|spent)\b[^.?!]{0,40}\b(a/?c|acct|account|card)\s*(no\.?\s*)?(x+|\*+)\d{3,4}\b"
          r"|\b(a/?c|acct|account|card)\s*(no\.?\s*)?(x+|\*+)\d{3,4}\b[^.?!]{0,40}\b(debited|credited)\b"),
-        ("status_update", 0.3, r"\b(has been|is|was) (successfully )?(credited|processed|delivered|confirmed|received|resolved|verified|generated|shipped|completed|booked|matured)\b|\bsuccessful(ly)?\b|\bpayment (status:?\s*)?(received|successful|confirmed)\b"),
+        ("status_update", 0.3, r"\b(has been|have been|is|are|was|were|will be|got) (successfully )?(credited|processed|delivered|confirmed|received|resolved|verified|generated|shipped|completed|booked|matured|granted|dispatched|published|cleared|ported|renewed|updated|approved|scheduled|settled)\b|\bsuccessful(ly)?\b|\bpayment (status:?\s*)?(received|successful|confirmed)\b"),
+        # Genuine service notices tell you how to REPORT spam or fraud to the
+        # official channels (TRAI DND 1909, cyber helpline 1930, Chakshu).
+        ("official_report_channel", 0.6, r"\b(complain\w*|report\w*|register (a )?complaint|activate dnd|dnd|unwanted (sms|calls?))\b[^.?!]{0,90}\b(1909|1930|155260|cybercrime\.gov\.in|sancharsaathi(\.gov\.in)?|chakshu)\b"
+         r"|\b(1909|1930|155260|cybercrime\.gov\.in|sancharsaathi(\.gov\.in)?|chakshu)\b[^.?!]{0,60}\b(complain\w*|report\w*|dnd|fraud)\b"),
+        # Delivery and ride OTPs are meant to be shared, in person, only at
+        # handover ("share OTP 4821 with the delivery agent only at delivery").
+        ("delivery_otp", 0.5, r"\b(otp|code|pin)\b[^.?!]{0,60}\b(delivery (agent|partner|executive|boy|person)|driver|rider|captain)\b[^.?!]{0,40}\bonly\b"
+         r"|\b(share|give|tell)\b[^.?!]{0,40}\b(otp|code|pin)\b[^.?!]{0,60}\bonly (at the time of|on|upon|after) (delivery|handover)\b"
+         r"|\b(otp|code|pin)\b[^?!]{0,70}\b(driver|rider|captain|delivery (agent|partner|executive))\b[^.?!]{0,20}\bonly (when|at|on|upon|after)\b"
+         r"|\b(otp|code|pin)\b[^?!]{0,70}\bonly when you (start|begin|board) (the|your) (trip|ride|journey)\b"),
+        # Pointing you to the official app or portal rather than a link or number.
+        # Banks tell you how to block your own card: "Not you? SMS BLOCK to 56161600".
+        ("block_instruction", 0.4, r"\b(sms|send|text)\s+['\"]?block\b[^.?!]{0,30}\bto\s+\d{5,8}\b|\bnot you\?[^.?!]{0,40}\bblock\b"),
+        ("official_app", 0.35, r"\b(on|in|via|through|using|from) the (official )?[a-z][\w-]*( [a-z][\w-]*){0,2} (app|portal|website)\b|\bvia netbanking\b|\bnetbanking or\b"),
     ]
 )
 
@@ -189,6 +203,77 @@ def is_genuine_transaction(text: str, found: dict[str, float], protective: dict[
 
 GENUINE_TRANSACTION_CAP = 0.15
 
+# Genuine notice guard: the same idea for service notices (passport granted,
+# EPF credited, number ported, report spam to 1909, data usage). The model is
+# overconfident on them because its public training data is UK spam, where
+# "call", "send SMS to" and links were mostly spam. A notice that reports
+# something or points to an official channel, with no request for money,
+# details, an install or a call to a mobile number, and no unofficial link,
+# cannot be used to steal anything.
+_OFFICIAL_DOMAIN = re.compile(
+    r"^([\w-]+\.)*(gov\.in|nic\.in|airtel\.in|jio\.com|amazon\.in|flipkart\.com|sbi\.co\.in|onlinesbi\.sbi|hdfcbank\.com|icicibank\.com|"
+    r"axisbank\.com|irctc\.co\.in|paytm\.com|phonepe\.com|myntra\.com|swiggy\.com|zomato\.com|npci\.org\.in|rbi\.org\.in)$",
+    re.I,
+)
+_ANY_LINK = re.compile(r"(?:https?://)?(?:www\.)?((?:[a-z0-9-]+\.)+[a-z]{2,})(?:/\S*)?", re.I)
+_SHORTENERS = {"bit.ly", "tinyurl.com", "t.co", "goo.gl", "cutt.ly", "rb.gy", "is.gd", "i.airtel.in"}
+_NOTICE_BLOCKERS = re.compile(
+    r"\b(install|download|apk|anydesk|teamviewer|quicksupport|click|tap here)\b"
+    r"|\b(by mistake|galti|wrongly|return (it|the|money|amount)|send (it|money|back)|refund it)\b"
+    r"|\b(update your|verify your|link your|re-?kyc|kyc (update|pending|expired)|blocked|suspend\w*|deactivat\w*|disconnect\w*)\b"
+    r"|\b(pay|paying)\s+(rs\.?|inr|₹|\d|now|a|the|fee|charges?)\b|\b(fee|charges? of|processing fee|claim|lottery|prize|reward|won|winner)\b"
+    r"|(?<!\d)(\+?91[\s-]?)?[6-9]\d{9}(?!\d)|(?<!\d)0\d{9,11}(?!\d)|\+\d{1,3}[\s-]?\d{6,}"
+    # offers and calls to action are not notices
+    r"|\bfree\b|\b(to|and) (activate|claim|redeem|unlock|collect)\b|\b(call|text|sms|reply|dial)\s+(now|back|\w+\s+to\s+\d{4,})\b|\bcall\s+\d{6,}"
+    r"|\b(congratulations|congrats|selected|winner|cash|bonus|offer expires|limited time)\b",
+    re.I,
+)
+_NOTICE_SIGNALS = {"block_instruction", "status_update", "official_report_channel", "official_app", "official_channel", "delivery_otp", "warns_not_to_share"}
+
+
+def _links_are_safe(text: str, report_notice: bool) -> bool:
+    for m in _ANY_LINK.finditer(text):
+        host = m.group(1).lower()
+        if "." not in host or host.replace(".", "").isdigit() or re.fullmatch(r"[\d.,]+", host):
+            continue
+        if host.split(".")[-1] in {"rs", "inr"}:
+            continue
+        if _OFFICIAL_DOMAIN.match(host):
+            continue
+        if host in _SHORTENERS and report_notice:
+            continue  # official "report spam" notices use short links to their own apps
+        return False
+    return True
+
+
+# A completed event reported in plain words ("has been recharged", "has
+# been topped up"). Used only inside the notice guard, never as evidence
+# on its own, because "has been blocked" is a scam threat (blockers catch it).
+_COMPLETED_EVENT = re.compile(r"\b(has|have) been (successfully )?[a-z]+(ed|en)\b|\b(has|have) been (successfully )?[a-z]+ up\b", re.I)
+_OFFER_OR_CHAT = re.compile(
+    r"\b(txt|text|sms|reply|ansr|chat|date|dating|singles|quiz|win|won|prize|deals?|coupon|off on|discount|offer|compt?\w*|"
+    r"join|contact|whatsapp|telegram|invest|deposit|apply|register|visit|login|enter|share|verify|update|activate|call|dial|press|scan|approve)\b|!",
+    re.I,
+)
+
+
+def is_genuine_notice(text: str, found: dict[str, float], protective: dict[str, float]) -> bool:
+    flat = " ".join(text.split())
+    if not (_NOTICE_SIGNALS & protective.keys()):
+        # No reassuring signal: only a plain report of a completed event
+        # qualifies, with no scam intent, offer, chat line or request.
+        if found or not _COMPLETED_EVENT.search(flat) or _OFFER_OR_CHAT.search(flat):
+            return False
+    report_notice = "official_report_channel" in protective
+    allowed = {"impersonation", "deadline"} | ({"suspicious_link", "link_with_action"} if report_notice else set())
+    if set(found) - allowed:
+        return False
+    if _NOTICE_BLOCKERS.search(flat) or not _links_are_safe(flat, report_notice):
+        return False
+    if _OTP_WORD.search(flat) and not ({"warns_not_to_share", "delivery_otp"} & protective.keys()):
+        return False
+    return True
+
 
 def _logit(p: float) -> float:
     p = min(max(p, 1e-4), 1 - 1e-4)
@@ -226,8 +311,10 @@ class ThreatScorer:
                 protective[name] = weight
         # "Do not share your OTP" also matches the share-a-secret pattern;
         # the warning wins when it is the only thing asking about secrets.
-        if "warns_not_to_share" in protective:
+        if "warns_not_to_share" in protective or "delivery_otp" in protective:
             found.pop("asks_for_secret", None)
+        if "block_instruction" in protective:
+            found.pop("account_threat", None)
         # A copied bank-alert format is no comfort when the text also asks for
         # something (fake "credited by mistake" or refund SMS).
         if found.keys() & _ALERT_OVERRIDES or _TXN_BLOCKERS.search(text):
@@ -251,7 +338,7 @@ class ThreatScorer:
         model_logit = max(-self._MODEL_LOGIT_CAP, min(self._MODEL_LOGIT_CAP, _logit(scam_probability)))
         logit = model_logit + self._GAIN * (evidence_for - evidence_against)
         threat_score = 1 / (1 + math.exp(-logit))
-        genuine_transaction = is_genuine_transaction(text, found, protective)
+        genuine_transaction = is_genuine_transaction(text, found, protective) or is_genuine_notice(text, found, protective)
         if genuine_transaction:
             threat_score = min(threat_score, GENUINE_TRANSACTION_CAP)
 
