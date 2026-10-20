@@ -120,7 +120,9 @@ jobs:
                   ("scam", "Part time job: earn Rs 5000/day by liking YouTube videos. WhatsApp wa.me/919812345678"),
               ]
               wrong = []
+              time.sleep(60)  # quick-check allows 10 requests a minute per visitor
               for want, text in cases:
+                  time.sleep(7)
                   s, body = req(API + "/public/quick-check", {"text": text})
                   d = json.loads(body)
                   got = "legitimate" if d["verdict"] == "legitimate" else "scam"
