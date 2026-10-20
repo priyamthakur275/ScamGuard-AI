@@ -1,6 +1,7 @@
 \documentclass[conference]{IEEEtran}
 \IEEEoverridecommandlockouts
 \usepackage{cite}
+\usepackage{mathptmx} % Times for text and mathematics
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
 \usepackage{booktabs}
@@ -17,36 +18,36 @@
 
 \begin{document}
 
-\title{Reported Is Not Scam: An Audited, Campaign-Split Corpus and a Hybrid Detector for Indian SMS Fraud}
+\title{\textbf{ScamGuard: AI-Based Online Scam and Fraud\\ Detection System}}
 
 % Fill in the e-mail addresses that are marked [e-mail] before submission.
 \author{
 \IEEEauthorblockN{Kayarvizhy N}
-\IEEEauthorblockA{\textit{Department of Computer Science and Engineering} \\
+\IEEEauthorblockA{\textit{Department of Computer Science and} \\ \textit{Engineering} \\
 \textit{B.M.S. College of Engineering}\\
 Bengaluru, India \\
 {[e-mail]}}
 \and
 \IEEEauthorblockN{Priyam Thakur}
-\IEEEauthorblockA{\textit{Department of Computer Science and Engineering} \\
+\IEEEauthorblockA{\textit{Department of Computer Science and} \\ \textit{Engineering} \\
 \textit{B.M.S. College of Engineering}\\
 Bengaluru, India \\
 priyamthakur.cs23@bmsce.ac.in}
 \and
 \IEEEauthorblockN{Bhavya Goyal}
-\IEEEauthorblockA{\textit{Department of Computer Science and Engineering} \\
+\IEEEauthorblockA{\textit{Department of Computer Science and} \\ \textit{Engineering} \\
 \textit{B.M.S. College of Engineering}\\
 Bengaluru, India \\
 {[e-mail]}}
 \and
 \IEEEauthorblockN{Samir Chaudhary}
-\IEEEauthorblockA{\textit{Department of Computer Science and Engineering} \\
+\IEEEauthorblockA{\textit{Department of Computer Science and} \\ \textit{Engineering} \\
 \textit{B.M.S. College of Engineering}\\
 Bengaluru, India \\
 {[e-mail]}}
 \and
 \IEEEauthorblockN{Sana Subodh}
-\IEEEauthorblockA{\textit{Department of Computer Science and Engineering} \\
+\IEEEauthorblockA{\textit{Department of Computer Science and} \\ \textit{Engineering} \\
 \textit{B.M.S. College of Engineering}\\
 Bengaluru, India \\
 {[e-mail]}}
@@ -55,7 +56,7 @@ Bengaluru, India \\
 \maketitle
 
 \begin{abstract}
-Most published SMS fraud detectors are trained and tested on the 2011 SMS Spam Collection, a corpus of British messages in which ``spam'' means premium-rate promotion. Such models transfer poorly to the scams Indian users receive today, and the newer public smishing corpora contain only reported messages, with no genuine class. We build ScamGuard-IN-2026, a corpus of 11,399 messages that combines Indian user-reported smishing from the IMC~2025 collection, real Indian genuine SMS, scam texts quoted in 2025--26 advisories, and clearly marked synthetic messages used for training only. Every one of the 2,922 reported-message campaigns was checked, by rule or by hand, and 19.5\% of the retained reports turned out to be genuine bank alerts, one-time-password messages, order updates or advertisements. Real messages are grouped into near-duplicate campaigns with MinHash and split so that no campaign crosses the train--test boundary. On 1,874 held-out real messages, a logistic-regression model over word and character TF-IDF reaches an F1-score of 98.1\% with a 2.6\% false-alarm rate. Treating every report as a scam instead raises the false-alarm rate to 34.0\% ($p<10^{-30}$, McNemar). The deployed system, which adds interpretable intent rules for explanation, scores 97.1\% accuracy against 78.8\% for the earlier model trained on the 2011 corpus, whose false-alarm rate on real Indian messages was 48.9\%. We also show that hand-written rules that look strong on the developers' own test messages do not improve, and slightly hurt, accuracy on independent real data. The corpus, audit decisions and experiment code are released.
+Most published SMS fraud detectors are trained and tested on the 2011 SMS Spam Collection, a corpus of British messages in which ``spam'' means a premium-rate promotion. Such models transfer poorly to the scams Indian users receive today, and newer smishing corpora contain only reported messages, with no genuine class. This paper presents ScamGuard, a deployed scam and fraud detection system, and the corpus built for it: ScamGuard-IN-2026, 11,399 messages drawn from Indian user-reported smishing in the IMC~2025 collection, real Indian genuine SMS, scam texts quoted in 2025--26 advisories, and clearly marked synthetic messages used for training only. All 2,922 reported-message campaigns were checked by rule or by hand; 19.5\% of the retained reports were genuine bank alerts, one-time-password messages, order updates or advertisements. Near-duplicate campaigns were grouped with MinHash, and no campaign crosses the train--test boundary. On 1,874 held-out real messages, logistic regression over word and character TF-IDF reaches an F1-score of 98.1\% with a 2.6\% false-alarm rate; training on raw report labels raises the false-alarm rate to 34.0\%. The deployed system, which adds interpretable intent rules for explanation, scores 97.1\% accuracy against 78.8\% for the earlier model trained on the 2011 corpus. We also show that hand-written rules that look strong on the developers' own test messages do not improve accuracy on independent real data. The corpus, audit decisions and code are released.
 \end{abstract}
 
 \begin{IEEEkeywords}
