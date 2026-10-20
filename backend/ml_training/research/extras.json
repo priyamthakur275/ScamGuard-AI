@@ -8,10 +8,10 @@
   "features": 35148
  },
  "latency_ms_per_message": {
-  "classifier": 1.9738726963713076,
-  "classifier_plus_fusion": 4.080708444503784
+  "classifier": 1.6585559930626623,
+  "classifier_plus_fusion": 3.7621184306294637
  },
- "training_seconds": 2.7050178569998025,
+ "training_seconds": 2.658851600000162,
  "real_test_classifier": {
   "accuracy": 0.9754535752401281,
   "precision": 0.985797827903091,
