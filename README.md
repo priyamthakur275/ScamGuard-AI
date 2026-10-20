@@ -19,7 +19,7 @@ Hosted on Render's free tier (frontend + `app_service` + PostgreSQL). The backen
 **Explain the verdict**
 - **TrustLens** — for every result: the classifier probability and the final risk score side by side, a Scam Journey Mapper (only stages with matched phrases are marked), evidence for and against, evidence-based safety actions, a similar known pattern with its source (only when the retrieval evaluator accepts it) and an honest "why this may be wrong" section. It also shows **how a genuine message differs**, tactic by tactic, with a real example format. It adds no score of its own; see `docs/TRUSTLENS.md`.
 - **Scam X-Ray** — highlights the exact trap phrases in the message and maps them onto the four stages of a scam: hook, pressure, the ask, cash-out.
-- **Scam likelihood** — an SVM model (v3, trained on the SMS Spam Collection + a documented Indian scam supplement) fused with an intent-based risk engine; the model's own probability is always shown alongside. Unseen-set accuracy: 87.5% (see `backend/ml_training/datasets/README.md`).
+- **Scam likelihood** — a logistic-regression model on word + character TF-IDF (v4, trained on ScamGuard-IN-2026, an audited corpus of real Indian SMS plus labelled synthetic messages) fused with an intent-based risk engine; the model's own probability is always shown alongside. On 1,874 real held-out Indian SMS from unseen scam campaigns the final verdict scores 97.1% accuracy with a 3.2% false-alarm rate (see `backend/ml_training/datasets/scamguard_in_2026/DATASHEET.md` and `backend/ml_training/research/results.md`).
 - **Website trust score** — domain age from RDAP, HTTPS, link signals and a live inspection of the page (password/OTP/card forms, forms posting elsewhere, brand impersonation).
 - **Ask ScamGuard** — answers "is this a scam?", "I already paid, what now?", "how do I report it?" (English/Hindi), backed by Gemini (or Groq/Anthropic/OpenAI) via env vars, with per-visitor and daily caps that fall back to built-in answers.
 
@@ -47,7 +47,7 @@ graph TD
     Frontend -->|Same-Origin /backend-api Rewrite| AppService[FastAPI App Service - Port 8000]
     AppService -->|SQLAlchemy / Alembic| DB[(PostgreSQL / SQLite)]
     AppService -->|In-process, same container| MLEngine[ML Inference Engine]
-    MLEngine -->|Joblib Serialization| ModelRegistry[(Trained ML Artifacts - SVM / TF-IDF)]
+    MLEngine -->|Joblib Serialization| ModelRegistry[(Trained ML Artifacts - LR / TF-IDF)]
 ```
 
 > **Note on the deployed topology:** the codebase supports running ML
@@ -233,7 +233,7 @@ URL analysis now computes real, deterministic signals from the URL string itself
 
 ### Model evaluation (extended)
 
-`ModelEvaluator` (`ml_training/evaluation/evaluator.py`) computes real accuracy/precision/recall/F1/ROC-AUC/false-positive-rate via scikit-learn on an actual train/test split, plus the raw confusion matrix counts (TP/TN/FP/FN). The production model (`svm` v2) is trained on the public SMS Spam Collection from Kaggle plus 24 project samples (5,193 unique messages, 80/20 split). On the 1,039-message test split it scores accuracy 0.987, precision 0.955, recall 0.947, F1 0.951, ROC-AUC 0.998 and false-positive rate 0.007. See `backend/ml_training/datasets/README.md` for the dataset source and the exact training command. The dataset is English SMS from the UK and does not contain Indian UPI, job or investment scams, so the rule-based threat scorer remains important for those.
+`ModelEvaluator` (`ml_training/evaluation/evaluator.py`) computes real accuracy/precision/recall/F1/ROC-AUC/false-positive-rate via scikit-learn, plus the raw confusion matrix counts. The production model (`logistic_regression` v4) is trained on ScamGuard-IN-2026 (`backend/ml_training/datasets/scamguard_in_2026/`), split by scam campaign so no near-duplicate of a test message is seen in training. `python -m ml_training.research.run_experiments` reproduces every reported number; `results.md` holds the tables. The earlier 2011 UK SMS Spam Collection has been removed from the project.
 
 ---
 

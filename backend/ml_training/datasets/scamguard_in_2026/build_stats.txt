@@ -1,0 +1,31 @@
+R1 IMC'25 India-relevant English/Hindi, excluding 'spam' category: 8948
+R1 removed as label noise (genuine verification codes): 5
+R1 after placeholder restore, length>=15, exact dedupe: 5478
+R2 India SMS: genuine 'ham' kept 1126; promotions relabelled genuine 665; promotions with fraud cues dropped 70
+R2 promotion audit: moved to scam 6, dropped 5 (rows)
+R1 audit: scam 4092, relabelled genuine 950, dropped as unclear 436 (rows); unseen-by-audit 381
+Real R1+R2 unique campaigns: 4077 from 6745 rows
+R3 2025-26 advisory set: 12 ({'scam': 11, 'legitimate': 1})
+R4 team 2026 SMS: not yet provided
+S synthetic (train only): 4800 ({'legitimate': 3000, 'scam': 1800})
+Train rows dropped because a near-identical text is in a test split: 0
+Second-pass corrections: relabelled 19, dropped 7 (rows)
+
+Rows by split / source / label:
+split      source            label     
+dev        imc25             legitimate     136
+                             scam           506
+           india_sms         legitimate     225
+                             scam             1
+test       imc25             legitimate     245
+                             scam          1207
+           india_sms         legitimate     420
+                             scam             2
+test_2026  advisory_2025_26  legitimate       1
+                             scam            11
+train      imc25             legitimate     582
+                             scam          2274
+           india_sms         legitimate    1049
+                             scam             3
+           synthetic         legitimate    2950
+                             scam          1787

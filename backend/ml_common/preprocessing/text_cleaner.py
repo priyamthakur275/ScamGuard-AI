@@ -31,11 +31,16 @@ class CleaningConfig:
     number_token: str = " __num__ "
 
 
-_URL_PATTERN = re.compile(r"https?://\S+|www\.\S+")
+_URL_PATTERN = re.compile(
+    r"https?://\S+|www\.\S+|"
+    # bare links such as bit.ly/x or i.airtel.in/abc, common in Indian SMS
+    r"\b(?:[a-z0-9-]+\.)+(?:com|in|ly|me|co|org|net|xyz|top|link|gy|gd|io|app|info|site|online|click|live|shop|vip|cc|to|gl|tk|ml|ga|cf|example)\b(?:/\S*)?",
+    re.IGNORECASE,
+)
 _EMAIL_PATTERN = re.compile(r"\b[\w.+-]+@[\w-]+\.[\w.-]+\b")
 _PHONE_PATTERN = re.compile(r"\b(?:\+?\d{1,3}[-.\s])?(?:\(?\d{2,4}\)?[-.\s]){1,4}\d{2,4}\b")
 _NUMBER_PATTERN = re.compile(r"\b\d+\b")
-_PUNCTUATION_PATTERN = re.compile(r"[^\w\s]")
+_PUNCTUATION_PATTERN = re.compile(r"[^\w\s\u0900-\u0963\u0966-\u097F]")  # keep Devanagari vowel signs
 _WHITESPACE_PATTERN = re.compile(r"\s+")
 
 
@@ -59,11 +64,12 @@ class TextCleaner:
 
         cleaned = text
 
-        if self._config.replace_urls:
-            cleaned = _URL_PATTERN.sub(self._config.url_token, cleaned)
-
+        # Emails first: the bare-domain URL pattern would otherwise eat "bank.com" in "fraud@bank.com".
         if self._config.replace_emails:
             cleaned = _EMAIL_PATTERN.sub(self._config.email_token, cleaned)
+
+        if self._config.replace_urls:
+            cleaned = _URL_PATTERN.sub(self._config.url_token, cleaned)
 
         if self._config.replace_phone_numbers:
             cleaned = _PHONE_PATTERN.sub(self._config.phone_token, cleaned)

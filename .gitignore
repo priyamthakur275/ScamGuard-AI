@@ -44,3 +44,6 @@ ScamGuard-AI-Final.zip
 # Local run helper
 .venv/
 .run-logs/
+
+# ScamGuard-IN-2026 raw sources and team SMS exports (never commit)
+backend/ml_training/datasets/scamguard_in_2026/raw/

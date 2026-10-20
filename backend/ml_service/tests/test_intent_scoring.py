@@ -43,7 +43,7 @@ def test_unseen_challenge_set_accuracy_does_not_regress():
     from ml_service.inference.inference_engine import InferenceEngine
 
     root = Path(__file__).resolve().parents[2]
-    engine = InferenceEngine(ModelRegistry(root_dir=str(root / "artifacts")), TextPreprocessingPipeline(), "svm")
+    engine = InferenceEngine(ModelRegistry(root_dir=str(root / "artifacts")), TextPreprocessingPipeline(), "logistic_regression")
     engine.load()
     df = pd.read_csv(root / "ml_training" / "datasets" / "indian_challenge_set_b.csv")
     correct = 0
@@ -52,6 +52,32 @@ def test_unseen_challenge_set_accuracy_does_not_regress():
         tokens, _ = engine.transform(text)
         correct += (S.assess(p, tokens, text).threat_score >= 0.5) == (label == "scam")
     assert correct / len(df) >= 0.85
+
+
+def test_real_heldout_indian_sms_do_not_regress():
+    """Guards the main reported number: the final verdict on the real, campaign-held-out
+    test split of ScamGuard-IN-2026 (never trained on)."""
+    from ml_common.preprocessing.pipeline import TextPreprocessingPipeline
+    from ml_common.registry.model_registry import ModelRegistry
+    from ml_service.inference.inference_engine import InferenceEngine
+
+    root = Path(__file__).resolve().parents[2]
+    engine = InferenceEngine(ModelRegistry(root_dir=str(root / "artifacts")), TextPreprocessingPipeline(), "logistic_regression")
+    engine.load()
+    df = pd.read_csv(root / "ml_training" / "datasets" / "scamguard_in_2026" / "scamguard_in_2026.csv")
+    df = df[df.split == "test"]
+    tp = fp = tn = fn = 0
+    for text, label in zip(df.text, df.label):
+        p = engine.predict(text).scam_probability
+        tokens, _ = engine.transform(text)
+        flagged = S.assess(p, tokens, text).threat_score >= 0.5
+        scam = label == "scam"
+        tp += flagged and scam
+        fp += flagged and not scam
+        tn += not flagged and not scam
+        fn += not flagged and scam
+    assert (tp + tn) / len(df) >= 0.96
+    assert fp / (fp + tn) <= 0.05
 
 
 @pytest.mark.parametrize("text", [

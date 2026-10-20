@@ -79,9 +79,12 @@ class PredictionExplainer:
         contributions: list[tuple[str, float]] = []
 
         for feature_index, tfidf_value in zip(row.col, row.data):
+            name = feature_names[feature_index]
+            if name.startswith("~"):
+                continue  # character n-grams help the model but are not readable as reasons
             weight = float(feature_weights[feature_index]) * float(tfidf_value)
             if weight > self._config.min_weight_threshold:
-                contributions.append((feature_names[feature_index], weight))
+                contributions.append((name, weight))
 
         contributions.sort(key=lambda item: item[1], reverse=True)
         top = contributions[: self._config.top_n]
