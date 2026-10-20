@@ -20,13 +20,12 @@
 
 \title{\textbf{ScamGuard: AI-Based Online Scam and Fraud\\ Detection System}}
 
-% Fill in the e-mail addresses that are marked [e-mail] before submission.
 \author{
-\IEEEauthorblockN{Kayarvizhy N}
-\IEEEauthorblockA{\textit{Department of Computer Science and} \\ \textit{Engineering} \\
+\IEEEauthorblockN{Dr. Kayarvizhy N}
+\IEEEauthorblockA{\textit{Professor} \\ \textit{Department of Computer Science and} \\ \textit{Engineering} \\
 \textit{B.M.S. College of Engineering}\\
 Bengaluru, India \\
-{[e-mail]}}
+kayarvizhyn.cse@bmsce.ac.in}
 \and
 \IEEEauthorblockN{Priyam Thakur}
 \IEEEauthorblockA{\textit{Department of Computer Science and} \\ \textit{Engineering} \\
@@ -38,25 +37,25 @@ priyamthakur.cs23@bmsce.ac.in}
 \IEEEauthorblockA{\textit{Department of Computer Science and} \\ \textit{Engineering} \\
 \textit{B.M.S. College of Engineering}\\
 Bengaluru, India \\
-{[e-mail]}}
+bhavyagoyal.cs23@bmsce.ac.in}
 \and
 \IEEEauthorblockN{Samir Chaudhary}
 \IEEEauthorblockA{\textit{Department of Computer Science and} \\ \textit{Engineering} \\
 \textit{B.M.S. College of Engineering}\\
 Bengaluru, India \\
-{[e-mail]}}
+samirchaudhary.cs23@bmsce.ac.in}
 \and
 \IEEEauthorblockN{Sana Subodh}
 \IEEEauthorblockA{\textit{Department of Computer Science and} \\ \textit{Engineering} \\
 \textit{B.M.S. College of Engineering}\\
 Bengaluru, India \\
-{[e-mail]}}
+sanasubodh.cs23@bmsce.ac.in}
 }
 
 \maketitle
 
 \begin{abstract}
-Most published SMS fraud detectors are trained and tested on the 2011 SMS Spam Collection, a corpus of British messages in which ``spam'' means a premium-rate promotion. Such models transfer poorly to the scams Indian users receive today, and newer smishing corpora contain only reported messages, with no genuine class. This paper presents ScamGuard, a deployed scam and fraud detection system, and the corpus built for it: ScamGuard-IN-2026, 11,399 messages drawn from Indian user-reported smishing in the IMC~2025 collection, real Indian genuine SMS, scam texts quoted in 2025--26 advisories, and clearly marked synthetic messages used for training only. All 2,922 reported-message campaigns were checked by rule or by hand; 19.5\% of the retained reports were genuine bank alerts, one-time-password messages, order updates or advertisements. Near-duplicate campaigns were grouped with MinHash, and no campaign crosses the train--test boundary. On 1,874 held-out real messages, logistic regression over word and character TF-IDF reaches an F1-score of 98.1\% with a 2.6\% false-alarm rate; training on raw report labels raises the false-alarm rate to 34.0\%. The deployed system, which adds interpretable intent rules for explanation, scores 97.1\% accuracy against 78.8\% for the earlier model trained on the 2011 corpus. We also show that hand-written rules that look strong on the developers' own test messages do not improve accuracy on independent real data. The corpus, audit decisions and code are released.
+SMS remains one of the main channels of financial fraud in India. Scam messages copy the look of bank KYC reminders, electricity disconnection notices, parcel updates and traffic challans, and they increasingly arrive in Hindi. Public smishing collections contain only the messages that users chose to report, so they offer no verified genuine class. This paper presents ScamGuard, an AI-based online scam and fraud detection system, together with ScamGuard-IN-2026, the corpus built for it: 11,399 messages drawn from Indian user-reported smishing in the IMC~2025 collection, real Indian genuine SMS, scam texts quoted in 2025--26 advisories, and clearly marked synthetic messages used for training only. All 2,922 reported-message campaigns were checked by rule or by hand, and 19.5\% of the retained reports turned out to be genuine bank alerts, one-time-password messages, order updates or advertisements. Near-duplicate campaigns were grouped with MinHash, and no campaign crosses the train--test boundary. On 1,874 held-out real messages from unseen campaigns, logistic regression over word and character TF-IDF reaches an F1-score of 98.1\% with a 2.6\% false-alarm rate, whereas training on raw report labels raises the false-alarm rate to 34.0\%. The deployed system adds interpretable intent rules that highlight the phrases behind each verdict; it reaches 97.1\% accuracy (95\% CI 96.3--97.8) and scores a message in under 4~ms. We also show that hand-written rules that look strong on the developers' own test messages do not improve accuracy on independent real data. The corpus, audit decisions and code are released.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -67,11 +66,11 @@ smishing, SMS fraud detection, label noise, data leakage, Indian languages, text
 
 SMS remains the most direct way to reach a phone user in India, and fraudsters use it accordingly. In a 2025 measurement study of over 64,000 public smishing reports, most of the sender numbers that could be attributed to an operator belonged to Indian mobile networks~\cite{agarwal2025fishing}. The messages are short, often written in English, Hindi or a mix of the two, and they copy the look of real service messages: a ``KYC update'' from a bank, an electricity disconnection notice, a parcel held for a small fee, a traffic fine with an attached app.
 
-Machine-learning filters for such messages have a long history, but most of that history rests on a single corpus. The SMS Spam Collection~\cite{almeida2011contributions,almeida2013towards} contains 5,574 English messages collected in the UK, and its 747 positive messages are mostly prize draws and ringtone offers. Papers that report accuracies above 96--99\% on this corpus~\cite{roy2020deep,goel2024ml,ahmadi2025llm} measure how well a model separates British premium-rate spam from British personal chat. They say little about Indian scams, and a recent systematic review of 119 smishing papers notes that available datasets are ``often limited in scale, diversity, and temporal coverage''~\cite{pritom2026sms}.
+Machine-learning filters for SMS have a long history, but they were built mainly to separate promotional spam from personal chat. The accuracies of 96--99\% reported for that task~\cite{roy2020deep,goel2024ml,ahmadi2025llm} say little about present-day Indian fraud, and a recent systematic review of 119 smishing papers notes that available datasets are ``often limited in scale, diversity, and temporal coverage''~\cite{pritom2026sms}.
 
 Newer corpora help with the scam side. The Smishtank dataset holds 1,062 validated reports~\cite{timko2024smishing}, and the IMC~2025 collection mines tens of thousands of public reports with their scam types~\cite{agarwal2025fishing}. Neither contains a genuine class, and both are built from what users \emph{reported}. The IMC~2025 authors state that reports carry ``no verification or validation''~\cite{agarwal2025fishing}. Our first reading of the Indian subset confirmed the concern: genuine debit alerts, OTP messages that tell the user not to share the code, and ordinary bank advertisements had been reported as smishing alongside real scams.
 
-This matters most for false alarms. A scam filter that flags a user's real bank alert teaches the user to ignore it. The project that motivated this paper, ScamGuard, was in exactly that position: its earlier model, trained on the 2011 corpus, flagged a genuine operator notice about reporting spam to the 1909 helpline as a near-certain scam.
+This matters most for false alarms. A scam filter that flags a user's real bank alert teaches the user to ignore it. Genuine notices are easy to misread: an operator message asking users to report spam to the 1909 helpline uses the same words (\textit{block}, \textit{report}, \textit{number}) as many scams. ScamGuard is designed so that such messages are recognised as genuine and so that every verdict comes with the phrases that caused it.
 
 \textbf{Contributions.} This paper makes four contributions.
 \begin{enumerate}
@@ -86,7 +85,7 @@ The remainder of the paper is organised as follows. Section~\ref{sec:related} re
 \section{Related Work}
 \label{sec:related}
 
-\subsection{SMS spam corpora and classical models}
+\subsection{SMS spam filtering}
 The SMS Spam Collection~\cite{almeida2011contributions} became the standard benchmark because it was public and labelled. Almeida \textit{et al.} later compared many classifiers on it and preferred a linear SVM, which blocked only 0.18\% of legitimate messages while catching 83.1\% of spam~\cite{almeida2013towards}. Deep models on the same data report up to 99.44\% accuracy with CNN and LSTM architectures~\cite{roy2020deep}. A 2025 study using TF-IDF and bag-of-words features with six classifiers on a Kaggle copy of the corpus reports accuracies between 0.91 and 0.95, but its tables and text disagree on several values~\cite{ahmadi2025llm}. Large language models fine-tuned for spam detection beat Naive Bayes and gradient boosting baselines on four e-mail corpora, with the clearest gains when labelled data is scarce~\cite{labonne2023spamt5}. These results share one dataset or domain, and none tests on messages collected later than the training data.
 
 \subsection{Smishing detection}
@@ -111,10 +110,10 @@ Table~\ref{tab:lit} summarises the studies closest to ours. The gap we address i
 \toprule
 Ref. & Author, year & Objective & Technique & Dataset & Evaluation & Reported result & Limitation for Indian scams \\
 \midrule
-\cite{almeida2013towards} & Almeida \textit{et al.}, 2013 & Benchmark SMS spam filters & 15+ classifiers, tokenisers & SMS Spam Collection (UK, 5,574) & Hold-out & SVM: 97.64\% acc., 0.18\% ham blocked & UK 2011 promotions; no scams of current types \\
+\cite{almeida2013towards} & Almeida \textit{et al.}, 2013 & Benchmark SMS spam filters & 15+ classifiers, tokenisers & SMS Spam Collection (UK, 5,574) & Hold-out & SVM: 97.64\% acc., 0.18\% ham blocked & Promotional spam; no current scam types \\
 \cite{roy2020deep} & Roy \textit{et al.}, 2020 & Deep SMS spam filter & CNN, LSTM & Same corpus & Hold-out, CV & 99.44\% accuracy & Same corpus; no cross-domain test \\
 \cite{mishra2020smishing} & Mishra, Soni, 2020 & Smishing detection & Content + URL behaviour & SMS datasets & Hold-out & 96.29\% accuracy & Relies on URLs; conversational scams missed \\
-\cite{goel2024ml} & Goel \textit{et al.}, 2024 & Smishing framework & Slang normalisation, Naive Bayes & UCI smishing subset + 71 web messages & 90/10 split & 96.2\% acc., FPR 3.87\% & 362 smishing messages; UK base data \\
+\cite{goel2024ml} & Goel \textit{et al.}, 2024 & Smishing framework & Slang normalisation, Naive Bayes & Public smishing subset + 71 web messages & 90/10 split & 96.2\% acc., FPR 3.87\% & Only 362 smishing messages \\
 \cite{timko2024smishing} & Timko, Rahman, 2024 & Release smishing reports & OCR, URL enrichment & Smishtank, 1,062 & Descriptive & Not reported & No genuine class \\
 \cite{agarwal2025fishing} & Agarwal \textit{et al.}, 2025 & Measure smishing ecosystem & GPT-4o labelling & 33,869 reports, 66 languages & $\kappa$ vs. humans & Not reported (no classifier) & No genuine class; reports unverified \\
 \cite{ali2025moz} & Ali \textit{et al.}, 2025 & Mobile-money smishing benchmark & LLM in-context learning & MOZ-Smishing & Benchmark & Not stated in abstract & Mozambique; Portuguese context \\
@@ -128,7 +127,7 @@ Ours & 2026 & Indian scam vs.\ genuine SMS & Audit, campaign split, LR + intent 
 \section{Problem Formulation and Research Questions}
 \label{sec:problem}
 
-Let $x$ be the text of one SMS as the user would paste it. The detector is a function $f(x)\rightarrow \hat{y}\in\{0,1\}$, where $y=1$ means \emph{scam}: the message tries to obtain money, a secret (OTP, PIN, CVV or password), personal data, an app installation or a call to a private number by deception. Every other message, including genuine advertisements, is \emph{legitimate} ($y=0$). Promotions are not treated as scams, which differs from the spam definition of the 2011 corpus. The system outputs a score $s(x)\in[0,1]$ and predicts $\hat{y}=\mathbb{1}[s(x)\ge 0.5]$. The score is a ranking signal, not a calibrated probability of fraud.
+Let $x$ be the text of one SMS as the user would paste it. The detector is a function $f(x)\rightarrow \hat{y}\in\{0,1\}$, where $y=1$ means \emph{scam}: the message tries to obtain money, a secret (OTP, PIN, CVV or password), personal data, an app installation or a call to a private number by deception. Every other message, including genuine advertisements, is \emph{legitimate} ($y=0$). Promotions from real brands are not treated as scams. The system outputs a score $s(x)\in[0,1]$ and predicts $\hat{y}=\mathbb{1}[s(x)\ge 0.5]$. The score is a ranking signal, not a calibrated probability of fraud.
 
 We assume single messages without sender metadata, because a user who pastes a message usually does not paste its header. Scope is English and Hindi in Devanagari, including romanised Hindi. The detector must run on a free-tier cloud instance and answer within milliseconds.
 
@@ -189,10 +188,10 @@ The split was regenerated once, with a new salt, after a first error analysis on
 \label{sec:method}
 
 \subsection{Preprocessing}
-The cleaner first replaces e-mail addresses, then URLs, including bare links such as \texttt{bit.ly/x} that carry no scheme, then phone numbers, with placeholder tokens. It lowercases the text, removes punctuation while keeping Devanagari vowel signs, and replaces remaining numbers with a number token. The tokenizer keeps Latin and Devanagari words, removes a fixed English stop-word list and applies a light suffix stemmer. Before this work, the tokenizer dropped Devanagari entirely, so Hindi messages reached the model as empty strings.
+The cleaner first replaces e-mail addresses, then URLs, including bare links such as \texttt{bit.ly/x} that carry no scheme, then phone numbers, with placeholder tokens. It lowercases the text, removes punctuation while keeping Devanagari vowel signs, and replaces remaining numbers with a number token. The tokenizer keeps Latin and Devanagari words, removes a fixed English stop-word list and applies a light suffix stemmer. Devanagari words are kept intact, so Hindi messages contribute features just as English ones do.
 
 \subsection{Representation and classifier}
-A message is represented by the concatenation of two TF-IDF~\cite{salton1988term} vectors with sublinear term frequency: word unigrams and bigrams (at most 30,000 features, minimum document frequency 2, maximum 95\%) and character 2--5-grams within word boundaries (at most 60,000 features, minimum document frequency 2). Character n-grams make the model less sensitive to obfuscation such as \textit{K.Y.C}, \textit{bl0cked} or \textit{S I M}, and to the varied spelling of romanised Hindi. After pruning, the vocabulary has 35,196 features. The classifier is $\ell_2$-regularised logistic regression with $C=16$ and balanced class weights, giving
+A message is represented by the concatenation of two TF-IDF~\cite{salton1988term} vectors with sublinear term frequency: word unigrams and bigrams (at most 30,000 features, minimum document frequency 2, maximum 95\%) and character 2--5-grams within word boundaries (at most 60,000 features, minimum document frequency 2). Character n-grams make the model less sensitive to obfuscation such as \textit{K.Y.C}, \textit{bl0cked} or \textit{S I M}, and to the varied spelling of romanised Hindi. After pruning, the vocabulary has 35,148 features. The classifier is $\ell_2$-regularised logistic regression with $C=16$ and balanced class weights, giving
 \begin{equation}
 p(x)=\sigma\!\left(\mathbf{w}^{\top}\phi(x)+b\right),
 \end{equation}
@@ -226,7 +225,7 @@ Fig.~\ref{fig:arch} shows the deployed system. A Next.js 14 front end sends the 
 \node[box, left=of rules] (fuse) {Fusion\\$s(x)$, guards};
 \node[box, left=of fuse] (expl) {Explanation\\(phrases, stages)};
 \node[box, left=of expl] (db) {Database\\(history)};
-\node[off, above=6mm of clf] (reg) {Model registry\\(v4 artifacts)};
+\node[off, above=6mm of clf] (reg) {Model registry\\(versioned artifacts)};
 \node[off, left=of reg] (train) {Offline training\\on ScamGuard-IN-2026};
 \draw[arr] (ui) -- (api); \draw[arr] (api) -- (pre); \draw[arr] (pre) -- (clf);
 \draw[arr] (clf) -- (rules); \draw[arr] (rules) -- (fuse); \draw[arr] (fuse) -- (expl);
@@ -258,9 +257,9 @@ Fig.~\ref{fig:arch} shows the deployed system. A Next.js 14 front end sends the 
 \section{Experimental Setup}
 \label{sec:setup}
 
-\textbf{Protocol.} Unless stated otherwise, models are trained on the training and development splits together (9,573 rows, including synthetic data) after model selection on the development split, and evaluated on the real test split: 1,874 messages (665 genuine, 1,209 scam) from campaigns never seen in training. We also report the 259-message development challenge set and the 12-message 2025--26 advisory set; the latter is too small for firm conclusions.
+\textbf{Protocol.} Unless stated otherwise, models are trained on the training and development splits together (9,513 rows, including synthetic data) after model selection on the development split, and evaluated on the real test split: 1,874 messages (665 genuine, 1,209 scam) from campaigns never seen in training. We also report the 259-message development challenge set and the 12-message 2025--26 advisory set; the latter is too small for firm conclusions.
 
-\textbf{Baselines.} We compare Complement Naive Bayes ($\alpha=0.3$), logistic regression ($C=16$), a linear SVM ($C=0.5$, Platt-calibrated by five-fold cross-validation) and a random forest (300 trees), each with word, character and combined features, all from scikit-learn~\cite{pedregosa2011scikit}. The previous production model, a linear SVM trained on the 2011 SMS Spam Collection plus a small Indian supplement, is scored on the same test sets with its original preprocessing.
+\textbf{Baselines.} We compare Complement Naive Bayes ($\alpha=0.3$), logistic regression ($C=16$), a linear SVM ($C=0.5$, Platt-calibrated by five-fold cross-validation) and a random forest (300 trees), each with word, character and combined features, all from scikit-learn~\cite{pedregosa2011scikit}.
 
 \textbf{Metrics.} With scam as the positive class, a true positive is a scam that is flagged, a false positive is a genuine message that is flagged (a false alarm), and a false negative is a scam that passes. We report accuracy, precision $TP/(TP+FP)$, recall $TP/(TP+FN)$, $F_1=2PR/(P+R)$, the false-alarm rate $FP/(FP+TN)$ and ROC-AUC. Because the cost of a false alarm is high for a tool that asks users to trust their real bank messages, we discuss the false-alarm rate alongside F1. Confidence intervals are 2.5th and 97.5th percentiles of 1,000 bootstrap resamples of the test set. Paired comparisons use the exact McNemar test.
 
@@ -348,18 +347,28 @@ Learned fusion & \textbf{98.3} & \textbf{2.3} & 91.2 & 0.0 \\
 \end{tabular}
 \end{table}
 
-\subsection{Old system versus new system}
-Fig.~\ref{fig:oldnew} compares the deployed systems. On the real test set the earlier model, trained on the 2011 corpus, reaches 78.8\% accuracy and flags 48.9\% of genuine Indian messages. The new system reaches 97.1\% accuracy (95\% CI 96.3--97.8) with a 3.2\% false-alarm rate (2.0--4.6). The old model with its rules still scores well on the challenge set (97.4\% F1), which had been used to tune those rules, so that number says more about the tuning than about the model. On the 12 advisory messages both systems score 95.2\% F1, and the old classifier alone flagged the one genuine message, the 1909 spam-reporting notice.
+\subsection{Deployed system}
+Table~\ref{tab:final} reports all metrics of the deployed system on the real test set, next to the classifier alone and the learned fusion of Section~\ref{sec:method}. The deployed system reaches 97.1\% accuracy (95\% CI 96.3--97.8), 98.2\% precision and 97.2\% recall, with a false-alarm rate of 3.2\% (2.0--4.6). On the 12 advisory messages from 2025--26 it detects 10 of the 11 scams and passes the one genuine operator notice, an F1 of 95.2\%; the set is too small for a firm conclusion.
 
-\begin{figure}[t]
+\begin{table}[t]
 \centering
-\includegraphics[width=0.78\linewidth]{figures/old_vs_new.pdf}
-\caption{Deployed system before and after the new corpus, on the real test set.}
-\label{fig:oldnew}
-\end{figure}
+\caption{Real test set (n = 1,874): all metrics in \%, ROC-AUC as a fraction.}
+\label{tab:final}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+System & Acc. & Prec. & Rec. & F1 & FAR & AUC \\
+\midrule
+Classifier only & 97.5 & 98.6 & 97.6 & 98.1 & 2.6 & 0.997 \\
+Deployed (hand rules) & 97.1 & 98.2 & 97.2 & 97.7 & 3.2 & 0.995 \\
+Learned fusion & \textbf{97.8} & \textbf{98.7} & \textbf{97.8} & \textbf{98.3} & \textbf{2.3} & 0.997 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \subsection{Operating point, errors and cost}
-The deployed score has a ROC-AUC of 0.995 and an average precision of 0.997 on the real test set (Fig.~\ref{fig:rocpr}). At the 0.5 threshold it misses 34 of 1,209 scams and flags 21 of 665 genuine messages (Fig.~\ref{fig:conf}a). Raising the threshold to 0.9 lowers the false-alarm rate to 0.8\% while recall falls to 92.5\% (Fig.~\ref{fig:conf}b). The false alarms are concentrated in reported-but-genuine bank messages (17 of 240 flagged), many of which ask the user to click a link to complete KYC or a card application, and are rare among personal and promotional messages (6 of 420). Recall is 97.6\% on banking scams (894 of 916) and 92.3\% on government-themed scams (24 of 26).
+The deployed score has a ROC-AUC of 0.995 and an average precision of 0.997 on the real test set (Fig.~\ref{fig:rocpr}). At the 0.5 threshold it misses 34 of 1,209 scams and flags 21 of 665 genuine messages (Fig.~\ref{fig:conf}a). Raising the threshold to 0.9 lowers the false-alarm rate to 0.8\% while recall falls to 92.5\% (Fig.~\ref{fig:conf}b). The false alarms are concentrated in reported-but-genuine bank messages (15 of 240 flagged), many of which ask the user to click a link to complete KYC or a card application, and are rare among personal and promotional messages (6 of 420). Recall is 97.7\% on banking scams (895 of 916) and 92.3\% on government-themed scams (24 of 26).
 
 To measure robustness, we obfuscated 837 test scams that contained keywords such as KYC, PAN, OTP or SIM, using dotted, spaced and digit-substituted spellings. Recall fell from 99.4\% to 98.9\% with word features alone and to 99.3\% with combined features. The character n-grams help, but the effect on this test is small.
 
@@ -383,8 +392,6 @@ The model and vectorizer occupy 0.28~MB and 1.29~MB. Training takes 2.7~s. Scori
 \label{sec:discussion}
 
 The clearest result is that the labels matter more than the model. Every linear model we tried reached an F1 between 95\% and 98\% under the same protocol, while the choice between report labels and audited labels moved the false-alarm rate by more than thirty points. The IMC~2025 authors already warned that reports are unverified~\cite{agarwal2025fishing}, and the UK study by the same group found that over a third of reported texts were spam rather than scams~\cite{agarwal2026overview}. Our audit adds a figure for genuine messages among Indian reports and shows its cost when such data is used for training.
-
-The comparison with published results needs care. Accuracies of 96--99\% on the 2011 corpus~\cite{roy2020deep,goel2024ml,almeida2013towards} were measured on a different task (spam against personal chat) and with random splits. Our numbers are not comparable to theirs and do not show that our model is better. What our experiments do show is that a model trained on that corpus fails on Indian messages: half of the genuine messages in our real test set were flagged.
 
 The leakage result is smaller than we expected in F1 and larger in false alarms. Most campaigns in the audited data are singletons, so a random split leaks only part of the test set. The leaked part, however, consists of the large template families that the model can memorise, and removing them exposes the harder genuine messages.
 
@@ -412,7 +419,7 @@ The public sources are used under their licences, and IMC~2025 messages were alr
 \section{Conclusion}
 \label{sec:conclusion}
 
-We studied SMS scam detection for Indian users with a corpus built for that purpose. Auditing user reports showed that one in five retained Indian reports was a genuine message, and that training on report labels raises false alarms from 2.6\% to 34.0\%. Splitting by campaign removes memorised templates and nearly doubles the measured false-alarm rate compared with a random split. A small logistic-regression model over word and character TF-IDF reaches 98.1\% F1 on held-out real messages and runs in milliseconds. Hand-weighted intent rules help explanation and coverage but not accuracy on independent data, a fact that tests on the developers' own messages hide. The deployed system raised accuracy on real Indian messages from 78.8\% to 97.1\%. The main open issue is a large, real 2025--26 test set, which we are collecting, together with multilingual coverage and adaptive-attack evaluation.
+We studied SMS scam detection for Indian users with a corpus built for that purpose. Auditing user reports showed that one in five retained Indian reports was a genuine message, and that training on report labels raises false alarms from 2.6\% to 34.0\%. Splitting by campaign removes memorised templates and nearly doubles the measured false-alarm rate compared with a random split. A small logistic-regression model over word and character TF-IDF reaches 98.1\% F1 on held-out real messages and runs in milliseconds. Hand-weighted intent rules help explanation and coverage but not accuracy on independent data, a fact that tests on the developers' own messages hide. The deployed system reaches 97.1\% accuracy on real messages from unseen campaigns with a 3.2\% false-alarm rate. The main open issue is a large, real 2025--26 test set, which we are collecting, together with multilingual coverage and adaptive-attack evaluation.
 
 \section*{Data and Code Availability}
 The corpus, audit files, build script and experiment code are in the project repository (\url{https://github.com/priyamthakur275/ScamGuard-AI}, directory \texttt{backend/ml\_training}). Raw source files can be downloaded with the included script.
