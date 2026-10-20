@@ -618,7 +618,7 @@ A false positive is a genuine message wrongly flagged, which is the error users 
 \If{a sentence asks for an OTP after a ``never share'' warning} \State add decoy intent \EndIf
 \State $s\gets\sigma(\operatorname{clip}(\operatorname{logit}p,\pm4)+5(E^+-E^-))$
 \If{genuine alert or notice with no blocking cue} \State $s\gets\min(s,0.15)$ \EndIf
-\State \Return verdict $\mathbb{1}[s\ge0.5]$, $p$, $s$, highlighted phrases, explanation
+\State \Return verdict $\mathbf{1}[s\ge0.5]$, $p$, $s$, highlighted phrases, explanation
 \end{algorithmic}
 \end{algorithm}
 
