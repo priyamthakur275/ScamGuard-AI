@@ -111,9 +111,8 @@ python -m ml_training.run_training \
     --artifacts-dir artifacts
 ```
 
-Multiple `--dataset` flags may be given to merge sources (Kaggle, UCI,
-SpamAssassin, Enron-style exports per the report's Section 1.4 Scope),
-as long as each has `text`/`label` columns (configurable via
+Multiple `--dataset` flags may be given to merge sources (for example the
+ScamGuard-IN-2026 corpus and new team-contributed messages), as long as each has `text`/`label` columns (configurable via
 `DatasetSource.text_column` / `label_column` for differently-named
 source files).
 
@@ -150,9 +149,8 @@ Winner: naive_bayes (f1=0.667) registered as version=v1 and promoted to producti
 ```
 
 (These specific numbers come from the bundled 24-row synthetic demo
-dataset — real numbers from the actual Kaggle/UCI/SpamAssassin/Enron
-corpora specified in the report will differ substantially and should be
-much higher.)
+dataset. The production numbers come from ScamGuard-IN-2026; see
+`ml_training/research/results.md`.)
 
 ---
 

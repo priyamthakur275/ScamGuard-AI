@@ -14,8 +14,6 @@ built for this project. Details, sources, licences, the label audit and limitati
 | `indian_challenge_set.csv`, `indian_challenge_set_b.csv` | Hand-written development sets used while designing the intent rules |
 | `sample_messages.csv` | 24 hand-written messages used by the pipeline tests |
 
-The 2011 UK SMS Spam Collection used by earlier versions has been removed.
-
 Rebuild and train:
 
 ```bash

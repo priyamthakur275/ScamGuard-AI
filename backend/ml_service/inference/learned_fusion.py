@@ -1,6 +1,6 @@
-"""Learned evidence fusion (ScamGuard v4).
+"""Learned evidence fusion.
 
-The v3 ThreatScorer combined the classifier and the intent rules with hand-set
+The ThreatScorer combines the classifier and the intent rules with hand-set
 weights: ``logit = clip(logit p, ±4) + 5 (E_for - E_against)``. On real Indian SMS
 those weights over-fire on genuine bank and brand messages that mention KYC,
 "click" or a deadline. Here the same interpretable evidence is kept, but its
