@@ -1,8 +1,11 @@
 \documentclass[conference]{IEEEtran}
 \IEEEoverridecommandlockouts
 \usepackage{cite}
-\usepackage{mathptmx} % Times for text and mathematics
-\usepackage{amsmath,amssymb}
+\usepackage{amsmath}
+\usepackage{newtxtext}          % Times New Roman (text)
+\usepackage{newtxmath}          % Times New Roman (mathematics)
+\renewcommand{\texttt}[1]{\textrm{#1}}  % keep code-like words in Times as well
+\renewcommand{\labelitemi}{$\bullet$}
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{multirow}
