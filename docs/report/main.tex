@@ -164,7 +164,7 @@ Signature \\
 % ----- Acknowledgment -----
 \chapter*{Acknowledgment}
 \thispagestyle{empty}
-We are grateful to our guide, Dr. Kayarvizhy N, Professor, Department of Computer Science and Engineering, for steering this project towards a question that could be answered with evidence, and for insisting that the dataset reflect the messages people in India actually receive today. Her review of our early results is the reason the project moved from an off-the-shelf dataset to the audited corpus described here.
+We are grateful to our guide, Dr. Kayarvizhy N, Professor, Department of Computer Science and Engineering, for steering this project towards a question that could be answered with evidence, and for insisting that the dataset reflect the messages people in India actually receive today. Her guidance on building a dataset that reflects current Indian scams shaped the audited corpus described here.
 
 We thank Dr. Kavitha Sooda, Head of the Department of Computer Science and Engineering, and Dr. Bheemsha Arya, Principal, B.M.S. College of Engineering, for the facilities and the academic environment that made this work possible. We also thank the faculty members who reviewed our phase presentations and pointed out gaps in our evaluation.
 
@@ -297,6 +297,7 @@ We reviewed work on SMS spam corpora, smishing detection, report-based measureme
 Table~\ref{tab:lit} summarises the most relevant studies.
 
 {\small
+\renewcommand{\arraystretch}{1.1}
 \begin{longtable}{|L{2.1cm}|L{2.6cm}|L{2.8cm}|L{2.2cm}|L{2.7cm}|}
 \caption{Summary of related work}\label{tab:lit}\\
 \hline
@@ -571,7 +572,7 @@ For a message $x$, the detector computes a score $s(x)\in[0,1]$ and predicts
 \end{equation}
 
 \subsection{Preprocessing}
-The cleaner replaces e-mail addresses, URLs (including bare links such as \texttt{bit.ly/x}) and phone numbers with placeholder tokens, lowercases the text, removes punctuation while keeping Devanagari vowel signs, and replaces remaining numbers with a number token. The tokenizer keeps Latin and Devanagari words, removes English stop words and applies a light suffix stemmer. The same code runs in training and in the live service, which rules out train-serve skew. Before this project's changes, the tokenizer discarded Devanagari, so Hindi scams reached the model as empty text.
+The cleaner replaces e-mail addresses, URLs (including bare links such as \texttt{bit.ly/x}) and phone numbers with placeholder tokens, lowercases the text, removes punctuation while keeping Devanagari vowel signs, and replaces remaining numbers with a number token. The tokenizer keeps Latin and Devanagari words, removes English stop words and applies a light suffix stemmer. The same code runs in training and in the live service, which rules out train-serve skew. Devanagari words are kept intact, so Hindi messages contribute features just as English ones do.
 
 \subsection{Feature extraction}
 For a term $t$ in message $d$, with $N$ training messages and document frequency $\mathrm{df}(t)$, the TF-IDF weight is
@@ -647,14 +648,16 @@ Learned fusion & \textbf{97.8} & \textbf{98.7} & \textbf{97.8} & \textbf{98.3} &
 \end{tabular}
 \end{table}
 
+The deployed system catches 1,175 of the 1,209 test scams and passes 644 of the 665 genuine messages. The 95\% confidence interval of its accuracy is 96.3--97.8\%, and of its false-alarm rate 2.0--4.6\%. On the twelve 2025--26 advisory messages it detects 10 of the 11 scams and passes the one genuine operator notice (F1 95.2\%); this set is too small for a firm conclusion.
+
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.72\linewidth]{figures/final_metrics.pdf}
+\includegraphics[width=0.62\linewidth]{figures/final_metrics.pdf}
 \caption{Accuracy, precision, recall and F1-score on the real test set (vertical axis starts at 95\%)}
 \label{fig:final}
 \end{figure}
 
-The deployed system catches 1,175 of the 1,209 test scams and passes 644 of the 665 genuine messages. The 95\% confidence interval of its accuracy is 96.3--97.8\%, and of its false-alarm rate 2.0--4.6\%. On the twelve 2025--26 advisory messages it detects 10 of the 11 scams and passes the one genuine operator notice (F1 95.2\%); this set is too small for a firm conclusion.
+
 
 \section{Comparison of models and features}
 \begin{table}[H]
