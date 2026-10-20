@@ -4,7 +4,7 @@ Single responsibility: turn one or more raw CSV files on disk into a
 single, unified in-memory DataFrame with exactly the columns the rest of
 the pipeline expects (`text`, `label`). Column-name mapping is
 configurable so heterogeneous source datasets (different column names in
-Kaggle vs. UCI vs. SpamAssassin exports) can all be normalized here,
+different CSV exports) can all be normalized here,
 before validation ever sees them.
 """
 from dataclasses import dataclass, field
