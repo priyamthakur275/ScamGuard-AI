@@ -73,8 +73,8 @@
   \centering
   {\Large \textbf{ALTERNATE ASSESSMENT REPORT}}\\[0.25cm]
   {\large on}\\[0.25cm]
-  {\Large \textbf{[Course Title]}}\\[0.15cm]
-  {\large Course Code: [Course Code]}\\[1.0cm]
+  {\Large \textbf{Major Project Phase-2}}\\[0.15cm]
+  {\large Course Code: 23CS7PWPP2 \quad $|$ \quad Semester: VII}\\[1.0cm]
   {\Huge \textbf{ScamGuard: AI-Based Online Scam}}\\[0.25cm]
   {\Huge \textbf{and Fraud Detection System}}\\[1.0cm]
   {\large \textit{Submitted by}}\\[0.4cm]
@@ -87,7 +87,7 @@
   Sana Subodh & 1BM23CS296 \\
   \end{tabular}}\\[0.8cm]
   {\large Department of Computer Science and Engineering}\\[0.8cm]
-  {\large \textit{Faculty In-charge}}\\[0.15cm]
+  {\large \textit{Faculty In-charge (Project Guide)}}\\[0.15cm]
   {\large \textbf{Dr. Kayarvizhy N}}\\
   {\large Professor, Department of CSE, BMSCE}
   \vfill
@@ -433,8 +433,72 @@ Algorithm~\ref{alg:build} builds the dataset and Algorithm~\ref{alg:infer} score
 \item \textbf{Deployment.} Both services run on Render. GitHub Actions runs 818 automated tests on every change and checks the live site daily.
 \end{itemize}
 
+\section{Sub-systems and interface design}
+\begin{table}[H]
+\centering
+\caption{Sub-systems of ScamGuard and their interfaces}
+\label{tab:subsys}
+\begin{tabular}{|L{3.2cm}|L{5.8cm}|L{4.7cm}|}
+\hline
+\textbf{Sub-system} & \textbf{Responsibility} & \textbf{Interface} \\
+\hline
+Dataset builder & Collect sources, audit labels, group campaigns, split & Python script; writes one CSV file \\
+\hline
+Training pipeline & Train and compare models; register the selected one & Model registry (vectorizer and model files) \\
+\hline
+Detector & Clean, classify, apply rules, fuse, explain & Python function \texttt{predict(text)} \\
+\hline
+Back end (API) & Authentication, rate limits, storage, reports & REST over HTTPS, JSON \\
+\hline
+Front end & Quick check, analysis, dashboard, tools, Hindi & Browser; calls the REST API \\
+\hline
+Copilot & Answers follow-up questions about a scan & REST endpoint; external LLM API with a daily cap \\
+\hline
+Monitoring & Daily check of the live site & GitHub Actions workflow \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Testing}
+Testing was done at three levels.
+\begin{itemize}
+\item \textbf{Unit and integration tests.} 818 automated back-end tests cover preprocessing, the feature extractor, the model registry, the detector, the rules and every API route, and 14 front-end tests cover the main components. All of them pass.
+\item \textbf{Continuous integration.} GitHub Actions runs the back-end and front-end tests on every change before deployment.
+\item \textbf{Live checks.} A scheduled workflow sends known scam and genuine messages to the deployed site every day and checks the verdicts, history and analytics pages.
+\end{itemize}
+Model validation (held-out test set, confidence intervals and significance tests) is described in Chapters~\ref{ch:perf} and~\ref{ch:results}.
+
+\section{Project plan, resources and cost}
+Figure~\ref{fig:gantt} shows the Phase-2 implementation timeline taken from the commit history of the project repository. Problem study and literature review were done in Phase 1, before this repository was created.
+
+\begin{figure}[H]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[font=\small]
+\def\rowh{0.75}
+\foreach \d/\lab in {0/27 Sep, 2/4 Oct, 4/11 Oct, 6/18 Oct, 7.2/21 Oct} {\draw[gray!40] (\d+4.6,0.4) -- (\d+4.6,-4.1); \node[font=\footnotesize] at (\d+4.6,0.7) {\lab};}
+\foreach \y/\t/\s/\e in {
+  0/{Set-up and cloud deployment}/0/0.6,
+  1/{Core features, CI and copilot}/4.2/4.9,
+  2/{Copilot and safety tools}/5.0/5.4,
+  3/{TrustLens, tests, live monitoring}/5.8/6.3,
+  4/{Dataset, audit and retraining}/6.6/6.9,
+  5/{Paper, report and presentation}/6.6/6.9} {
+  \node[anchor=east, align=right] at (4.4,-\y*\rowh-0.2) {\t};
+  \fill[blue!55!black] (\s+4.6,-\y*\rowh-0.45) rectangle (\e+4.6+0.08,-\y*\rowh+0.05);
+}
+\end{tikzpicture}}
+\caption{Phase-2 implementation timeline (from commit dates, 27 September to 20 October 2026)}
+\label{fig:gantt}
+\end{figure}
+
+\textbf{Resources.} Hardware: the team's own laptops for development and a two-core cloud instance for serving; no GPU is needed. Software: Python, scikit-learn, FastAPI, PostgreSQL, Next.js and GitHub Actions, all open source; the public datasets are used under CC BY 4.0 and MIT licences.
+
+\textbf{Cost.} The application runs on Render's free tier and the copilot on a free API tier with a daily cap, so the recurring cost of the prototype is zero. A deployment for many users would need a paid always-on instance and a managed database, priced by the provider's current plans.
+
 % ======================================================================
 \chapter{Performance Evaluation}
+\label{ch:perf}
 
 \section{Experimental setup}
 \begin{table}[H]
@@ -473,6 +537,7 @@ We also report the area under the ROC curve (ROC-AUC), 95\% confidence intervals
 
 % ======================================================================
 \chapter{Output and Results}
+\label{ch:results}
 
 \section{Comparative analysis}
 Table~\ref{tab:final} and Figure~\ref{fig:final} give the main result. The deployed system catches 1,175 of the 1,209 test scams and passes 644 of the 665 genuine messages.
@@ -614,6 +679,58 @@ Figures~\ref{fig:s1}--\ref{fig:s8} show the deployed application.
 \textbf{Limitations.} The 2025--26 scam types are represented in testing by only 12 advisory messages. One annotator made the manual decisions. Synthetic training data shares authors with the rules. Languages other than English and Hindi are not covered, and only simple obfuscation was tested.
 
 \textbf{Future work.} Collect a larger real 2026 test set from team members, add a second annotator, extend to Kannada, Tamil and Telugu, test against paraphrased and adaptive scams, compare with small transformer models under the same split, and offer an Android share-to-check feature.
+
+\section{Mapping to course outcomes}
+Table~\ref{tab:co} relates the work to the course outcomes of Major Project Phase-2 (23CS7PWPP2), and Table~\ref{tab:copo} gives the CO--PO--PSO mapping of the course.
+
+\begin{table}[H]
+\centering
+\caption{Course outcomes and where they are addressed}
+\label{tab:co}
+\begin{tabular}{|c|L{6.6cm}|L{6.1cm}|}
+\hline
+\textbf{CO} & \textbf{Course outcome} & \textbf{Addressed in this work} \\
+\hline
+CO1 & Apply software engineering principles in planning, design and requirements within legal, societal and environmental constraints & Chapters 6--7: problem statement, architecture, sub-systems; licensed data and masking of personal data \\
+\hline
+CO2 & Apply mathematics, science and engineering to implement the project and draw conclusions with integrity & Chapter 7: mathematical model; Chapter 9: reported results with confidence intervals \\
+\hline
+CO3 & Monitor and manage schedules, resources and work assignments & Section 7.9: timeline, resources and cost \\
+\hline
+CO4 & Test and defend the performance of the implemented project & Section 7.8 and Chapters 8--9: tests, metrics and validation \\
+\hline
+CO5 & Work individually and as a team & Shared work on data, model, back end and front end \\
+\hline
+CO6 & Communicate, present and prepare technical documents & This report, the research paper and the presentation \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{CO--PO--PSO mapping of Major Project Phase-2}
+\label{tab:copo}
+\footnotesize
+\setlength{\tabcolsep}{2.6pt}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+ & \textbf{PO1} & \textbf{PO2} & \textbf{PO3} & \textbf{PO4} & \textbf{PO5} & \textbf{PO6} & \textbf{PO7} & \textbf{PO8} & \textbf{PO9} & \textbf{PO10} & \textbf{PO11} & \textbf{PO12} & \textbf{PSO1} & \textbf{PSO2} & \textbf{PSO3} \\
+\hline
+CO1 & & 2 & 2 & & & 2 & 2 & & & & & 2 & 2 & & \\
+\hline
+CO2 & 3 & & & 3 & 3 & & & 3 & & & & & & 3 & 3 \\
+\hline
+CO3 & & & & & & & & & & & 3 & & & & \\
+\hline
+CO4 & & & & & & & 1 & & & & & & & & 1 \\
+\hline
+CO5 & & & & & & & & & 1 & & & 1 & & & \\
+\hline
+CO6 & & & & & & & & & & 2 & & 2 & & & \\
+\hline
+\end{tabular}
+\end{table}
+
 
 % ======================================================================
 \clearpage
