@@ -1,7 +1,7 @@
 \documentclass[12pt,a4paper]{report}
 
 % Packages
-\usepackage{times}              % Times New Roman font
+\usepackage{mathptmx}           % Times New Roman for text and mathematics
 \usepackage{setspace}           % Line spacing
 \usepackage[a4paper, left=1.5in, right=1in, top=1in, bottom=1in]{geometry}
 \usepackage{titlesec}           % Chapter/section formatting
@@ -20,6 +20,13 @@
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 \usepackage{caption}
+\usepackage{enumitem}
+\usepackage[section]{placeins}  % keep figures and tables inside their own section
+\captionsetup{font=small, labelfont=bf, labelsep=colon, justification=centering}
+\captionsetup[table]{position=top, skip=6pt}
+\setlist{itemsep=3pt, topsep=4pt, parsep=0pt}
+\setlength{\parskip}{6pt}
+\renewcommand{\arraystretch}{1.25}
 
 % Line spacing
 \onehalfspacing
@@ -28,11 +35,14 @@
 \titleformat{\chapter}[hang]{\bfseries\centering\LARGE}{Chapter \thechapter}{1em}{}
 \titleformat{\section}[hang]{\bfseries\Large}{\thesection}{1em}{}
 \titleformat{\subsection}[hang]{\bfseries\large}{\thesubsection}{1em}{}
+\titlespacing*{\chapter}{0pt}{0pt}{24pt}
+\titlespacing*{\section}{0pt}{14pt}{8pt}
+\titlespacing*{\subsection}{0pt}{10pt}{6pt}
 
 % Fancy Header/Footer
 \pagestyle{fancy}
 \fancyhf{}
-\lhead{\textit{ScamGuard: Scam Message Detection for Indian SMS}}
+\lhead{\textit{ScamGuard: AI-Based Online Scam and Fraud Detection System}}
 \lfoot{\textit{Dept. of CSE,BMSCE}}
 \rfoot{\textit{Page \thepage}}
 
@@ -52,7 +62,7 @@
   \thispagestyle{empty}
   \centering
 
-  {\Huge \textbf{ScamGuard: Detecting Scam Messages in Indian SMS with an Audited Dataset and Explainable Machine Learning}}\\[1.0cm]
+  {\Huge \textbf{ScamGuard: AI-Based Online Scam}}\\[0.25cm]{\Huge \textbf{and Fraud Detection System}}\\[1.0cm]
   \includegraphics[width=0.18\linewidth]{VTU-Logojpg.jpg}\\[0.9cm]
   {\Large \textbf{PROJECT REPORT}}\\[0.2cm]
   {\large \textit{Submitted by}}\\[0.5cm]
@@ -79,7 +89,7 @@
 \chapter*{Certificate}
 \thispagestyle{empty}
 \vspace{2cm}
-This is to certify that the project report entitled \textbf{``ScamGuard: Detecting Scam Messages in Indian SMS with an Audited Dataset and Explainable Machine Learning''} is a bonafide work carried out by \textbf{Bhavya Goyal (USN: 1BM23CS063)}, \textbf{Priyam Thakur (USN: 1BM23CS252)}, \textbf{Samir Chaudhary (USN: 1BM23CS294)} and \textbf{Sana Subodh (USN: 1BM23CS296)} in partial fulfillment of the requirements for the award of the degree of \textbf{Bachelor of Engineering} in \textbf{Computer Science and Engineering}, under my supervision during the academic year 2026--2027.
+This is to certify that the project report entitled \textbf{``ScamGuard: AI-Based Online Scam and Fraud Detection System''} is a bonafide work carried out by \textbf{Bhavya Goyal (USN: 1BM23CS063)}, \textbf{Priyam Thakur (USN: 1BM23CS252)}, \textbf{Samir Chaudhary (USN: 1BM23CS294)} and \textbf{Sana Subodh (USN: 1BM23CS296)} in partial fulfillment of the requirements for the award of the degree of \textbf{Bachelor of Engineering} in \textbf{Computer Science and Engineering}, under my supervision during the academic year 2026--2027.
 
 \vspace{2cm}
 \begin{flushleft}
@@ -104,10 +114,12 @@ This project replaces that foundation. We built ScamGuard-IN-2026, a corpus of 1
 
 The detector is a logistic-regression classifier over word and character TF-IDF features, combined with 31 interpretable intent patterns that explain each verdict by highlighting the exact phrases that make a message risky. On 1,874 held-out real messages from unseen campaigns, the classifier reaches an F1-score of 98.1\% with a 2.6\% false-alarm rate, and the deployed system reaches 97.1\% accuracy against 78.8\% for the earlier model. Training on unverified report labels instead of audited labels raises the false-alarm rate to 34.0\%. The detector is part of a working web application with a FastAPI back end and a Next.js front end, which offers a quick check without sign-in, a full analysis with phrase-level explanations, an AI copilot, safety tools for QR codes, UPI requests and files, scan history and analytics. The application is deployed on Render, and every number in this report can be reproduced from the project repository.
 
+\vspace{0.4cm}\noindent\textbf{Keywords:} scam detection, smishing, SMS fraud, machine learning, natural language processing, label noise, data leakage, explainable AI
+
 %-------------Declaration ----------
 \chapter*{DECLARATION}
 \thispagestyle{empty}
-We hereby declare that the Major Project Phase-2 work entitled ``ScamGuard: Detecting Scam Messages in Indian SMS with an Audited Dataset and Explainable Machine Learning'' is a bonafide work and has been carried out by us under the guidance of Dr. Kayarvizhy N, Professor, Department of Computer Science and Engineering, B.M.S. College of Engineering, Bengaluru, in partial fulfillment of the requirements of the degree of Bachelor of Engineering in Computer Science and Engineering of Visvesvaraya Technological University, Belagavi.
+We hereby declare that the Major Project Phase-2 work entitled ``ScamGuard: AI-Based Online Scam and Fraud Detection System'' is a bonafide work and has been carried out by us under the guidance of Dr. Kayarvizhy N, Professor, Department of Computer Science and Engineering, B.M.S. College of Engineering, Bengaluru, in partial fulfillment of the requirements of the degree of Bachelor of Engineering in Computer Science and Engineering of Visvesvaraya Technological University, Belagavi.
 We further declare that, to the best of our knowledge and belief, this project has not been submitted either in part or in full to any other university for the award of any degree.
 \vspace{0.3cm}
 \begin{flushleft}
@@ -133,7 +145,7 @@ Candidate details:
 Place: Bengaluru \\
 Date: \\
 \end{flushleft}
-Certified that these candidates are students of Computer Science and Engineering Department of B.M.S. College of Engineering. They have carried out the project work titled ``ScamGuard: Detecting Scam Messages in Indian SMS with an Audited Dataset and Explainable Machine Learning'' as Major Project Phase-2 work. It is in partial fulfillment for completing the requirement for the award of B.E. degree by VTU. The work is original and we duly certify the same.
+Certified that these candidates are students of Computer Science and Engineering Department of B.M.S. College of Engineering. They have carried out the project work titled ``ScamGuard: AI-Based Online Scam and Fraud Detection System'' as Major Project Phase-2 work. It is in partial fulfillment for completing the requirement for the award of B.E. degree by VTU. The work is original and we duly certify the same.
 \vspace{1cm}
 \begin{flushleft}
 Guide Name: Dr. Kayarvizhy N\\
@@ -227,7 +239,7 @@ The proposed system makes three changes.
 \section{Work Plan}
 Table~\ref{tab:workplan} shows the work plan across the two project phases.
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption{Work plan}
 \label{tab:workplan}
@@ -276,7 +288,7 @@ We reviewed work on SMS spam corpora, smishing detection, report-based measureme
 
 Table~\ref{tab:lit} summarises the most relevant studies.
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption{Summary of related work}
 \label{tab:lit}
@@ -312,7 +324,7 @@ The survey points to four gaps.
 \end{enumerate}
 
 \section{Mapping of Objectives with Research Gap Identification}
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption{Mapping of objectives to research gaps}
 \label{tab:mapping}
@@ -360,7 +372,7 @@ The survey points to four gaps.
 \end{itemize}
 
 \section{Hardware Requirements}
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption{Hardware requirements}
 \begin{tabular}{|p{4cm}|p{9.5cm}|}
@@ -379,7 +391,7 @@ Client & Any browser on a phone or computer \\
 \end{table}
 
 \section{Software Requirements}
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption{Software requirements}
 \begin{tabular}{|p{4cm}|p{9.5cm}|}
@@ -426,7 +438,7 @@ The project was built and deployed with free resources. Development used the tea
 The first version of ScamGuard was trained on the SMS Spam Collection plus a small set of Indian examples written by the team. On real Indian genuine messages it flagged 48.9\% as scams. The cause was the data: in the 2011 corpus, a message that asks the user to ``send SMS to'' a short number or ``visit'' a link is almost always spam, so genuine Indian service notices with the same shape looked like spam to the model. Our guide asked for a dataset that reflects current Indian scams, so we removed the old corpus from the project completely and built a new one.
 
 \subsection{Sources}
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption{Sources of ScamGuard-IN-2026}
 \label{tab:sources}
@@ -467,7 +479,7 @@ After the audit, 963 of 4,950 retained IMC rows (19.5\%) are genuine: debit and 
 \subsection{Campaigns and splits}
 Messages are grouped into campaigns when their MinHash-estimated Jaccard similarity over word 3-shingles is at least 0.6. The 6,662 real messages form 4,085 campaigns; the largest has 128 messages and the largest 1\% of campaigns hold 14\% of real messages. Each campaign goes entirely to training (60\%), development (15\%) or test (25\%), chosen by a hash of its first message. Table~\ref{tab:splits} gives the final counts.
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption{Dataset splits}
 \label{tab:splits}
@@ -489,7 +501,7 @@ Test & 665 & 1,209 & real only, unseen campaigns \\
 \section{Flow Chart Of Methodology From Start To End}
 Figure~\ref{fig:flow} shows the methodology from data collection to deployment, and Figure~\ref{fig:arch} the architecture of the deployed system.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \begin{tikzpicture}[node distance=5mm,
   box/.style={draw, rounded corners=2pt, align=center, font=\small, minimum width=6.5cm, minimum height=8mm, fill=white},
@@ -510,7 +522,7 @@ Figure~\ref{fig:flow} shows the methodology from data collection to deployment, 
 \label{fig:flow}
 \end{figure}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \resizebox{\linewidth}{!}{%
 \begin{tikzpicture}[
@@ -606,7 +618,7 @@ A false positive is a genuine message wrongly flagged, which is the error users 
 Models were selected on the development split and then trained on the training and development splits together (9,573 messages). All results below are on the real test split: 1,874 messages (665 genuine, 1,209 scams) from campaigns never seen in training. We also report a 259-message challenge set that the team wrote while designing the rules; because the same people wrote both, it is a development check, not an independent test. Experiments ran on a two-core Intel Xeon at 2.8~GHz with Python 3.13 and scikit-learn 1.7.2. One script produces every table.
 
 \section{Old system versus new system}
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption{Deployed system before and after the new dataset (real test set, \%)}
 \label{tab:oldnew}
@@ -621,7 +633,7 @@ v4: ScamGuard-IN-2026 & \textbf{97.1} & \textbf{98.2} & \textbf{97.2} & \textbf{
 \end{tabular}
 \end{table}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.62\linewidth]{figures/old_vs_new.pdf}
 \caption{Old and new system on the real test set}
@@ -631,7 +643,7 @@ v4: ScamGuard-IN-2026 & \textbf{97.1} & \textbf{98.2} & \textbf{97.2} & \textbf{
 The old system caught most scams but flagged almost half of the genuine messages. The new system keeps recall high and reduces false alarms by a factor of fifteen. The 95\% confidence interval of the new accuracy is 96.3--97.8\%, and of its false-alarm rate 2.0--4.6\%.
 
 \section{Comparison of models and features}
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption{Classifiers on the real test set (\%); ``Challenge'' is F1 on the 259 team-written messages}
 \label{tab:models}
@@ -662,7 +674,7 @@ Random forest & word + char & 97.6 & 3.3 & 73.9 \\
 Logistic regression with word and character features gives the lowest false-alarm rate among the strong models with an F1 of 98.1\%. The SVM's F1 is 0.1 points higher, but it flags 3.9\% of genuine messages. We chose logistic regression, which also gives readable word-level explanations.
 
 \section{Effect of the label audit}
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.55\linewidth]{figures/label_audit.pdf}
 \caption{False-alarm rate with report labels and with audited labels}
@@ -673,7 +685,7 @@ Training the same model with every reported message labelled as a scam gives 99.
 \section{Effect of the split and of synthetic data}
 With a random split of the real data, 793 test messages had a near-duplicate in training. The random split gave an F1 of 98.3\% and a 0.8\% false-alarm rate; the campaign-aware split gave 97.7\% and 1.4\%. The random split hides nearly half of the false alarms.
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption{Effect of the training data (logistic regression, word + char, \%)}
 \label{tab:train}
@@ -692,7 +704,7 @@ Real + synthetic & 98.1 & 2.6 & 82.2 & 90.2 \\
 Synthetic messages alone do not resemble real Indian SMS closely enough. Real messages alone miss most of the newest scam types. Together they keep real-data F1 at 98.1\% and raise challenge F1 from 51.2\% to 90.2\%, at the cost of a slightly higher false-alarm rate.
 
 \section{Value of the intent rules}
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption{Classifier alone and with fusion (\%)}
 \label{tab:fusion}
@@ -711,13 +723,13 @@ Learned fusion weights & 98.3 & 2.3 & 91.2 \\
 On real messages from unseen campaigns, the hand-weighted rules do not improve accuracy and add a few false alarms. On the team's own challenge messages they look much better. Learned fusion weights are significantly better than the hand-set ones on real data ($p=0.002$). We keep the rules in the application because they produce the phrase-level explanations and cover 2025--26 scam types that the real training data barely contains, but we do not claim that they improve accuracy.
 
 \section{Operating point and errors}
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.95\linewidth]{figures/roc_pr.pdf}
 \caption{ROC and precision-recall curves on the real test set}
 \label{fig:rocpr}
 \end{figure}
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.7\linewidth]{figures/confusion.pdf}
 \caption{(a) Confusion matrix of the deployed system; (b) recall and false-alarm rate by threshold}
@@ -783,32 +795,37 @@ The result is a deployed application that answers in milliseconds, explains ever
 \setcounter{figure}{0}\setcounter{table}{0}
 \renewcommand{\thechapter}{\Alph{chapter}}
 \renewcommand{\thesection}{\Roman{section}}
-\section {Appendix A: Snapshots}
-\begin{figure}[H]\centering\includegraphics[width=0.92\linewidth]{shots/01_landing.jpg}\caption{Home page with the quick check}\end{figure}
-\begin{figure}[H]\centering\includegraphics[width=0.92\linewidth]{shots/02_quick_scam.jpg}\caption{Quick check of a fake KYC message: verdict, matched tactics, known pattern and Scam X-Ray}\end{figure}
-\begin{figure}[H]\centering\includegraphics[width=0.92\linewidth]{shots/03_quick_genuine.jpg}\caption{Quick check of a genuine operator notice about the 1909 helpline: ``Looks genuine'' with the TrustLens reason}\end{figure}
-\begin{figure}[H]\centering\includegraphics[width=0.92\linewidth]{shots/05_analyze_result.jpg}\caption{Full analysis of a scam message for a signed-in user}\end{figure}
-\begin{figure}[H]\centering\includegraphics[width=0.92\linewidth]{shots/07_analyze_trustlens.jpg}\caption{TrustLens: scam journey, recommended actions and how a genuine message differs}\end{figure}
-\begin{figure}[H]\centering\includegraphics[width=0.92\linewidth]{shots/08_dashboard.jpg}\caption{Dashboard with priority findings and recent scans}\end{figure}
-\begin{figure}[H]\centering\includegraphics[width=0.92\linewidth]{shots/09_history.jpg}\caption{Scan history with search, filters and export}\end{figure}
-\begin{figure}[H]\centering\includegraphics[width=0.92\linewidth]{shots/10_analytics.jpg}\caption{Analytics: verdict share, distribution and score trend}\end{figure}
-\begin{figure}[H]\centering\includegraphics[width=0.92\linewidth]{shots/11_tools.jpg}\caption{Safety tools: QR code check, before-you-pay, file check and chat timeline}\end{figure}
-\begin{figure}[H]\centering\includegraphics[width=0.92\linewidth]{shots/12_simulator.jpg}\caption{Scam simulator for practice}\end{figure}
+\section*{Appendix A: Snapshots}
+\addcontentsline{toc}{section}{Appendix A: Snapshots}
+\begin{figure}[H]\centering\fbox{\includegraphics[width=0.82\linewidth]{shots/01_landing.jpg}}\caption{Home page with the quick check}\end{figure}
+\begin{figure}[H]\centering\fbox{\includegraphics[width=0.82\linewidth]{shots/02_quick_scam.jpg}}\caption{Quick check of a fake KYC message: verdict, matched tactics, known pattern and Scam X-Ray}\end{figure}
+\begin{figure}[H]\centering\fbox{\includegraphics[width=0.82\linewidth]{shots/03_quick_genuine.jpg}}\caption{Quick check of a genuine operator notice about the 1909 helpline: ``Looks genuine'' with the TrustLens reason}\end{figure}
+\begin{figure}[H]\centering\fbox{\includegraphics[width=0.82\linewidth]{shots/05_analyze_result.jpg}}\caption{Full analysis of a scam message for a signed-in user}\end{figure}
+\begin{figure}[H]\centering\fbox{\includegraphics[width=0.82\linewidth]{shots/07_analyze_trustlens.jpg}}\caption{TrustLens: scam journey, recommended actions and how a genuine message differs}\end{figure}
+\begin{figure}[H]\centering\fbox{\includegraphics[width=0.82\linewidth]{shots/08_dashboard.jpg}}\caption{Dashboard with priority findings and recent scans}\end{figure}
+\begin{figure}[H]\centering\fbox{\includegraphics[width=0.82\linewidth]{shots/09_history.jpg}}\caption{Scan history with search, filters and export}\end{figure}
+\begin{figure}[H]\centering\fbox{\includegraphics[width=0.82\linewidth]{shots/10_analytics.jpg}}\caption{Analytics: verdict share, distribution and score trend}\end{figure}
+\begin{figure}[H]\centering\fbox{\includegraphics[width=0.82\linewidth]{shots/11_tools.jpg}}\caption{Safety tools: QR code check, before-you-pay, file check and chat timeline}\end{figure}
+\begin{figure}[H]\centering\fbox{\includegraphics[width=0.82\linewidth]{shots/12_simulator.jpg}}\caption{Scam simulator for practice}\end{figure}
 \clearpage
-\section {Appendix B: Details of list of publications related to this project}
+\section*{Appendix B: Details of list of publications related to this project}
+\addcontentsline{toc}{section}{Appendix B: Details of list of publications related to this project}
 \large{Author Names: } Kayarvizhy N, Priyam Thakur, Bhavya Goyal, Samir Chaudhary, Sana Subodh \\
-\large{Paper Title: } Reported Is Not Scam: An Audited, Campaign-Split Corpus and a Hybrid Detector for Indian SMS Fraud \\
+\large{Paper Title: } ScamGuard: AI-Based Online Scam and Fraud Detection System \\
 \large {Name of the Conference or Journal:} To be decided (manuscript prepared in IEEE conference format) \\
 \large {Place of the conference:} -- \\
 \large {Date of Conference:} --
 \clearpage
-\section {Appendix C: Details of Patent}
+\section*{Appendix C: Details of Patent}
+\addcontentsline{toc}{section}{Appendix C: Details of Patent}
 No patent has been filed for this project.
 \clearpage
-\section {Appendix D: Details of Funding}
+\section*{Appendix D: Details of Funding}
+\addcontentsline{toc}{section}{Appendix D: Details of Funding}
 The project received no external funding. It was built with free cloud tiers and open-source software.
 \clearpage
-\section {Appendix E:POs and PSOs Mapped}
+\section*{Appendix E:POs and PSOs Mapped}
+\addcontentsline{toc}{section}{Appendix E:POs and PSOs Mapped}
 \begin{table}[h!]
 \centering
 \renewcommand{\arraystretch}{1.3}
@@ -864,7 +881,8 @@ PSO3 & 3 & Integrates machine learning, NLP and information systems into a deplo
 \end{table}
 \clearpage
 
-\section {Appendix F: Similarity report, AI Generated report}
+\section*{Appendix F: Similarity report, AI Generated report}
+\addcontentsline{toc}{section}{Appendix F: Similarity report, AI Generated report}
 To be attached after the department's similarity and AI-content check.
 \clearpage
 
