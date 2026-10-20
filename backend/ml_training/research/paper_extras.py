@@ -186,21 +186,6 @@ def _figures(E, p, f, y, sizes) -> int:
     ax.set(xlabel="Campaign rank", ylabel="Messages in campaign")
     save(fig, "campaigns")
 
-    fig, ax = plt.subplots(figsize=(3.3, 2.7))
-    e6, e5 = R["E6_legacy_v3"]["real_test"]["fused"], R["E5_fusion"]["real_test"]["hand_fusion_v3"]
-    labels = ["Accuracy", "F1", "False alarms"]
-    old = [100 * e6["accuracy"], 100 * e6["f1"], 100 * e6["fpr"]]
-    new = [100 * e5["accuracy"], 100 * e5["f1"], 100 * e5["fpr"]]
-    x = np.arange(3)
-    ax.bar(x - 0.18, old, 0.36, color=GREY, label="v3 (UCI 2011)")
-    ax.bar(x + 0.18, new, 0.36, color=ACC, label="v4 (ScamGuard-IN-2026)")
-    for i in range(3):
-        ax.text(i - 0.18, old[i] + 1, f"{old[i]:.1f}", ha="center", fontsize=7)
-        ax.text(i + 0.18, new[i] + 1, f"{new[i]:.1f}", ha="center", fontsize=7)
-    ax.set_xticks(x, labels)
-    ax.set(ylabel="%", ylim=(0, 110))
-    ax.legend(frameon=False, loc="upper center", ncol=2, bbox_to_anchor=(0.5, -0.14))
-    save(fig, "old_vs_new")
 
     tp, fp_, fn, tn = (int(((f >= .5) & (y == 1)).sum()), int(((f >= .5) & (y == 0)).sum()), int(((f < .5) & (y == 1)).sum()), int(((f < .5) & (y == 0)).sum()))
     with plt.rc_context({"font.size": 7, "legend.fontsize": 6.5}):

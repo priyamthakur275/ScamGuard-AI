@@ -1,17 +1,18 @@
 # ScamGuard-IN-2026: datasheet
 
 A labelled corpus of Indian SMS for scam-vs-genuine classification, built for the
-ScamGuard project (BMS College of Engineering). It replaces the 2011 UK SMS Spam
-Collection used by model v3, which has been removed from the project.
+ScamGuard project (BMS College of Engineering). It is the only dataset used to train
+and evaluate the ScamGuard model.
 
 Build it with `python -m ml_training.datasets.scamguard_in_2026.build` (needs the raw
 sources, see `fetch_sources.sh`). The build is deterministic: the same sources give a
 byte-identical `scamguard_in_2026.csv`.
 
-## Why a new dataset
+## Why this dataset
 
-* The UCI SMS Spam Collection (2011, UK) labels premium-rate promotions as spam. It has no
-  KYC, UPI, digital-arrest, e-challan or task scams, no Indian bank alerts and no Hindi.
+* Indian scams (KYC, UPI, digital arrest, e-challan, task jobs) and Indian genuine
+  messages (bank alerts, OTPs, operator notices, Hindi) share most of their vocabulary,
+  so a detector needs real examples of both.
 * Public Indian "scam/ham" sets on Hugging Face are synthetic with undocumented
   generation; the India Spam SMS set labels brand promotions as spam, not scams.
 * No public, labelled, real 2025-26 Indian scam *and* genuine SMS corpus exists (checked

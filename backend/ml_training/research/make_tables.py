@@ -34,11 +34,9 @@ def main() -> int:
     d = R["dataset"]
     out += ["## Dataset", "", f"{d['rows']} rows. By split and label: " + ", ".join(f"{k.replace('|', ' ')} {v}" for k, v in d["by_split_label"].items()) + ".", ""]
 
-    out += ["## E6 + E5. Old system vs new system (final verdict)", "", HEAD]
+    out += ["## Deployed system (classifier + intent rules)", "", HEAD]
     for k, name in (("real_test", "real test"), ("challenge", "dev challenge set"), ("test_2026", "2025-26 set")):
-        if k in R.get("E6_legacy_v3", {}):
-            out.append(row(f"v3 (UCI 2011 + supplement, hand fusion) - {name}", R["E6_legacy_v3"][k]["fused"]))
-        out.append(row(f"v4 (ScamGuard-IN-2026, hand fusion) - {name}", R["E5_fusion"][k]["hand_fusion_v3"]))
+        out.append(row(f"deployed system - {name}", R["E5_fusion"][k]["hand_fusion"]))
     out.append("")
 
     out += ["## E1. Near-duplicate leakage (same data, same model)", "", HEAD]
@@ -67,7 +65,7 @@ def main() -> int:
     out += ["## E5. Evidence fusion", "", HEAD]
     for k in ("real_test", "challenge", "test_2026"):
         if k in R["E5_fusion"]:
-            for n in ("classifier", "hand_fusion_v3", "learned_fusion_v4"):
+            for n in ("classifier", "hand_fusion", "learned_fusion"):
                 out.append(row(f"{n} - {k}", R["E5_fusion"][k][n]))
     out += ["", f"McNemar learned vs hand fusion on real test: {R['E5_fusion']['real_test']['mcnemar_learned_vs_hand']}", ""]
     w = R["E5_fusion"]["learned_weights"]

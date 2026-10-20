@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 HERE = pathlib.Path(__file__).parent
 plt.rcParams.update({"font.family": "serif", "font.serif": ["Liberation Serif", "Times New Roman", "TeX Gyre Termes", "DejaVu Serif"], "font.size": 10})
 r = json.load(open(HERE / "results.json"))["E5_fusion"]["real_test"]
-systems = [("Classifier only", r["classifier"], "#9AA0A6"), ("Deployed system", r["hand_fusion_v3"], "#1F2A44"), ("Learned fusion", r["learned_fusion_v4"], "#C0392B")]
+systems = [("Classifier only", r["classifier"], "#9AA0A6"), ("Deployed system", r["hand_fusion"], "#1F2A44"), ("Learned fusion", r["learned_fusion"], "#C0392B")]
 metrics = [("Accuracy", "accuracy"), ("Precision", "precision"), ("Recall", "recall"), ("F1-score", "f1")]
 fig, ax = plt.subplots(figsize=(6.4, 3.2))
 w = 0.26

@@ -11,7 +11,6 @@ E2  Model and feature comparison on the campaign-aware real test set
 E3  Training-data ablation: synthetic only / real only / real + synthetic
 E4  Label-audit ablation: IMC'25 "reported = scam" labels vs audited labels
 E5  Evidence fusion: classifier alone vs classifier + ThreatScorer (intent rules + genuine guards)
-E6  Legacy baseline: the previous production model (UCI SMS Spam + supplement, v3) on the new test sets
 """
 
 from __future__ import annotations
@@ -233,7 +232,7 @@ def main(argv=None) -> int:
                            "mcnemar_real_test": mcnemar(s_aud["real_test"].y, s_aud["real_test"].p, s_raw["real_test"].p)}
     print("E4", {k: round(v["real_test"]["fpr"], 4) for k, v in R["E4_label_audit"].items() if k != "mcnemar_real_test"})
 
-    # E5 fusion: classifier alone vs hand-weighted rules (v3) vs learned fusion (v4)
+    # E5 fusion: classifier alone vs hand-weighted rules (deployed) vs learned fusion weights
     from ml_service.inference.learned_fusion import fit as fit_fusion
     p_oof = oof_probs(train)
     lf = fit_fusion(train.text.tolist(), p_oof.tolist(), (train.label == "scam").astype(int).tolist())
@@ -242,37 +241,11 @@ def main(argv=None) -> int:
         y, p = s_aud[k].y, s_aud[k].p
         hand = fused(d.text.tolist(), p)
         learned = np.array([lf.score(t, q) for t, q in zip(d.text, p)])
-        R["E5_fusion"][k] = {"classifier": Scores(y, p).metrics(boot=boot), "hand_fusion_v3": Scores(y, hand).metrics(boot=boot),
-                             "learned_fusion_v4": Scores(y, learned).metrics(boot=boot),
+        R["E5_fusion"][k] = {"classifier": Scores(y, p).metrics(boot=boot), "hand_fusion": Scores(y, hand).metrics(boot=boot),
+                             "learned_fusion": Scores(y, learned).metrics(boot=boot),
                              "mcnemar_learned_vs_classifier": mcnemar(y, learned, p), "mcnemar_learned_vs_hand": mcnemar(y, learned, hand)}
         print("E5", k, {n: (round(R["E5_fusion"][k][n]["f1"], 4), round(R["E5_fusion"][k][n]["fpr"], 4))
-                        for n in ("classifier", "hand_fusion_v3", "learned_fusion_v4")})
-
-    # E6 legacy model
-    try:
-        from ml_common.registry.model_registry import ModelRegistry
-        from ml_service.inference.inference_engine import InferenceEngine
-        # v3 was trained with the v3 preprocessing (no bare-domain URLs, no Devanagari); restore it for a fair comparison.
-        import re as _re
-        import ml_common.preprocessing.text_cleaner as _tc
-        import ml_common.preprocessing.tokenizer as _tk
-        saved = (_tc._URL_PATTERN, _tc._PUNCTUATION_PATTERN, _tk._TOKEN_PATTERN)
-        _tc._URL_PATTERN = _re.compile(r"https?://\S+|www\.\S+")
-        _tc._PUNCTUATION_PATTERN = _re.compile(r"[^\w\s]")
-        _tk._TOKEN_PATTERN = _re.compile(r"[a-zA-Z_]+")
-        eng = InferenceEngine(ModelRegistry(root_dir=os.path.join(HERE, "..", "..", "artifacts")), TextPreprocessingPipeline(), "svm")
-        eng._version = "v3"  # noqa: SLF001 - pin the legacy model explicitly
-        eng.load()
-        if eng.version_info.version == "v3":
-            R["E6_legacy_v3"] = {}
-            for k, d in tests.items():
-                p = np.array([eng.predict(t).scam_probability for t in d.text])
-                y = (d.label == "scam").astype(int).values
-                R["E6_legacy_v3"][k] = {"classifier": Scores(y, p).metrics(boot=0), "fused": Scores(y, fused(d.text.tolist(), p)).metrics(boot=0)}
-            print("E6", {k: round(v["fused"]["f1"], 4) for k, v in R["E6_legacy_v3"].items()})
-        _tc._URL_PATTERN, _tc._PUNCTUATION_PATTERN, _tk._TOKEN_PATTERN = saved
-    except Exception:  # noqa: BLE001 - v3 and its UCI training data were removed; use the frozen scores
-        R["E6_legacy_v3"] = json.load(open(os.path.join(HERE, "results_legacy_v3.json")))["E6_legacy_v3"]
+                        for n in ("classifier", "hand_fusion", "learned_fusion")})
 
     with open(os.path.join(HERE, "results.json"), "w") as fh:
         json.dump(R, fh, indent=1)
