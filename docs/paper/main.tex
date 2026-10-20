@@ -362,7 +362,7 @@ The deployed score has a ROC-AUC of 0.995 and an average precision of 0.997 on t
 
 To measure robustness, we obfuscated 837 test scams that contained keywords such as KYC, PAN, OTP or SIM, using dotted, spaced and digit-substituted spellings. Recall fell from 99.4\% to 98.9\% with word features alone and to 99.3\% with combined features. The character n-grams help, but the effect on this test is small.
 
-The model and vectorizer occupy 0.28~MB and 1.29~MB. Training takes 2.7~s. Scoring one message takes 2.0~ms for the classifier and 4.1~ms including the intent layer on the hardware above.
+The model and vectorizer occupy 0.28~MB and 1.29~MB. Training takes 2.7~s. Scoring one message takes 1.7~ms for the classifier and 3.8~ms including the intent layer on the hardware above.
 
 \begin{figure*}[t]
 \centering
