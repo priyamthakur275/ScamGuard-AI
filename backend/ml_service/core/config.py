@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     API_V1_PREFIX: str = "/api/v1"
 
     ARTIFACTS_DIR: str = _DEFAULT_ARTIFACTS
-    PRODUCTION_MODEL_NAME: str = "svm"
+    PRODUCTION_MODEL_NAME: str = "logistic_regression"
 
     RATE_LIMIT_DEFAULT: str = "200/minute"
     RATE_LIMIT_PREDICT: str = "60/minute"

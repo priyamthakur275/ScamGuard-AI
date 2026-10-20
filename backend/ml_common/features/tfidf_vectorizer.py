@@ -11,6 +11,10 @@ from dataclasses import dataclass
 import joblib
 from scipy.sparse import csr_matrix
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.pipeline import FeatureUnion
+
+# Prefix for character n-gram feature names, so explanations can show words only.
+CHAR_FEATURE_PREFIX = "~"
 
 
 class VectorizerNotFittedError(Exception):
@@ -24,6 +28,11 @@ class TfidfConfig:
     min_df: int = 1
     max_df: float = 0.95
     sublinear_tf: bool = True
+    # Optional character n-grams (within word boundaries), added next to the word
+    # n-grams. They make the model robust to obfuscation ("K.Y.C", "bl0cked",
+    # "S I M") and to Hinglish spelling variation. None = word n-grams only.
+    char_ngram_range: tuple[int, int] | None = None
+    char_max_features: int = 60000
 
 
 class TfidfFeatureExtractor:
@@ -34,13 +43,24 @@ class TfidfFeatureExtractor:
 
     def __init__(self, config: TfidfConfig | None = None):
         self._config = config or TfidfConfig()
-        self._vectorizer = TfidfVectorizer(
+        self._words = TfidfVectorizer(
             max_features=self._config.max_features,
             ngram_range=self._config.ngram_range,
             min_df=self._config.min_df,
             max_df=self._config.max_df,
             sublinear_tf=self._config.sublinear_tf,
         )
+        if self._config.char_ngram_range:
+            chars = TfidfVectorizer(
+                analyzer="char_wb",
+                ngram_range=self._config.char_ngram_range,
+                max_features=self._config.char_max_features,
+                min_df=self._config.min_df,
+                sublinear_tf=self._config.sublinear_tf,
+            )
+            self._vectorizer = FeatureUnion([("w", self._words), ("c", chars)])
+        else:
+            self._vectorizer = self._words
         self._is_fitted = False
 
     def fit_transform(self, preprocessed_texts: list[str]) -> csr_matrix:
@@ -56,12 +76,12 @@ class TfidfFeatureExtractor:
         training batch crash the whole pipeline, widen max_df to 1.0 for
         corpora too small for the configured fraction to make sense.
         """
-        max_df = self._vectorizer.max_df
-        min_df = self._vectorizer.min_df
+        max_df = self._words.max_df
+        min_df = self._words.min_df
         if isinstance(max_df, float) and document_count > 0:
             effective_max_docs = max_df * document_count
             if effective_max_docs < min_df:
-                self._vectorizer.max_df = 1.0
+                self._words.max_df = 1.0
 
     def transform(self, preprocessed_texts: list[str]) -> csr_matrix:
         if not self._is_fitted:
@@ -75,6 +95,12 @@ class TfidfFeatureExtractor:
     def get_feature_names(self) -> list[str]:
         if not self._is_fitted:
             raise VectorizerNotFittedError("Vectorizer has not been fitted yet")
+        if isinstance(self._vectorizer, FeatureUnion):
+            names = []
+            for n in self._vectorizer.get_feature_names_out():
+                kind, _, feat = n.partition("__")
+                names.append(feat if kind == "w" else CHAR_FEATURE_PREFIX + feat)
+            return names
         return list(self._vectorizer.get_feature_names_out())
 
     def save(self, path: str) -> None:

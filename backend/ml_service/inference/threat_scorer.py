@@ -194,7 +194,7 @@ def is_genuine_transaction(text: str, found: dict[str, float], protective: dict[
     flat = " ".join(text.split())
     if not (_TXN_FORM.search(flat) and _TXN_ANCHOR.search(flat)):
         return False
-    if _TXN_BLOCKERS.search(flat):
+    if (_TXN_BLOCKERS.search(flat) or _ACTION_CUE.search(flat)):
         return False
     if _OTP_WORD.search(flat) and "warns_not_to_share" not in protective:
         return False
@@ -268,7 +268,7 @@ def is_genuine_notice(text: str, found: dict[str, float], protective: dict[str, 
     allowed = {"impersonation", "deadline"} | ({"suspicious_link", "link_with_action"} if report_notice else set())
     if set(found) - allowed:
         return False
-    if _NOTICE_BLOCKERS.search(flat) or not _links_are_safe(flat, report_notice):
+    if (_NOTICE_BLOCKERS.search(flat) or _ACTION_CUE.search(flat)) or not _links_are_safe(flat, report_notice):
         return False
     if _OTP_WORD.search(flat) and not ({"warns_not_to_share", "delivery_otp"} & protective.keys()):
         return False
@@ -288,14 +288,24 @@ _HANDOVER_CUE = re.compile(
 )
 
 
-def _real_secret_request(text: str) -> bool:
-    """True when some sentence actually asks for an OTP/PIN/password: one
-    without its own "never / do not" and that is not a delivery or ride
-    handover. Scammers put "never share your OTP" in front of a real request
-    ("...To avoid suspension, share the OTP with our officer") to look
+# A call to act on a "credited / approved" claim: real status updates never ask you to
+# register, verify or apply to receive something.
+_ACTION_CUE = re.compile(
+    r"\b(verify your|register (now|here|to)|register\b[^.?!]{0,20}\b(to use|to receive|to withdraw)|apply now|"
+    r"check (now|status|the status|your (loan|amount|status|balance) here)|submit (a |the |your )?(request|details|form)|"
+    r"enter your|confirm (now|few details|your details)|claim (it|now|your)|download (now|and register|the app)|to receive (the |your )?(amount|money|payment)|withdraw (it )?now)\b",
+    re.I,
+)
+
+
+def _real_secret_request(text: str, intent: str = "asks_for_secret") -> bool:
+    """True when some sentence actually asks for an OTP/PIN/password (or card
+    details): one without its own "never / do not" and that is not a delivery
+    or ride handover. Scammers put "never share your OTP" in front of a real
+    request ("...To avoid suspension, share the OTP with our officer") to look
     official, so a warning elsewhere in the message must not cancel it."""
     for name, _w, rx in _INTENTS:
-        if name != "asks_for_secret":
+        if name != intent:
             continue
         for m in rx.finditer(text):
             start = max(text.rfind(c, 0, m.start()) for c in ".?!") + 1
@@ -347,9 +357,15 @@ class ThreatScorer:
             found["decoy_warning"] = 0.3
         if "block_instruction" in protective:
             found.pop("account_threat", None)
+        # "Don't share your card details": a warning, not a request.
+        if "asks_card_details" in found and not _real_secret_request(text, "asks_card_details"):
+            found.pop("asks_card_details", None)
+        # "Rs 50,000 credited / loan approved. Verify your details to get it": not a status update.
+        if "status_update" in protective and _ACTION_CUE.search(text):
+            protective.pop("status_update", None)
         # A copied bank-alert format is no comfort when the text also asks for
         # something (fake "credited by mistake" or refund SMS).
-        if found.keys() & _ALERT_OVERRIDES or _TXN_BLOCKERS.search(text):
+        if found.keys() & _ALERT_OVERRIDES or (_TXN_BLOCKERS.search(text) or _ACTION_CUE.search(text)):
             protective.pop("transaction_alert", None)
         return found, protective
 

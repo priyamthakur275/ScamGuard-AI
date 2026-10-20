@@ -11,7 +11,8 @@ reliability -- the right trade for a production inference path.
 import re
 from dataclasses import dataclass, field
 
-_TOKEN_PATTERN = re.compile(r"[a-zA-Z_]+")
+# Latin words and Devanagari words (Hindi SMS scams are common; before v4 they were dropped entirely).
+_TOKEN_PATTERN = re.compile(r"[a-zA-Z_]+|[\u0900-\u0963\u0966-\u097F]+")
 
 # A standard, fixed English stopword list (bundled, not downloaded at
 # runtime). Kept intentionally close to the classic SMART/NLTK list.
