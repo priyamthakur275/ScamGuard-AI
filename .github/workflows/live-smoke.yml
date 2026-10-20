@@ -105,7 +105,32 @@ jobs:
               assert d["verdict"] == "legitimate", f"genuine Airtel notice flagged at {d['threat_score']:.2f}"
               return f"genuine Airtel 1909 notice: legitimate at {d['threat_score']:.2f}"
 
+          def verdicts():
+              cases = [
+                  ("legitimate", "Rs.2,450.00 debited from A/c XX4521 on 18-10-26 to VPA swiggy@icici. UPI Ref 629104837261. Not you? Call 18001234 -HDFC Bank"),
+                  ("legitimate", "482913 is your OTP for login on Amazon. Do not share it with anyone."),
+                  ("legitimate", "Your Flipkart order is out for delivery. Share OTP 4821 with the delivery agent only at the time of delivery."),
+                  ("legitimate", "Bhai kal ka plan kya hai? Movie chalein?"),
+                  ("legitimate", "Hi, your Urban Company professional will arrive between 3 and 4 pm today."),
+                  ("scam", "Dear SBI user your YONO account will be blocked today. Update PAN now: http://sbi-kyc-update.xyz"),
+                  ("scam", "This is CBI. A parcel in your name with drugs was seized. You are under digital arrest. Stay on video call and do not tell anyone."),
+                  ("scam", "Congrats, your 98XXXX21 is selected for Rs 5000 directly in your account. Register now to use it"),
+                  ("scam", "प्रिय उपभोक्ता, आपकी बिजली आज रात 9:30 बजे काट दी जाएगी। तुरंत बिजली अधिकारी 9876543210 पर कॉल करें।"),
+                  ("scam", "Dear vehicle owner, your traffic challan is pending. Download RTO e-Challan app: rto-challan.apk"),
+                  ("scam", "Part time job: earn Rs 5000/day by liking YouTube videos. WhatsApp wa.me/919812345678"),
+              ]
+              wrong = []
+              for want, text in cases:
+                  s, body = req(API + "/public/quick-check", {"text": text})
+                  d = json.loads(body)
+                  got = "legitimate" if d["verdict"] == "legitimate" else "scam"
+                  if got != want:
+                      wrong.append(f"{want} -> {d['verdict']} {d['threat_score']:.2f}: {text[:50]}")
+              assert not wrong, "; ".join(wrong)
+              return f"all {len(cases)} genuine/scam examples correct"
+
           step("Frontend", frontend)
+          step("Verdicts", verdicts)
           step("Genuine notice", genuine_not_flagged)
           step("Dashboard speed", dashboard_speed)
           step("Chat timeline", timeline)
