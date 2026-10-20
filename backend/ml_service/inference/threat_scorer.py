@@ -220,7 +220,7 @@ _SHORTENERS = {"bit.ly", "tinyurl.com", "t.co", "goo.gl", "cutt.ly", "rb.gy", "i
 _NOTICE_BLOCKERS = re.compile(
     r"\b(install|download|apk|anydesk|teamviewer|quicksupport|click|tap here)\b"
     r"|\b(by mistake|galti|wrongly|return (it|the|money|amount)|send (it|money|back)|refund it)\b"
-    r"|\b(update your|verify your|link your|re-?kyc|kyc (update|pending|expired)|blocked|suspend\w*|deactivat\w*|disconnect\w*)\b"
+    r"|\b(update your|verify your|link your|re-?kyc|kyc (update|pending|expired)|blocked|suspen\w*|deactivat\w*|disconnect\w*|frozen|freez\w*)\b"
     r"|\b(pay|paying)\s+(rs\.?|inr|₹|\d|now|a|the|fee|charges?)\b|\b(fee|charges? of|processing fee|claim|lottery|prize|reward|won|winner)\b"
     r"|(?<!\d)(\+?91[\s-]?)?[6-9]\d{9}(?!\d)|(?<!\d)0\d{9,11}(?!\d)|\+\d{1,3}[\s-]?\d{6,}"
     # offers and calls to action are not notices
@@ -280,6 +280,32 @@ def _logit(p: float) -> float:
     return math.log(p / (1 - p))
 
 
+_NEG_RX = re.compile(rf"\b{_NEG}\b", re.I)
+_HANDOVER_CUE = re.compile(
+    r"\b(delivery (agent|partner|executive|boy|person)|driver|rider|captain)\b[^.?!]{0,40}\bonly\b"
+    r"|\bonly (at the time of|on|upon|after) (delivery|handover)\b|\bonly when you (start|begin|board)\b|\bonly at your doorstep\b",
+    re.I,
+)
+
+
+def _real_secret_request(text: str) -> bool:
+    """True when some sentence actually asks for an OTP/PIN/password: one
+    without its own "never / do not" and that is not a delivery or ride
+    handover. Scammers put "never share your OTP" in front of a real request
+    ("...To avoid suspension, share the OTP with our officer") to look
+    official, so a warning elsewhere in the message must not cancel it."""
+    for name, _w, rx in _INTENTS:
+        if name != "asks_for_secret":
+            continue
+        for m in rx.finditer(text):
+            start = max(text.rfind(c, 0, m.start()) for c in ".?!") + 1
+            ends = [i for i in (text.find(c, m.end()) for c in ".?!") if i >= 0]
+            sentence = text[start:min(ends) if ends else len(text)]
+            if not (_NEG_RX.search(sentence) or _HANDOVER_CUE.search(sentence)):
+                return True
+    return False
+
+
 class ThreatScorer:
     """Final risk engine: fuses the model's probability with intent
     evidence in log-odds space, so the result behaves like a probability:
@@ -311,8 +337,14 @@ class ThreatScorer:
                 protective[name] = weight
         # "Do not share your OTP" also matches the share-a-secret pattern;
         # the warning wins when it is the only thing asking about secrets.
-        if "warns_not_to_share" in protective or "delivery_otp" in protective:
+        real_request = "asks_for_secret" in found and _real_secret_request(text)
+        if ("warns_not_to_share" in protective or "delivery_otp" in protective) and not real_request:
             found.pop("asks_for_secret", None)
+        if real_request and "warns_not_to_share" in protective:
+            # "Never share your OTP... now share it with our officer": the
+            # warning is a decoy to look official, so it counts against.
+            protective.pop("warns_not_to_share", None)
+            found["decoy_warning"] = 0.3
         if "block_instruction" in protective:
             found.pop("account_threat", None)
         # A copied bank-alert format is no comfort when the text also asks for

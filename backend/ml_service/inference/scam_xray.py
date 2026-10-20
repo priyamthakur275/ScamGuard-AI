@@ -12,6 +12,8 @@ explanation, grouped into the four stages most scams follow:
 
 from __future__ import annotations
 
+import re
+
 from ml_service.inference.threat_scorer import _INTENTS, _PROTECTIVE
 
 STAGES = ("hook", "pressure", "ask", "cashout")
@@ -43,6 +45,7 @@ INTENT_INFO: dict[str, tuple[str, str, str]] = {
     "page_posts_elsewhere": ("cashout", "Data sent to another site", "The form secretly submits to a different website."),
     "page_impersonates_brand": ("cashout", "Fake brand page", "The page shows a brand's name on a domain that isn't theirs."),
     "new_domain": ("cashout", "Brand-new website", "The site was registered recently; scam sites rarely live long."),
+    "decoy_warning": ("ask", "Fake safety warning", "It says never share your OTP, then asks for it anyway: a trick to look official."),
     "harassment": ("pressure", "Blackmail threat", "Threats to share your photos are extortion; report it, don't pay."),
 }
 
@@ -71,20 +74,27 @@ def xray(text: str, max_chars: int = 1500) -> dict:
             if m.end() - m.start() < 2:
                 continue
             spans.append({"start": m.start(), "end": m.end(), "intent": name, "stage": info[0], "label": info[1], "why": info[2]})
-    protective = {n for n, _w, rx in _PROTECTIVE if rx.search(text)}
-    reassuring = [PROTECTIVE_INFO[n] for n, _w, _rx in _PROTECTIVE if n in protective and n in PROTECTIVE_INFO]
     from ml_service.inference.threat_scorer import ThreatScorer, is_genuine_notice, is_genuine_transaction
 
+    # Use the risk engine's own reading, so the X-Ray always matches the
+    # verdict: a decoy "never share your OTP" is not shown as reassurance,
+    # and a real OTP request after it stays highlighted.
     found, prot_weights = ThreatScorer.intents(text)
+    reassuring = [PROTECTIVE_INFO[n] for n, _w, _rx in _PROTECTIVE if n in prot_weights and n in PROTECTIVE_INFO]
+    reassuring = list(dict.fromkeys(reassuring))
     if is_genuine_notice(text, found, prot_weights) and not is_genuine_transaction(text, found, prot_weights):
         reassuring.insert(0, "Reads like a genuine service notice: it reports something or points to an official channel, and asks for no money, details or installs.")
     if is_genuine_transaction(text, found, prot_weights):
         reassuring = [r for r in reassuring if r != PROTECTIVE_INFO.get("transaction_alert")]
         reassuring.insert(0, "Reads like a genuine bank transaction alert: masked account number, no request, no link and no number to call.")
-    if "warns_not_to_share" in protective:
-        # Same rule as the risk engine: "never share your OTP" is a warning,
-        # not a request, so it must not be shown as a red flag.
+    if "asks_for_secret" not in found:
+        # The engine judged every OTP mention to be a warning or a delivery/ride handover.
         spans = [s for s in spans if s["intent"] != "asks_for_secret"]
+    if "decoy_warning" in found:
+        m = re.search(r"\b(never|do not|don't|dont)\b[^.?!]{0,60}", text, re.I)
+        if m:
+            info = INTENT_INFO["decoy_warning"]
+            spans.append({"start": m.start(), "end": m.end(), "intent": "decoy_warning", "stage": info[0], "label": info[1], "why": info[2]})
 
     # Keep spans non-overlapping: prefer earlier, then longer ones.
     spans.sort(key=lambda s: (s["start"], -(s["end"] - s["start"])))
