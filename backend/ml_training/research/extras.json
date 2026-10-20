@@ -1,0 +1,181 @@
+{
+ "model": {
+  "name": "logistic_regression",
+  "version": "v4",
+  "train_rows": 9513,
+  "model_bytes": 282063,
+  "vectorizer_bytes": 1289926,
+  "features": 35148
+ },
+ "latency_ms_per_message": {
+  "classifier": 1.9738726963713076,
+  "classifier_plus_fusion": 4.080708444503784
+ },
+ "training_seconds": 2.7050178569998025,
+ "real_test_classifier": {
+  "accuracy": 0.9754535752401281,
+  "precision": 0.985797827903091,
+  "recall": 0.9760132340777502,
+  "f1": 0.9808811305070656,
+  "fpr": 0.02556390977443609,
+  "tp": 1180,
+  "fp": 17,
+  "fn": 29,
+  "tn": 648,
+  "roc_auc": 0.9965596373066662,
+  "f1_ci": [
+   0.974998956594324,
+   0.9859189592023015
+  ],
+  "fpr_ci": [
+   0.014983723365257343,
+   0.03876119456882854
+  ],
+  "accuracy_ci": [
+   0.967982924226254,
+   0.981336712913554
+  ],
+  "n": 1874,
+  "pr_auc": 0.9982450151802775
+ },
+ "real_test_final": {
+  "accuracy": 0.9706510138740662,
+  "precision": 0.9824414715719063,
+  "recall": 0.9718775847808105,
+  "f1": 0.9771309771309771,
+  "fpr": 0.031578947368421054,
+  "tp": 1175,
+  "fp": 21,
+  "fn": 34,
+  "tn": 644,
+  "roc_auc": 0.9948158236783023,
+  "f1_ci": [
+   0.9708360231711859,
+   0.9825302055357253
+  ],
+  "fpr_ci": [
+   0.019519336409580312,
+   0.0459272030651341
+  ],
+  "accuracy_ci": [
+   0.9626467449306296,
+   0.9775880469583778
+  ],
+  "n": 1874,
+  "pr_auc": 0.997310416095417
+ },
+ "thresholds": [
+  {
+   "threshold": 0.3,
+   "precision": 0.959546925566343,
+   "recall": 0.9809760132340778,
+   "f1": 0.9701431492842536,
+   "fpr": 0.07518796992481203
+  },
+  {
+   "threshold": 0.4,
+   "precision": 0.9727497935590421,
+   "recall": 0.9743589743589743,
+   "f1": 0.9735537190082646,
+   "fpr": 0.04962406015037594
+  },
+  {
+   "threshold": 0.5,
+   "precision": 0.9824414715719063,
+   "recall": 0.9718775847808105,
+   "f1": 0.9771309771309771,
+   "fpr": 0.031578947368421054
+  },
+  {
+   "threshold": 0.6,
+   "precision": 0.9847586790855207,
+   "recall": 0.9619520264681555,
+   "f1": 0.9732217573221758,
+   "fpr": 0.02706766917293233
+  },
+  {
+   "threshold": 0.7,
+   "precision": 0.9879725085910653,
+   "recall": 0.9511993382961125,
+   "f1": 0.9692372524230932,
+   "fpr": 0.021052631578947368
+  },
+  {
+   "threshold": 0.8,
+   "precision": 0.9895833333333334,
+   "recall": 0.9429280397022333,
+   "f1": 0.96569250317662,
+   "fpr": 0.01804511278195489
+  },
+  {
+   "threshold": 0.9,
+   "precision": 0.9937943262411347,
+   "recall": 0.9272125723738627,
+   "f1": 0.9593495934959351,
+   "fpr": 0.010526315789473684
+  }
+ ],
+ "false_alarms_by_source": {
+  "banking": {
+   "n": 3,
+   "flagged": 0
+  },
+  "delivery": {
+   "n": 1,
+   "flagged": 0
+  },
+  "india_sms:brand_promotion": {
+   "n": 168,
+   "flagged": 4
+  },
+  "india_sms:personal_or_work": {
+   "n": 252,
+   "flagged": 2
+  },
+  "reported_but_genuine": {
+   "n": 240,
+   "flagged": 15
+  },
+  "telecom": {
+   "n": 1,
+   "flagged": 0
+  }
+ },
+ "recall_by_scam_type": {
+  "banking": {
+   "n": 916,
+   "caught": 895
+  },
+  "government": {
+   "n": 26,
+   "caught": 24
+  },
+  "others": {
+   "n": 158,
+   "caught": 151
+  },
+  "telecom": {
+   "n": 98,
+   "caught": 97
+  }
+ },
+ "campaigns": {
+  "real_campaigns": 4085,
+  "singletons": 3257,
+  "max_size": 128,
+  "rows_in_top_1pct": 933,
+  "real_rows": 6662,
+  "imc_campaigns": 2551
+ },
+ "robustness": {
+  "scam_messages_changed": 837,
+  "word": {
+   "recall_clean": 0.994026284348865,
+   "recall_obfuscated": 0.989247311827957
+  },
+  "word+char": {
+   "recall_clean": 0.994026284348865,
+   "recall_obfuscated": 0.992831541218638
+  }
+ }
+}
