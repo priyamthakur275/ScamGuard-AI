@@ -22,6 +22,8 @@
 \usepackage{caption}
 \usepackage{enumitem}
 \usepackage[section]{placeins}  % keep figures and tables inside their own section
+\usepackage{needspace}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
 \captionsetup{font=small, labelfont=bf, labelsep=colon, justification=centering}
 \captionsetup[table]{position=top, skip=6pt}
 \setlist{itemsep=3pt, topsep=4pt, parsep=0pt}
@@ -32,15 +34,19 @@
 \onehalfspacing
 
 % Title formatting
-\titleformat{\chapter}[hang]{\bfseries\centering\LARGE}{Chapter \thechapter}{1em}{}
+\titleformat{\chapter}[display]{\bfseries\centering\LARGE}{Chapter \thechapter}{10pt}{}
 \titleformat{\section}[hang]{\bfseries\Large}{\thesection}{1em}{}
 \titleformat{\subsection}[hang]{\bfseries\large}{\thesubsection}{1em}{}
 \titlespacing*{\chapter}{0pt}{0pt}{24pt}
 \titlespacing*{\section}{0pt}{14pt}{8pt}
 \titlespacing*{\subsection}{0pt}{10pt}{6pt}
+% never leave a heading alone at the bottom of a page
+\pretocmd{\section}{\Needspace*{7\baselineskip}}{}{}
+\pretocmd{\subsection}{\Needspace*{5\baselineskip}}{}{}
 
 % Fancy Header/Footer
 \pagestyle{fancy}
+\setlength{\headheight}{14.5pt}
 \fancyhf{}
 \lhead{\textit{ScamGuard: AI-Based Online Scam and Fraud Detection System}}
 \lfoot{\textit{Dept. of CSE,BMSCE}}
@@ -238,11 +244,11 @@ The proposed system has three parts.
 \section{Work Plan}
 Table~\ref{tab:workplan} shows the work plan across the two project phases.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Work plan}
 \label{tab:workplan}
-\begin{tabular}{|p{1.3cm}|p{5cm}|p{6.8cm}|}
+\begin{tabular}{|L{1.3cm}|L{5cm}|L{6.8cm}|}
 \hline
 \textbf{Phase} & \textbf{Activity} & \textbf{Outcome} \\
 \hline
@@ -287,15 +293,17 @@ We reviewed work on SMS spam corpora, smishing detection, report-based measureme
 
 Table~\ref{tab:lit} summarises the most relevant studies.
 
-\begin{table}[htbp]
-\centering
-\caption{Summary of related work}
-\label{tab:lit}
-\small
-\begin{tabular}{|p{2.1cm}|p{2.6cm}|p{2.8cm}|p{2.2cm}|p{2.7cm}|}
+{\small
+\begin{longtable}{|L{2.1cm}|L{2.6cm}|L{2.8cm}|L{2.2cm}|L{2.7cm}|}
+\caption{Summary of related work}\label{tab:lit}\\
 \hline
 \textbf{Work} & \textbf{Technique} & \textbf{Dataset} & \textbf{Reported result} & \textbf{Limitation for our problem} \\
 \hline
+\endfirsthead
+\hline
+\textbf{Work} & \textbf{Technique} & \textbf{Dataset} & \textbf{Reported result} & \textbf{Limitation for our problem} \\
+\hline
+\endhead
 Almeida \textit{et al.}, 2013~\cite{almeida2013towards} & Many classifiers; linear SVM preferred & SMS Spam Collection, UK, 5,574 & 97.64\% acc., 0.18\% ham blocked & Promotional spam, not Indian scams \\
 \hline
 Roy \textit{et al.}, 2020~\cite{roy2020deep} & CNN, LSTM & Same corpus & 99.44\% acc. & Same corpus, no cross-domain test \\
@@ -310,8 +318,8 @@ Agarwal \textit{et al.}, 2025~\cite{agarwal2025fishing} & GPT-4o labelling & 33,
 \hline
 Pritom \textit{et al.}, 2026~\cite{pritom2026sms} & Systematic review & 119 papers & Not applicable & Identifies the dataset gap \\
 \hline
-\end{tabular}
-\end{table}
+\end{longtable}}
+
 
 \section{Research Gap Identification}
 The survey points to four gaps.
@@ -323,11 +331,11 @@ The survey points to four gaps.
 \end{enumerate}
 
 \section{Mapping of Objectives with Research Gap Identification}
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Mapping of objectives to research gaps}
 \label{tab:mapping}
-\begin{tabular}{|p{6.3cm}|p{7.2cm}|}
+\begin{tabular}{|L{6.3cm}|L{7.2cm}|}
 \hline
 \textbf{Objective} & \textbf{Gap addressed} \\
 \hline
@@ -365,16 +373,16 @@ The survey points to four gaps.
 \item \textbf{Performance.} Classification of one message takes about 2~ms, and about 4~ms including the intent layer, on a two-core server; page responses are compressed and cached.
 \item \textbf{Reliability.} The model is loaded once at start-up from a versioned registry; if the configured database is unreachable, the service starts on a local fallback database instead of failing. An automated job checks the live site every morning.
 \item \textbf{Security.} Passwords are hashed, access uses signed tokens with refresh, endpoints are rate-limited, request bodies are size-limited, and security headers are set.
-\item \textbf{Privacy.} The quick check stores nothing; contributed dataset messages are masked before storage.
+\item \textbf{Privacy.} The quick check stores nothing, and contributed messages are masked before they are stored.
 \item \textbf{Usability.} English and Hindi interface, an elder mode with larger text, keyboard-accessible controls, and layouts that work at phone width.
 \item \textbf{Maintainability.} Training and serving share the same preprocessing code; 818 automated back-end and ML tests run on every change.
 \end{itemize}
 
 \section{Hardware Requirements}
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Hardware requirements}
-\begin{tabular}{|p{4cm}|p{9.5cm}|}
+\begin{tabular}{|L{4cm}|L{9.5cm}|}
 \hline
 \textbf{Component} & \textbf{Requirement} \\
 \hline
@@ -390,10 +398,10 @@ Client & Any browser on a phone or computer \\
 \end{table}
 
 \section{Software Requirements}
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Software requirements}
-\begin{tabular}{|p{4cm}|p{9.5cm}|}
+\begin{tabular}{|L{4cm}|L{9.5cm}|}
 \hline
 \textbf{Layer} & \textbf{Software} \\
 \hline
@@ -437,12 +445,12 @@ The project was built and deployed with free resources. Development used the tea
 Indian scam messages and Indian genuine service messages share most of their vocabulary, and public smishing data contains only reported messages with unverified labels. A detector for Indian users therefore needs real Indian genuine messages, checked labels for reported messages and current scam types. ScamGuard-IN-2026 was built for this purpose, and it is the only dataset used for training and evaluation in this project.
 
 \subsection{Sources}
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Sources of ScamGuard-IN-2026}
 \label{tab:sources}
 \small
-\begin{tabular}{|p{3.6cm}|p{2.1cm}|p{1.4cm}|p{1.2cm}|p{3.6cm}|}
+\begin{tabular}{|L{3.6cm}|L{2.1cm}|L{1.4cm}|L{1.2cm}|L{3.6cm}|}
 \hline
 \textbf{Source} & \textbf{Licence} & \textbf{Genuine} & \textbf{Scam} & \textbf{Use} \\
 \hline
@@ -478,7 +486,7 @@ After the audit, 963 of 4,950 retained IMC rows (19.5\%) are genuine: debit and 
 \subsection{Campaigns and splits}
 Messages are grouped into campaigns when their MinHash-estimated Jaccard similarity over word 3-shingles is at least 0.6. The 6,662 real messages form 4,085 campaigns; the largest has 128 messages and the largest 1\% of campaigns hold 14\% of real messages. Each campaign goes entirely to training (60\%), development (15\%) or test (25\%), chosen by a hash of its first message. Table~\ref{tab:splits} gives the final counts.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Dataset splits}
 \label{tab:splits}
@@ -500,7 +508,7 @@ Test & 665 & 1,209 & real only, unseen campaigns \\
 \section{Flow Chart Of Methodology From Start To End}
 Figure~\ref{fig:flow} shows the methodology from data collection to deployment, and Figure~\ref{fig:arch} the architecture of the deployed system.
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \begin{tikzpicture}[node distance=5mm,
   box/.style={draw, rounded corners=2pt, align=center, font=\small, minimum width=6.5cm, minimum height=8mm, fill=white},
@@ -521,7 +529,7 @@ Figure~\ref{fig:flow} shows the methodology from data collection to deployment, 
 \label{fig:flow}
 \end{figure}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \resizebox{\linewidth}{!}{%
 \begin{tikzpicture}[
@@ -619,7 +627,7 @@ Models were selected on the development split and then trained on the training a
 \section{Performance of the deployed system}
 Table~\ref{tab:final} and Figure~\ref{fig:final} give the main result: all metrics of the deployed system on the real test set, next to the classifier alone and the learned fusion weights described in Section~\ref{sec:fusionexp}.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Real test set, 1,874 messages from unseen campaigns (\%; FAR = false-alarm rate)}
 \label{tab:final}
@@ -636,7 +644,7 @@ Learned fusion & \textbf{97.8} & \textbf{98.7} & \textbf{97.8} & \textbf{98.3} &
 \end{tabular}
 \end{table}
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.72\linewidth]{figures/final_metrics.pdf}
 \caption{Accuracy, precision, recall and F1-score on the real test set (vertical axis starts at 95\%)}
@@ -646,7 +654,7 @@ Learned fusion & \textbf{97.8} & \textbf{98.7} & \textbf{97.8} & \textbf{98.3} &
 The deployed system catches 1,175 of the 1,209 test scams and passes 644 of the 665 genuine messages. The 95\% confidence interval of its accuracy is 96.3--97.8\%, and of its false-alarm rate 2.0--4.6\%. On the twelve 2025--26 advisory messages it detects 10 of the 11 scams and passes the one genuine operator notice (F1 95.2\%); this set is too small for a firm conclusion.
 
 \section{Comparison of models and features}
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Classifiers on the real test set (\%); ``Challenge'' is F1 on the 259 team-written messages}
 \label{tab:models}
@@ -677,7 +685,7 @@ Random forest & word + char & 97.6 & 3.3 & 73.9 \\
 Logistic regression with word and character features gives the lowest false-alarm rate among the strong models with an F1 of 98.1\%. The SVM's F1 is 0.1 points higher, but it flags 3.9\% of genuine messages. We chose logistic regression, which also gives readable word-level explanations.
 
 \section{Effect of the label audit}
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.55\linewidth]{figures/label_audit.pdf}
 \caption{False-alarm rate with report labels and with audited labels}
@@ -688,13 +696,13 @@ Training the same model with every reported message labelled as a scam gives 99.
 \section{Effect of the split and of synthetic data}
 With a random split of the real data, 793 test messages had a near-duplicate in training. The random split gave an F1 of 98.3\% and a 0.8\% false-alarm rate; the campaign-aware split gave 97.7\% and 1.4\%. The random split hides nearly half of the false alarms.
 
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Effect of the training data (logistic regression, word + char, \%)}
 \label{tab:train}
 \begin{tabular}{|l|r|r|r|r|}
 \hline
-\textbf{Training data} & \textbf{Real F1} & \textbf{Real false alarms} & \textbf{Challenge recall} & \textbf{Challenge F1} \\
+\textbf{Training data} & \textbf{Real F1} & \textbf{Real FAR} & \textbf{Challenge recall} & \textbf{Challenge F1} \\
 \hline
 Synthetic only & 87.4 & 31.1 & 86.4 & 90.3 \\
 \hline
@@ -708,7 +716,7 @@ Synthetic messages alone do not resemble real Indian SMS closely enough. Real me
 
 \section{Value of the intent rules}
 \label{sec:fusionexp}
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
 \caption{Classifier alone and with fusion (\%)}
 \label{tab:fusion}
@@ -727,13 +735,13 @@ Learned fusion weights & 98.3 & 2.3 & 91.2 \\
 On real messages from unseen campaigns, the hand-weighted rules do not improve accuracy and add a few false alarms. On the team's own challenge messages they look much better. Learned fusion weights are significantly better than the hand-set ones on real data ($p=0.002$). We keep the rules in the application because they produce the phrase-level explanations and cover 2025--26 scam types that the real training data barely contains, but we do not claim that they improve accuracy.
 
 \section{Operating point and errors}
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.95\linewidth]{figures/roc_pr.pdf}
 \caption{ROC and precision-recall curves on the real test set}
 \label{fig:rocpr}
 \end{figure}
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \includegraphics[width=0.7\linewidth]{figures/confusion.pdf}
 \caption{(a) Confusion matrix of the deployed system; (b) recall and false-alarm rate by threshold}
@@ -803,7 +811,7 @@ The result is a deployed application that answers in milliseconds, explains ever
 \addcontentsline{toc}{section}{Appendix A: Snapshots}
 \begin{figure}[H]\centering\fbox{\includegraphics[width=0.82\linewidth]{shots/01_landing.jpg}}\caption{Home page with the quick check}\end{figure}
 \begin{figure}[H]\centering\fbox{\includegraphics[width=0.82\linewidth]{shots/02_quick_scam.jpg}}\caption{Quick check of a fake KYC message: verdict, matched tactics, known pattern and Scam X-Ray}\end{figure}
-\begin{figure}[H]\centering\fbox{\includegraphics[width=0.82\linewidth]{shots/03_quick_genuine.jpg}}\caption{Quick check of a genuine operator notice about the 1909 helpline: ``Looks genuine'' with the TrustLens reason}\end{figure}
+\begin{figure}[H]\centering\fbox{\includegraphics[width=0.82\linewidth]{shots/03_quick_genuine.jpg}}\caption[Quick check of a genuine operator notice]{Quick check of a genuine operator notice about the 1909 helpline: ``Looks genuine'' with the TrustLens reason}\end{figure}
 \begin{figure}[H]\centering\fbox{\includegraphics[width=0.82\linewidth]{shots/05_analyze_result.jpg}}\caption{Full analysis of a scam message for a signed-in user}\end{figure}
 \begin{figure}[H]\centering\fbox{\includegraphics[width=0.82\linewidth]{shots/06_analyze_xray.jpg}}\caption{Scam X-Ray: each risky phrase placed in the hook, pressure, request and cash-out stages}\end{figure}
 \begin{figure}[H]\centering\fbox{\includegraphics[width=0.82\linewidth]{shots/07_analyze_trustlens.jpg}}\caption{TrustLens: scam journey, recommended actions and how a genuine message differs}\end{figure}
@@ -829,16 +837,21 @@ No patent has been filed for this project.
 \addcontentsline{toc}{section}{Appendix D: Details of Funding}
 The project received no external funding. It was built with free cloud tiers and open-source software.
 \clearpage
-\section*{Appendix E:POs and PSOs Mapped}
-\addcontentsline{toc}{section}{Appendix E:POs and PSOs Mapped}
-\begin{table}[h!]
-\centering
-\renewcommand{\arraystretch}{1.3}
+\section*{Appendix E: POs and PSOs Mapped}
+\addcontentsline{toc}{section}{Appendix E: POs and PSOs Mapped}
+{\small
+\renewcommand{\arraystretch}{1.2}
 \setlength{\tabcolsep}{6pt}
-\begin{tabular}{|p{3cm}|c|p{8cm}|}
+\begin{longtable}{|L{3.6cm}|c|L{7.2cm}|}
+\caption{Programme Outcomes Mapping with Project}\\
 \hline
 \textbf{PROGRAMME OUTCOMES} & \textbf{Level (1/2/3)} & \textbf{Justification if addressed} \\
 \hline
+\endfirsthead
+\hline
+\textbf{PROGRAMME OUTCOMES} & \textbf{Level (1/2/3)} & \textbf{Justification if addressed} \\
+\hline
+\endhead
 PO1 & 3 & Applies machine learning, NLP and statistics to classify scam messages and to evaluate the classifier. \\
 \hline
 PO2 & 3 & Analyses why existing filters fail on Indian SMS and traces the failure to dataset labels and evaluation leakage. \\
@@ -863,27 +876,30 @@ PO11 & 2 & Plans the work in phases and keeps the deployment within free-tier bu
 \hline
 PO12 & 2 & Designs the dataset build so that new scam types and the 2026 test set can be added and re-evaluated. \\
 \hline
-\end{tabular}
-\caption{Programme Outcomes Mapping with Project}
-\end{table}
+\end{longtable}}
 
-\begin{table}[h!]
-\centering
-\renewcommand{\arraystretch}{1.3}
+
+{\small
+\renewcommand{\arraystretch}{1.2}
 \setlength{\tabcolsep}{6pt}
-\begin{tabular}{|p{3cm}|c|p{8cm}|}
+\begin{longtable}{|L{3.6cm}|c|L{7.2cm}|}
+\caption{Programme Specific Outcomes Mapping with Project}\\
 \hline
 \textbf{PROGRAMME SPECIFIC OUTCOMES} & \textbf{Level (1/2/3)} & \textbf{Justification if addressed} \\
 \hline
+\endfirsthead
+\hline
+\textbf{PROGRAMME SPECIFIC OUTCOMES} & \textbf{Level (1/2/3)} & \textbf{Justification if addressed} \\
+\hline
+\endhead
 PSO1 & 2 & Uses web APIs, cloud hosting, rate limiting and secure token-based communication. \\
 \hline
 PSO2 & 3 & Applies software engineering practice: versioned models, automated tests, CI and reproducible builds. \\
 \hline
 PSO3 & 3 & Integrates machine learning, NLP and information systems into a deployed, usable product. \\
 \hline
-\end{tabular}
-\caption{Programme Specific Outcomes Mapping with Project}
-\end{table}
+\end{longtable}}
+
 \clearpage
 
 \section*{Appendix F: Similarity report, AI Generated report}
