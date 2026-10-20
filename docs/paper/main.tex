@@ -131,7 +131,7 @@ Ours & 2026 & Indian scam vs.\ genuine SMS & Audit, campaign split, LR + intent 
 \section{Problem Formulation and Research Questions}
 \label{sec:problem}
 
-Let $x$ be the text of one SMS as the user would paste it. The detector is a function $f(x)\rightarrow \hat{y}\in\{0,1\}$, where $y=1$ means \emph{scam}: the message tries to obtain money, a secret (OTP, PIN, CVV or password), personal data, an app installation or a call to a private number by deception. Every other message, including genuine advertisements, is \emph{legitimate} ($y=0$). Promotions from real brands are not treated as scams. The system outputs a score $s(x)\in[0,1]$ and predicts $\hat{y}=\mathbb{1}[s(x)\ge 0.5]$. The score is a ranking signal, not a calibrated probability of fraud.
+Let $x$ be the text of one SMS as the user would paste it. The detector is a function $f(x)\rightarrow \hat{y}\in\{0,1\}$, where $y=1$ means \emph{scam}: the message tries to obtain money, a secret (OTP, PIN, CVV or password), personal data, an app installation or a call to a private number by deception. Every other message, including genuine advertisements, is \emph{legitimate} ($y=0$). Promotions from real brands are not treated as scams. The system outputs a score $s(x)\in[0,1]$ and predicts $\hat{y}=\mathbf{1}[s(x)\ge 0.5]$. The score is a ranking signal, not a calibrated probability of fraud.
 
 We assume single messages without sender metadata, because a user who pastes a message usually does not paste its header. Scope is English and Hindi in Devanagari, including romanised Hindi. The detector must run on a free-tier cloud instance and answer within milliseconds.
 
@@ -254,7 +254,7 @@ Fig.~\ref{fig:arch} shows the deployed system. A Next.js 14 front end sends the 
 \EndIf
 \State $s \gets \sigma(\operatorname{clip}(\operatorname{logit}p,\pm4)+5(E^{+}(I)-E^{-}(P)))$
 \If{$x$ is a genuine alert or notice with no blocking cue} \State $s\gets\min(s,0.15)$ \EndIf
-\State \Return $\mathbb{1}[s\ge0.5]$, $s$, matched phrases of $I$ and $P$
+\State \Return $\mathbf{1}[s\ge0.5]$, $s$, matched phrases of $I$ and $P$
 \end{algorithmic}
 \end{algorithm}
 
