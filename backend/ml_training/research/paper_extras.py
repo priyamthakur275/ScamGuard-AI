@@ -34,7 +34,7 @@ from ml_training.research.run_experiments import DS, Scores  # noqa: E402
 HERE = os.path.dirname(os.path.abspath(__file__))
 FIG = os.path.join(HERE, "figures")
 ART = os.path.join(HERE, "..", "..", "artifacts")
-plt.rcParams.update({"font.family": "serif", "font.serif": ["DejaVu Serif"], "font.size": 9, "axes.titlesize": 9, "legend.fontsize": 8, "axes.spines.top": False, "axes.spines.right": False, "savefig.dpi": 300})
+plt.rcParams.update({"font.family": "serif", "font.serif": ["Liberation Serif", "Times New Roman", "TeX Gyre Termes", "DejaVu Serif"], "mathtext.fontset": "stix", "font.size": 9, "axes.titlesize": 9, "legend.fontsize": 8, "axes.spines.top": False, "axes.spines.right": False, "savefig.dpi": 300})
 INK, ACC, ACC2, GREY = "#1f2a44", "#c0392b", "#2e86ab", "#9aa0a6"
 
 
@@ -62,7 +62,9 @@ def obfuscate(t: str, rng: random.Random) -> str:
     return out
 
 
-def main() -> int:
+def main(argv=None) -> int:
+    import sys
+    figures_only = "--figures-only" in (argv if argv is not None else sys.argv[1:])
     df = pd.read_csv(DS)
     test = df[df.split == "test"].copy()
     train = df[df.split.isin(["train", "dev"])]
@@ -83,6 +85,11 @@ def main() -> int:
                   "model_bytes": os.path.getsize(os.path.join(ART, "logistic_regression", "v4", "model.joblib")),
                   "vectorizer_bytes": os.path.getsize(os.path.join(ART, "logistic_regression", "v4", "vectorizer.joblib")),
                   "features": len(eng.feature_names)}
+    if figures_only:  # keep the measured numbers; only redraw the figures
+        E = json.load(open(os.path.join(HERE, "extras.json")))
+        th = E["thresholds"]
+        sizes = df[df.is_synthetic == 0].groupby("campaign").size()
+        return _figures(E, p, f, y, sizes)
     E["latency_ms_per_message"] = {"classifier": 1000 * (t1 - t0) / len(test), "classifier_plus_fusion": 1000 * ((t1 - t0) + (t2 - t1)) / len(test)}
 
     # training time of the production configuration (same settings as train_production.py)
@@ -136,7 +143,10 @@ def main() -> int:
     with open(os.path.join(HERE, "extras.json"), "w") as fh:
         json.dump(E, fh, indent=1)
 
-    # ---------------- figures
+    return _figures(E, p, f, y, sizes)
+
+
+def _figures(E, p, f, y, sizes) -> int:
     R = json.load(open(os.path.join(HERE, "results.json")))
 
     fig, ax = plt.subplots(1, 2, figsize=(6.8, 2.5))
