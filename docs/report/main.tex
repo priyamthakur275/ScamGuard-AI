@@ -71,9 +71,10 @@
   \thispagestyle{empty}
   \centering
 
-  {\Huge \textbf{ScamGuard: AI-Based Online Scam}}\\[0.25cm]{\Huge \textbf{and Fraud Detection System}}\\[1.0cm]
-  \includegraphics[width=0.18\linewidth]{VTU-Logojpg.jpg}\\[0.9cm]
-  {\Large \textbf{PROJECT REPORT}}\\[0.2cm]
+  {\Huge \textbf{ScamGuard: AI-Based Online Scam}}\\[0.25cm]{\Huge \textbf{and Fraud Detection System}}\\[0.8cm]
+  \includegraphics[width=0.18\linewidth]{VTU-Logojpg.jpg}\\[0.7cm]
+  {\Large \textbf{PROJECT REPORT}}\\[0.15cm]
+  {\large Major Project Phase-2 (23CS7PWPP2), Semester VII}\\[0.3cm]
   {\large \textit{Submitted by}}\\[0.5cm]
   {\large Bhavya Goyal (1BM23CS063)}\\
   {\large Priyam Thakur (1BM23CS252)}\\
@@ -91,14 +92,15 @@
   {\Large \textbf{B.M.S. COLLEGE OF ENGINEERING}}\\
   {\large (Autonomous Institution under VTU)}\\
   {\large BENGALURU - 560019}\\
-  {\large Academic Year - 2026--2027}
+  {\large Academic Year - 2026--2027}\\[0.2cm]
+  {\large Date of Submission: 29 October 2026}
 
 \end{titlepage}
 % ----- Certificate -----
 \chapter*{Certificate}
 \thispagestyle{empty}
 \vspace{2cm}
-This is to certify that the project report entitled \textbf{``ScamGuard: AI-Based Online Scam and Fraud Detection System''} is a bonafide work carried out by \textbf{Bhavya Goyal (USN: 1BM23CS063)}, \textbf{Priyam Thakur (USN: 1BM23CS252)}, \textbf{Samir Chaudhary (USN: 1BM23CS294)} and \textbf{Sana Subodh (USN: 1BM23CS296)} in partial fulfillment of the requirements for the award of the degree of \textbf{Bachelor of Engineering} in \textbf{Computer Science and Engineering}, under my supervision during the academic year 2026--2027.
+This is to certify that the project report entitled \textbf{``ScamGuard: AI-Based Online Scam and Fraud Detection System''} is a bonafide work carried out by \textbf{Bhavya Goyal (USN: 1BM23CS063)}, \textbf{Priyam Thakur (USN: 1BM23CS252)}, \textbf{Samir Chaudhary (USN: 1BM23CS294)} and \textbf{Sana Subodh (USN: 1BM23CS296)} as Major Project Phase-2 (Course Code: 23CS7PWPP2) in the seventh semester, in partial fulfillment of the requirements for the award of the degree of \textbf{Bachelor of Engineering} in \textbf{Computer Science and Engineering}, under my supervision during the academic year 2026--2027.
 
 \vspace{2cm}
 \begin{flushleft}
@@ -152,7 +154,7 @@ Candidate details:
 \end{center}
 \begin{flushleft}
 Place: Bengaluru \\
-Date: \\
+Date: 29 October 2026 \\
 \end{flushleft}
 Certified that these candidates are students of Computer Science and Engineering Department of B.M.S. College of Engineering. They have carried out the project work titled ``ScamGuard: AI-Based Online Scam and Fraud Detection System'' as Major Project Phase-2 work. It is in partial fulfillment for completing the requirement for the award of B.E. degree by VTU. The work is original and we duly certify the same.
 \vspace{1cm}
@@ -274,11 +276,34 @@ Table~\ref{tab:workplan} shows the work plan across the two project phases.
 \end{tabular}
 \end{table}
 
+Figure~\ref{fig:gantt} shows the Phase-2 implementation timeline, taken from the commit dates in the project repository. The Phase-1 activities in Table~\ref{tab:workplan} were completed before the repository was created.
+
+\begin{figure}[H]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[font=\small]
+\def\rowh{0.75}
+\foreach \d/\lab in {0/27 Sep, 2/4 Oct, 4/11 Oct, 6/18 Oct, 7.2/21 Oct} {\draw[gray!40] (\d+4.6,0.4) -- (\d+4.6,-4.1); \node[font=\footnotesize] at (\d+4.6,0.7) {\lab};}
+\foreach \y/\t/\s/\e in {
+  0/{Set-up and cloud deployment}/0/0.6,
+  1/{Core features, CI and copilot}/4.2/4.9,
+  2/{Copilot and safety tools}/5.0/5.4,
+  3/{TrustLens, tests, live monitoring}/5.8/6.3,
+  4/{Dataset, audit and retraining}/6.6/6.9,
+  5/{Paper, report and presentation}/6.6/6.9} {
+  \node[anchor=east, align=right] at (4.4,-\y*\rowh-0.2) {\t};
+  \fill[blue!55!black] (\s+4.6,-\y*\rowh-0.45) rectangle (\e+4.6+0.08,-\y*\rowh+0.05);
+}
+\end{tikzpicture}}
+\caption{Phase-2 implementation timeline (from commit dates, 27 September to 20 October 2026)}
+\label{fig:gantt}
+\end{figure}
+
 % ======================================================================
 \chapter{Literature Survey}
 
 \section{Overview}
-We reviewed work on SMS spam corpora, smishing detection, report-based measurement studies and general machine-learning methodology for label noise and data leakage. Each reference below was checked against its publisher page, DOI record or arXiv entry. Results quoted are those stated by the authors; where a value is not stated we say so.
+We reviewed sixteen papers on SMS spam corpora, smishing detection, report-based measurement studies and general machine-learning methodology for label noise and data leakage. Each reference below was checked against its publisher page, DOI record or arXiv entry. Results quoted are those stated by the authors; where a value is not stated we say so.
 
 \section{Detailed Survey}
 
@@ -294,34 +319,36 @@ We reviewed work on SMS spam corpora, smishing detection, report-based measureme
 
 \textbf{Methodology.} Northcutt, Jiang and Chuang showed that disagreements between cross-validated predictions and given labels locate many label errors (confident learning)~\cite{northcutt2021confident}. Lee \textit{et al.} showed that near-duplicates inflate evaluation of language models, with train-test overlap in over 4\% of standard validation sets~\cite{lee2022dedup}. Kapoor and Narayanan list duplicate data across train and test among the most common leakage errors in applied machine learning~\cite{kapoor2023leakage}. MinHash, introduced by Broder~\cite{broder1997resemblance}, is the standard tool for finding near-duplicate documents at scale.
 
-Table~\ref{tab:lit} summarises the most relevant studies.
+Table~\ref{tab:lit} summarises the sixteen studies.
 
 {\small
-\renewcommand{\arraystretch}{1.1}
-\begin{longtable}{|L{2.1cm}|L{2.6cm}|L{2.8cm}|L{2.2cm}|L{2.7cm}|}
+\renewcommand{\arraystretch}{1.15}
+\begin{longtable}{|L{0.7cm}|L{2.6cm}|L{2.9cm}|L{2.9cm}|L{3.3cm}|}
 \caption{Summary of related work}\label{tab:lit}\\
 \hline
-\textbf{Work} & \textbf{Technique} & \textbf{Dataset} & \textbf{Reported result} & \textbf{Limitation for our problem} \\
+\textbf{No.} & \textbf{Work} & \textbf{Technique} & \textbf{Result} & \textbf{Limitation for Indian scams} \\
 \hline
 \endfirsthead
 \hline
-\textbf{Work} & \textbf{Technique} & \textbf{Dataset} & \textbf{Reported result} & \textbf{Limitation for our problem} \\
+\textbf{No.} & \textbf{Work} & \textbf{Technique} & \textbf{Result} & \textbf{Limitation for Indian scams} \\
 \hline
 \endhead
-Almeida \textit{et al.}, 2013~\cite{almeida2013towards} & Many classifiers; linear SVM preferred & SMS Spam Collection, UK, 5,574 & 97.64\% acc., 0.18\% ham blocked & Promotional spam, not Indian scams \\
-\hline
-Roy \textit{et al.}, 2020~\cite{roy2020deep} & CNN, LSTM & Same corpus & 99.44\% acc. & Same corpus, no cross-domain test \\
-\hline
-Mishra, Soni, 2020~\cite{mishra2020smishing} & Content + URL behaviour & SMS datasets & 96.29\% acc. & Depends on URLs \\
-\hline
-Goel \textit{et al.}, 2024~\cite{goel2024ml} & Slang normalisation + Naive Bayes & Public smishing subset + 71 web messages & 96.2\% acc., FPR 3.87\% & 362 smishing messages \\
-\hline
-Timko, Rahman, 2024~\cite{timko2024smishing} & Data release & Smishtank, 1,062 & No classifier & No genuine class \\
-\hline
-Agarwal \textit{et al.}, 2025~\cite{agarwal2025fishing} & GPT-4o labelling & 33,869 reports & No classifier & Reports unverified; no genuine class \\
-\hline
-Pritom \textit{et al.}, 2026~\cite{pritom2026sms} & Systematic review & 119 papers & Not applicable & Identifies the dataset gap \\
-\hline
+1 & Almeida \textit{et al.}, 2011~\cite{almeida2011contributions} & SMS spam corpus and baselines & 5,574 labelled messages & Promotional spam, no Indian messages \\ \hline
+2 & Almeida \textit{et al.}, 2013~\cite{almeida2013towards} & 15+ classifiers, tokenisers & SVM 97.64\% accuracy & Same corpus; no scams of current types \\ \hline
+3 & Roy \textit{et al.}, 2020~\cite{roy2020deep} & CNN, LSTM & 99.44\% accuracy & No cross-domain test \\ \hline
+4 & Sonowal, Kuppusamy, 2018~\cite{sonowal2018smidca} & Feature selection, ML classifiers & Anti-smishing model & Small English datasets \\ \hline
+5 & Mishra, Soni, 2020~\cite{mishra2020smishing} & Content + URL behaviour & 96.29\% accuracy & Misses scams without links \\ \hline
+6 & Goel \textit{et al.}, 2024~\cite{goel2024ml} & Slang normalisation, Naive Bayes & 96.2\% acc., FPR 3.87\% & Only 362 smishing messages \\ \hline
+7 & Timko, Rahman, 2024~\cite{timko2024smishing} & Validated report collection & 1,062 reports & No genuine class \\ \hline
+8 & Agarwal \textit{et al.}, 2025~\cite{agarwal2025fishing} & GPT-4o labelling of reports & 33,869 messages, 66 languages & Reports unverified; no genuine class \\ \hline
+9 & Agarwal \textit{et al.}, 2026~\cite{agarwal2026overview} & Analysis of operator reports & 35.12\% of reports are spam & UK data; no classifier \\ \hline
+10 & Ali \textit{et al.}, 2025~\cite{ali2025moz} & LLM in-context learning & Mobile-money benchmark & Mozambique context \\ \hline
+11 & Labonne, Moran, 2023~\cite{labonne2023spamt5} & Fine-tuned Flan-T5 & Beats classical baselines & E-mail, not SMS \\ \hline
+12 & Ahmadi \textit{et al.}, 2025~\cite{ahmadi2025llm} & TF-IDF, six classifiers & 0.91--0.95 accuracy & Tables and text disagree \\ \hline
+13 & Pritom \textit{et al.}, 2026~\cite{pritom2026sms} & Systematic review & 119 papers, 12 datasets & Identifies the dataset gap \\ \hline
+14 & Northcutt \textit{et al.}, 2021~\cite{northcutt2021confident} & Confident learning & Finds label errors & General method \\ \hline
+15 & Lee \textit{et al.}, 2022~\cite{lee2022dedup} & Near-duplicate removal & Overlap inflates results & Language-model corpora \\ \hline
+16 & Kapoor, Narayanan, 2023~\cite{kapoor2023leakage} & Survey of leakage errors & Duplicates are common & General method \\ \hline
 \end{longtable}}
 
 
@@ -333,6 +360,12 @@ The survey points to four gaps.
 \item \textbf{Evaluation ignores campaigns.} Scam campaigns repeat one template many times. Random splits put copies of the same template on both sides, which inflates results, and none of the surveyed SMS studies controls for this.
 \item \textbf{Explanation and rules are not evaluated independently.} Hybrid systems add rules, but their benefit is usually measured on messages chosen by the same developers.
 \end{enumerate}
+
+Gaps 1 to 3 share one root: there is no Indian scam-versus-genuine SMS benchmark with checked labels and a leakage-free split. This project addresses that gap directly and handles gap 4 in support of it. The resulting problem statement is:
+
+\begin{center}
+\fbox{\parbox{0.9\linewidth}{\textit{To design, implement and evaluate an AI-based system that classifies an Indian SMS, in English or Hindi, as a scam or a genuine message with a low false-alarm rate, using a dataset whose labels have been audited and whose train--test split keeps every scam campaign on one side, and to deliver it as a deployed web application that explains each verdict at phrase level.}}}
+\end{center}
 
 \section{Mapping of Objectives with Research Gap Identification}
 \begin{table}[H]
@@ -563,6 +596,86 @@ Figure~\ref{fig:flow} shows the methodology from data collection to deployment, 
 \label{fig:arch}
 \end{figure}
 
+\subsection{Sub-systems and interfaces}
+Table~\ref{tab:subsys} lists the sub-systems of ScamGuard, what each one is responsible for and how it connects to the others.
+
+\begin{table}[H]
+\centering
+\caption{Sub-systems of ScamGuard and their interfaces}
+\label{tab:subsys}
+\begin{tabular}{|L{3.0cm}|L{5.3cm}|L{4.4cm}|}
+\hline
+\textbf{Sub-system} & \textbf{Responsibility} & \textbf{Interface} \\
+\hline
+Dataset builder & Collect sources, audit labels, group campaigns, split & Python script; writes one CSV file \\
+\hline
+Training pipeline & Train and compare models; register the selected one & Model registry (vectorizer and model files) \\
+\hline
+Detector & Clean, classify, apply rules, fuse, explain & Python function \texttt{predict(text)} \\
+\hline
+Back end (API) & Authentication, rate limits, storage, reports & REST over HTTPS, JSON \\
+\hline
+Front end & Quick check, analysis, dashboard, tools, Hindi & Browser; calls the REST API \\
+\hline
+Copilot & Answers follow-up questions about a scan & REST endpoint; external LLM API with a daily cap \\
+\hline
+Monitoring & Daily check of the live site & GitHub Actions workflow \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Client--server communication}
+The web client and the back end communicate over HTTPS with JSON request and response bodies. Figure~\ref{fig:seq} shows the sequence for one analysis.
+
+\begin{figure}[H]
+\centering
+\resizebox{0.95\linewidth}{!}{%
+\begin{tikzpicture}[font=\small, >={Stealth[length=2.2mm]}, msg/.style={->, thick}, ret/.style={->, thick, dashed}, every node/.append style={inner sep=1.5pt}, lbl/.style={above, fill=white, font=\small}]
+\foreach \x/\n/\t in {0/u/User, 3.6/c/Web client\\(Next.js), 7.6/a/FastAPI\\back end, 11.6/m/Detector, 15.2/d/Database} {
+  \node[draw, rounded corners=2pt, fill=gray!12, minimum width=2.7cm, minimum height=10mm, align=center] (\n) at (\x,0) {\t};
+  \draw[gray] (\x,-0.55) -- (\x,-10.2);
+}
+\draw[msg] (0,-1.2) -- node[lbl]{1. paste message} (3.6,-1.2);
+\draw[msg] (3.6,-2.1) -- node[lbl]{2. POST /analyze} (7.6,-2.1);
+\node[draw, fill=white, align=center, font=\footnotesize, minimum width=2.9cm] at (7.6,-3.2) {3. check token, rate\\and size limits; clean};
+\draw[msg] (7.6,-4.3) -- node[lbl]{4. predict(text)} (11.6,-4.3);
+\node[draw, fill=white, align=center, font=\footnotesize, minimum width=2.5cm] at (11.6,-5.4) {5. classifier, rules,\\fusion, explanation};
+\draw[ret] (11.6,-6.5) -- node[lbl]{6. verdict, score, phrases} (7.6,-6.5);
+\draw[msg] (7.6,-7.3) -- node[lbl]{7. save scan} (15.2,-7.3);
+\draw[ret] (15.2,-8.0) -- node[lbl]{8. saved} (7.6,-8.0);
+\draw[ret] (7.6,-8.8) -- node[lbl]{9. 200 OK (JSON)} (3.6,-8.8);
+\draw[ret] (3.6,-9.6) -- node[lbl]{10. show verdict} (0,-9.6);
+\end{tikzpicture}}
+\caption{Sequence diagram of one message analysis}
+\label{fig:seq}
+\end{figure}
+
+\begin{itemize}
+\item \textbf{Endpoints.} \texttt{POST /api/v1/public/quick-check} serves visitors without an account (10 requests per minute); \texttt{POST /api/v1/messages/analyze} serves signed-in users (30 per minute). Other routes handle authentication, history, cases, analytics, the copilot and the safety tools.
+\item \textbf{Authentication.} Signed access tokens with refresh tokens; passwords are stored as hashes.
+\item \textbf{Robustness.} Message text is limited to 4,000 characters. If a separate model service is configured, the back end calls it with a 1.5-second timeout and otherwise runs the detector in-process, so the API never waits on a dead service.
+\end{itemize}
+
+\subsection{Dataset construction procedure}
+Algorithm~\ref{alg:build} summarises how the dataset is built and split.
+
+\begin{algorithm}[H]
+\caption{Building and splitting ScamGuard-IN-2026}
+\label{alg:build}
+\begin{algorithmic}[1]
+\Require sources R1--R3, synthetic templates S, audit files
+\State normalise anonymised entities in R1; mask personal data
+\State group real messages into campaigns by MinHash ($J\ge0.6$)
+\For{each reported campaign}
+  \If{strong fraud cue and no genuine cue} \State label scam \Else \State apply the manual decision (scam, genuine or drop) \EndIf
+\EndFor
+\State re-read rows that a cross-validated model strongly contradicts
+\State assign each campaign to train, development or test by a salted hash
+\State add synthetic messages to training only; remove exact test duplicates from training
+\State \Return labelled dataset with split column
+\end{algorithmic}
+\end{algorithm}
+
 \section{Explanation Of Methodology In Details With Equations And Formulae}
 
 \subsection{Problem definition}
@@ -627,6 +740,14 @@ A false positive is a genuine message wrongly flagged, which is the error users 
 
 \section{Experimental setup}
 Models were selected on the development split and then trained on the training and development splits together (9,513 messages). All results below are on the real test split: 1,874 messages (665 genuine, 1,209 scams) from campaigns never seen in training. We also report a 259-message challenge set that the team wrote while designing the rules; because the same people wrote both, it is a development check, not an independent test. Experiments ran on a two-core Intel Xeon at 2.8~GHz with Python 3.13 and scikit-learn 1.7.2. One script produces every table.
+
+\section{Testing}
+Testing was done at three levels.
+\begin{itemize}
+\item \textbf{Unit and integration tests.} 818 automated back-end tests cover preprocessing, the feature extractor, the model registry, the detector, the rules and every API route, and 14 front-end tests cover the main components. All of them pass.
+\item \textbf{Continuous integration.} GitHub Actions runs the back-end and front-end tests on every change before deployment.
+\item \textbf{Live checks.} A scheduled workflow sends known scam and genuine messages to the deployed site every day and checks the verdicts, history and analytics pages.
+\end{itemize}
 
 \section{Performance of the deployed system}
 Table~\ref{tab:final} and Figure~\ref{fig:final} give the main result: all metrics of the deployed system on the real test set, next to the classifier alone and the learned fusion weights described in Section~\ref{sec:fusionexp}.
@@ -845,6 +966,57 @@ The project received no external funding. It was built with free cloud tiers and
 \clearpage
 \section*{Appendix E: POs and PSOs Mapped}
 \addcontentsline{toc}{section}{Appendix E: POs and PSOs Mapped}
+Tables~\ref{tab:co} and~\ref{tab:copo} give the course outcomes of Major Project Phase-2 (23CS7PWPP2) and their CO--PO--PSO mapping; the tables that follow justify the level of each PO and PSO addressed by this project.
+
+\begin{table}[H]
+\centering
+\caption{Course outcomes and where they are addressed}
+\label{tab:co}
+\begin{tabular}{|c|L{6.3cm}|L{5.6cm}|}
+\hline
+\textbf{CO} & \textbf{Course outcome} & \textbf{Addressed in this work} \\
+\hline
+CO1 & Apply software engineering principles in planning, design and requirements within legal, societal and environmental constraints & Sections 2.3, 3 and 4.3: problem statement, requirements, architecture and sub-systems; licensed data, masked personal data \\
+\hline
+CO2 & Apply mathematics, science and engineering to implement the project and draw conclusions with integrity & Section 4.4: mathematical model; Chapter 5: results with confidence intervals \\
+\hline
+CO3 & Monitor and manage schedules, resources and work assignments & Sections 1.8 and 3.5: work plan, timeline and cost \\
+\hline
+CO4 & Test and defend the performance of the implemented project & Chapter 5: testing, metrics and validation \\
+\hline
+CO5 & Work individually and as a team & Shared work on data, model, back end and front end \\
+\hline
+CO6 & Communicate, present and prepare technical documents & This report, the research paper and the presentation \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{CO--PO--PSO mapping of Major Project Phase-2}
+\label{tab:copo}
+\footnotesize
+\setlength{\tabcolsep}{1.9pt}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
+\hline
+ & \textbf{PO1} & \textbf{PO2} & \textbf{PO3} & \textbf{PO4} & \textbf{PO5} & \textbf{PO6} & \textbf{PO7} & \textbf{PO8} & \textbf{PO9} & \textbf{PO10} & \textbf{PO11} & \textbf{PO12} & \textbf{PSO1} & \textbf{PSO2} & \textbf{PSO3} \\
+\hline
+CO1 & & 2 & 2 & & & 2 & 2 & & & & & 2 & 2 & & \\
+\hline
+CO2 & 3 & & & 3 & 3 & & & 3 & & & & & & 3 & 3 \\
+\hline
+CO3 & & & & & & & & & & & 3 & & & & \\
+\hline
+CO4 & & & & & & & 1 & & & & & & & & 1 \\
+\hline
+CO5 & & & & & & & & & 1 & & & 1 & & & \\
+\hline
+CO6 & & & & & & & & & & 2 & & 2 & & & \\
+\hline
+\end{tabular}
+\end{table}
+\clearpage
+
 {\small
 \renewcommand{\arraystretch}{1.2}
 \setlength{\tabcolsep}{6pt}
