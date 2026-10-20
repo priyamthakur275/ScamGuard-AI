@@ -58,7 +58,7 @@ Outcome: 950 IMC rows (19% of the subset) are genuine messages that users had re
 ## Splits
 
 * Near-duplicates are grouped into **campaigns** (MinHash LSH, Jaccard >= 0.6 on word
-  3-shingles after masking numbers and links). One IMC campaign has 719 copies.
+  3-shingles after masking numbers and links). 4,085 real campaigns; the largest has 128 messages and the top 1% of campaigns hold 14% of real rows.
 * Real data is split **by campaign** (hash of the campaign's first text): 25% test,
   15% dev, 60% train. No campaign appears in two splits. Synthetic data is train-only.
 * `test_2026` holds R3 and R4 and is never used for training or tuning.

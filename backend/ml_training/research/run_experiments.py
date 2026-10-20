@@ -102,6 +102,11 @@ class Featurizer:
 
     def fit_transform(self, texts):
         x = prep(texts)
+        if self.kind == "word+char":  # exactly the production feature extractor
+            from ml_common.features.tfidf_vectorizer import TfidfConfig, TfidfFeatureExtractor
+            self.prod = TfidfFeatureExtractor(TfidfConfig(max_features=30000, ngram_range=(1, 2), min_df=2, max_df=0.95, sublinear_tf=True,
+                                                          char_ngram_range=(2, 5), char_max_features=60000))
+            return self.prod.fit_transform(x)
         if self.kind == "word":
             return self.w.fit_transform(x)
         if self.kind == "char":
@@ -110,6 +115,8 @@ class Featurizer:
 
     def transform(self, texts):
         x = prep(texts)
+        if self.kind == "word+char":
+            return self.prod.transform(x)
         if self.kind == "word":
             return self.w.transform(x)
         if self.kind == "char":
