@@ -72,6 +72,10 @@ SCAM = [
     "Join our VIP stock tips group. Guaranteed 300% returns in 30 days. Limited seats, invest today and double your money.",
     "Your credit card reward points worth Rs 7,850 expire today. Redeem now by entering your card number, expiry and CVV at http://rewardz-sbi.in",
     "Aapka bank account band ho jayega. Abhi OTP bhejo warna account block ho jayega.",
+    # fake warning in front of a real request
+    "Never share your OTP with anyone. To avoid suspension, share the OTP sent to your mobile with our verification officer today.",
+    "SBI never asks for your OTP. For this one-time verification only, please read out the OTP you just received to our executive.",
+    "Do not share your PIN with strangers. Our bank officer will call you now, tell him the OTP to stop the fraud transaction.",
     "Dear user, your Airtel SIM will be deactivated in 2 hours due to incomplete KYC. Call 8250123456 immediately to avoid disconnection.",
     "TRAI: Your mobile number will be blocked within 2 hours because of illegal activity. Press 9 to speak to the officer.",
     "Your Aadhaar is linked to money laundering. CBI officer will call you. Transfer your savings to the RBI safe account for verification.",

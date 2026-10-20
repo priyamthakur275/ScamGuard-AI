@@ -31,7 +31,7 @@ STAGE_INFO = {
 
 # intent -> safety action. Only actions whose evidence was matched are shown.
 _ACTIONS: list[tuple[set[str], str, str]] = [
-    ({"asks_for_secret"}, "secret",
+    ({"asks_for_secret", "decoy_warning"}, "secret",
      "Do not share OTPs, PINs, passwords or recovery codes with anyone, including people who say they are from your bank."),
     ({"asks_card_details"}, "card", "Do not send card numbers, expiry dates, CVV or account details by message or call."),
     ({"remote_access_app"}, "remote",
@@ -56,6 +56,7 @@ _ACTIONS: list[tuple[set[str], str, str]] = [
 # What a genuine message does instead of each scam tactic.
 GENUINE_INSTEAD = {
     "asks_for_secret": "Genuine messages tell you never to share an OTP or PIN; they never ask you for one.",
+    "decoy_warning": "A genuine message that warns you about OTPs never asks for the OTP in the same breath.",
     "asks_card_details": "Banks never ask for your card number, expiry date or CVV by message or call.",
     "verify_account_demand": "Real account checks happen inside the official app or at the branch, not through a link in a message.",
     "kyc_update_demand": "KYC is updated in the official app or at the branch; a genuine SMS never sends a KYC link.",
