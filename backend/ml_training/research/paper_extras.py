@@ -34,7 +34,7 @@ from ml_training.research.run_experiments import DS, Scores  # noqa: E402
 HERE = os.path.dirname(os.path.abspath(__file__))
 FIG = os.path.join(HERE, "figures")
 ART = os.path.join(HERE, "..", "..", "artifacts")
-plt.rcParams.update({"font.family": "serif", "font.size": 9, "axes.spines.top": False, "axes.spines.right": False, "savefig.dpi": 300})
+plt.rcParams.update({"font.family": "serif", "font.serif": ["DejaVu Serif"], "font.size": 9, "axes.titlesize": 9, "legend.fontsize": 8, "axes.spines.top": False, "axes.spines.right": False, "savefig.dpi": 300})
 INK, ACC, ACC2, GREY = "#1f2a44", "#c0392b", "#2e86ab", "#9aa0a6"
 
 
@@ -139,17 +139,17 @@ def main() -> int:
     # ---------------- figures
     R = json.load(open(os.path.join(HERE, "results.json")))
 
-    fig, ax = plt.subplots(1, 2, figsize=(6.8, 2.6))
+    fig, ax = plt.subplots(1, 2, figsize=(6.8, 2.5))
     for s, lab, col in ((p, "classifier", ACC2), (f, "final verdict", ACC)):
         fpr, tpr, _ = roc_curve(y, s)
         ax[0].plot(fpr, tpr, color=col, lw=1.4, label=f"{lab} (AUC {roc_auc_score(y, s):.3f})")
         pr, rc, _ = precision_recall_curve(y, s)
         ax[1].plot(rc, pr, color=col, lw=1.4, label=f"{lab} (AP {average_precision_score(y, s):.3f})")
     ax[0].plot([0, 1], [0, 1], ls=":", color=GREY, lw=1)
-    ax[0].set(xlabel="False-alarm rate", ylabel="Recall", title="ROC, real test set")
-    ax[1].set(xlabel="Recall", ylabel="Precision", title="Precision-recall, real test set", ylim=(0.6, 1.01))
+    ax[0].set(xlabel="False-alarm rate", ylabel="Recall")
+    ax[1].set(xlabel="Recall", ylabel="Precision", ylim=(0.6, 1.01))
     for a in ax:
-        a.legend(frameon=False, fontsize=7, loc="lower right")
+        a.legend(frameon=False, loc="lower right")
     save(fig, "roc_pr")
 
     fig, ax = plt.subplots(figsize=(3.3, 2.4))
@@ -157,8 +157,8 @@ def main() -> int:
     ax.plot([t["threshold"] for t in th], [100 * t["recall"] for t in th], marker="o", ms=3, color=ACC, label="recall (scams caught)")
     ax.plot([t["threshold"] for t in th], [100 * t["fpr"] for t in th], marker="s", ms=3, color=ACC2, label="false-alarm rate")
     ax.axvline(0.5, ls=":", color=GREY, lw=1)
-    ax.set(xlabel="Decision threshold on final score", ylabel="%", title="Threshold trade-off")
-    ax.legend(frameon=False, fontsize=7)
+    ax.set(xlabel="Decision threshold on final score", ylabel="%")
+    ax.legend(frameon=False)
     save(fig, "threshold")
 
     fig, ax = plt.subplots(figsize=(3.3, 2.4))
@@ -167,16 +167,16 @@ def main() -> int:
     ax.bar(["reports taken\nas scam", "audited\nlabels"], vals, color=[GREY, ACC2], width=0.55)
     for i, v in enumerate(vals):
         ax.text(i, v + 0.8, f"{v:.1f}%", ha="center", fontsize=8)
-    ax.set(ylabel="False-alarm rate on real test (%)", title="Effect of the label audit")
+    ax.set(ylabel="False-alarm rate on real test (%)")
     save(fig, "label_audit")
 
     fig, ax = plt.subplots(figsize=(3.3, 2.4))
     s_sorted = np.sort(sizes.values)[::-1]
     ax.loglog(np.arange(1, len(s_sorted) + 1), s_sorted, color=INK, lw=1.2)
-    ax.set(xlabel="Campaign rank", ylabel="Messages in campaign", title="Near-duplicate campaigns (real data)")
+    ax.set(xlabel="Campaign rank", ylabel="Messages in campaign")
     save(fig, "campaigns")
 
-    fig, ax = plt.subplots(figsize=(3.3, 2.4))
+    fig, ax = plt.subplots(figsize=(3.3, 2.7))
     e6, e5 = R["E6_legacy_v3"]["real_test"]["fused"], R["E5_fusion"]["real_test"]["hand_fusion_v3"]
     labels = ["Accuracy", "F1", "False alarms"]
     old = [100 * e6["accuracy"], 100 * e6["f1"], 100 * e6["fpr"]]
@@ -188,21 +188,29 @@ def main() -> int:
         ax.text(i - 0.18, old[i] + 1, f"{old[i]:.1f}", ha="center", fontsize=7)
         ax.text(i + 0.18, new[i] + 1, f"{new[i]:.1f}", ha="center", fontsize=7)
     ax.set_xticks(x, labels)
-    ax.set(ylabel="%", title="Old vs new system, real test", ylim=(0, 112))
-    ax.legend(frameon=False, fontsize=7, loc="upper center", ncol=2)
+    ax.set(ylabel="%", ylim=(0, 110))
+    ax.legend(frameon=False, loc="upper center", ncol=2, bbox_to_anchor=(0.5, -0.14))
     save(fig, "old_vs_new")
 
     tp, fp_, fn, tn = (int(((f >= .5) & (y == 1)).sum()), int(((f >= .5) & (y == 0)).sum()), int(((f < .5) & (y == 1)).sum()), int(((f < .5) & (y == 0)).sum()))
-    fig, ax = plt.subplots(figsize=(2.6, 2.3))
-    M = np.array([[tn, fp_], [fn, tp]])
-    ax.imshow(M, cmap="Blues")
-    for i in range(2):
-        for j in range(2):
-            ax.text(j, i, str(M[i, j]), ha="center", va="center", color="white" if M[i, j] > M.max() / 2 else INK, fontsize=10)
-    ax.set_xticks([0, 1], ["genuine", "scam"])
-    ax.set_yticks([0, 1], ["genuine", "scam"])
-    ax.set(xlabel="Predicted", ylabel="Actual", title="Final verdict, real test")
-    save(fig, "confusion")
+    with plt.rc_context({"font.size": 7, "legend.fontsize": 6.5}):
+        fig, (a1, a2) = plt.subplots(1, 2, figsize=(3.5, 1.75), gridspec_kw={"width_ratios": [1, 1.25]})
+        M = np.array([[tn, fp_], [fn, tp]])
+        a1.imshow(M, cmap="Blues")
+        for i in range(2):
+            for j in range(2):
+                a1.text(j, i, str(M[i, j]), ha="center", va="center", color="white" if M[i, j] > M.max() / 2 else INK, fontsize=8)
+        a1.set_xticks([0, 1], ["genuine", "scam"])
+        a1.set_yticks([0, 1], ["genuine", "scam"])
+        a1.set(xlabel="Predicted", ylabel="Actual")
+        a1.set_title("(a) confusion matrix", fontsize=7)
+        a2.plot([t["threshold"] for t in th], [100 * t["recall"] for t in th], marker="o", ms=2.5, color=ACC, label="recall")
+        a2.plot([t["threshold"] for t in th], [100 * t["fpr"] for t in th], marker="s", ms=2.5, color=ACC2, label="false alarms")
+        a2.axvline(0.5, ls=":", color=GREY, lw=1)
+        a2.set(xlabel="Threshold", ylabel="%")
+        a2.set_title("(b) threshold trade-off", fontsize=7)
+        a2.legend(frameon=False, loc="center right")
+        save(fig, "confusion")
     print(json.dumps({k: v for k, v in E.items() if k not in ("thresholds",)}, indent=1)[:3500])
     return 0
 
