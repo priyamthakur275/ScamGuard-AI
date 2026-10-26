@@ -28,4 +28,4 @@ def get_client_ip(request: Request) -> str:
     return request.client.host if request.client else "unknown"
 
 
-limiter = Limiter(key_func=get_client_ip, default_limits=[settings.RATE_LIMIT_DEFAULT])
+limiter = Limiter(key_func=get_client_ip, default_limits=[settings.RATE_LIMIT_DEFAULT], enabled=settings.rate_limit_enabled)

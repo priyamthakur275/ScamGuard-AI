@@ -86,8 +86,12 @@ class Settings(BaseSettings):
     # Local development can use sqlite if PostgreSQL is unavailable.
     DATABASE_URL: str = f"sqlite:///{_DEFAULT_SQLITE_DB}"
 
-    # Internal service-to-service URL for calling ml_service
-    ML_SERVICE_URL: str = "http://localhost:8002"
+    # Optional separate ml_service URL. Empty (the default) = run the model
+    # in-process, which is what every deployment actually does. A default of
+    # http://localhost:8002 made each scan first try a service that does not
+    # exist; on Windows a refused localhost connection takes ~2 s, so local
+    # scans hung and the UI reported the backend as busy.
+    ML_SERVICE_URL: str = ""
 
     # Voice transcription (Phase 6): no provider is configured by default.
     # When unset, server-side audio-file transcription is honestly
@@ -126,6 +130,16 @@ class Settings(BaseSettings):
     # Per visitor IP. A whole classroom/office can share one public IP
     # (NAT), so limits are sized for a room of people, not one person.
     RATE_LIMIT_DEFAULT: str = "300/minute"
+    # None = automatic: on in production and tests, off for local development
+    # (APP_ENV development/dev/local), where one developer re-running checks
+    # quickly hit the 10/minute quick-check limit and saw "too many checks".
+    RATE_LIMIT_ENABLED: bool | None = None
+
+    @property
+    def rate_limit_enabled(self) -> bool:
+        if self.RATE_LIMIT_ENABLED is not None:
+            return self.RATE_LIMIT_ENABLED
+        return self.APP_ENV.strip().lower() not in ("development", "dev", "local")
 
     # Keep-alive (see services/keep_alive.py). Production only.
     KEEPALIVE_ENABLED: bool = True
