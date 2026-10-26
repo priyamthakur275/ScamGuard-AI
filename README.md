@@ -6,7 +6,7 @@ ScamGuard is a full-stack, production-grade cybersecurity intelligence platform 
 
 ## 🌐 Live demo
 
-**https://scamguard-frontend-r6t7.onrender.com** — use **"Try the demo account"** on the sign-in page, or paste a message into the quick check on the home page (no account needed).
+**https://scamguard-ai-zeta.vercel.app** — use **"Try the demo account"** on the sign-in page, or paste a message into the quick check on the home page (no account needed).
 
 Hosted on Render's free tier (frontend + `app_service` + PostgreSQL). The backend keeps both services awake 08:00–22:00 IST (`app_service/services/keep_alive.py`); outside that window the first request can take up to a minute while the server wakes. ML inference runs in-process inside `app_service`; a separate `ml_service` container exists only in the local `docker-compose` setup.
 
