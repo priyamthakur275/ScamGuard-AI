@@ -50,6 +50,8 @@ export const metadata: Metadata = {
   applicationName: "ScamGuard",
   appleWebApp: { capable: true, title: "ScamGuard", statusBarStyle: "black-translucent" },
   icons: { icon: "/icons/icon-192.png", apple: "/icons/apple-touch-icon.png" },
+  // Stop Chrome auto-translate from rewriting React-owned text (see THEME_INIT_SCRIPT).
+  other: { google: "notranslate" },
 };
 
 export const viewport: Viewport = { themeColor: "#0d1117" };
@@ -61,6 +63,12 @@ export const viewport: Viewport = { themeColor: "#0d1117" };
 // CSP script-src hash. If you edit this script, you MUST recompute that
 // hash (see the comment above THEME_SCRIPT_CSP_HASH in next.config.js)
 // or dark-mode initialization will silently fail under CSP enforcement.
+//
+// It also guards React against browser extensions and auto-translate that
+// rewrite the page (Google Translate, Grammarly, ...): they move or wrap
+// text nodes React owns, and React then crashes with "Failed to execute
+// 'removeChild' on 'Node'". The guard makes those two DOM calls tolerate a
+// node that is no longer where React left it (facebook/react#11538).
 const THEME_INIT_SCRIPT = `
 (function () {
   try {
@@ -68,12 +76,30 @@ const THEME_INIT_SCRIPT = `
     var theme = stored === "light" || stored === "dark" ? stored : "dark";
     document.documentElement.classList.toggle("dark", theme === "dark");
   } catch (e) {}
+  try {
+    if (typeof Node === "function" && Node.prototype && !Node.prototype.__sgGuard) {
+      var removeChild = Node.prototype.removeChild;
+      Node.prototype.removeChild = function (child) {
+        if (child && child.parentNode !== this) {
+          if (child.parentNode) { return removeChild.call(child.parentNode, child); }
+          return child;
+        }
+        return removeChild.apply(this, arguments);
+      };
+      var insertBefore = Node.prototype.insertBefore;
+      Node.prototype.insertBefore = function (node, ref) {
+        if (ref && ref.parentNode !== this) { return insertBefore.call(this, node, null); }
+        return insertBefore.apply(this, arguments);
+      };
+      Node.prototype.__sgGuard = true;
+    }
+  } catch (e) {}
 })();
 `;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" translate="no" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
