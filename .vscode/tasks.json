@@ -1,0 +1,53 @@
+{
+  // Terminal > Run Task... (or Ctrl+Shift+B for the default one)
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "ScamGuard: Run (backend + frontend)",
+      "detail": "First run installs everything; then starts both and opens the browser",
+      "type": "shell",
+      "command": "python3 run.py",
+      "windows": { "command": "py -3 run.py" },
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": { "kind": "build", "isDefault": true },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true }
+    },
+    {
+      "label": "ScamGuard: Backend only",
+      "type": "shell",
+      "command": "python3 run.py --backend-only",
+      "windows": { "command": "py -3 run.py --backend-only" },
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "ScamGuard: Install / repair setup",
+      "type": "shell",
+      "command": "python3 run.py --setup-only",
+      "windows": { "command": "py -3 run.py --setup-only" },
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "ScamGuard: Backend tests",
+      "type": "shell",
+      "command": ".venv/bin/python -m pytest -q",
+      "windows": { "command": ".venv\\Scripts\\python.exe -m pytest -q" },
+      "options": { "cwd": "${workspaceFolder}/backend" },
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "ScamGuard: Frontend checks (types + lint + tests)",
+      "type": "shell",
+      "command": "npm run typecheck && npm run lint && npm test",
+      "options": { "cwd": "${workspaceFolder}/frontend" },
+      "group": "test",
+      "problemMatcher": []
+    }
+  ]
+}

@@ -1,5 +1,8 @@
 # Troubleshooting Guide
 
+> **Running locally (not Docker)?** See the Troubleshooting table in [START_HERE.md](START_HERE.md). `python run.py` fixes most local problems on its own.
+
+
 ## Docker Compose Issues
 
 ### Problem: Port 80, 5432, 8000, 3000 is already in use

@@ -1,104 +1,63 @@
-# Run your existing ScamGuard project
+# Run ScamGuard on your computer
 
-This archive updates the uploaded application. It retains the Next.js frontend,
-FastAPI services, SQLAlchemy models, migrations, ML registry/artifacts, and tests.
+## 1. Install two things (once)
 
-## Windows: first-time setup
+| Tool | Version | Download |
+| --- | --- | --- |
+| **Python** | 3.10 to 3.14 (3.12 or 3.13 recommended) | https://www.python.org/downloads/ (Windows: tick **"Add python.exe to PATH"**) |
+| **Node.js** | 18 or newer (the **LTS** version) | https://nodejs.org |
 
-Install Python 3.12 and Node.js 20 or newer. Open PowerShell in the extracted
-project folder (the folder containing this file).
+Restart VS Code after installing them.
 
-```powershell
-python setup_local.py
-python -m venv backend/.venv
-backend/.venv/Scripts/python -m pip install -r backend/requirements.txt -r backend/requirements-ml.txt
-cd frontend
-npm ci
-cd ..
-.\start_all.bat
-```
+No database, no `.env` file, no Docker and no API keys are needed.
 
-Wait for both terminal windows to report ready, then open http://localhost:3000.
-The backend uses http://127.0.0.1:8000. Register through the real CAPTCHA form.
-Registration creates a regular user, not an administrator.
+## 2. Run it
 
-The setup script creates a private JWT key only when `backend/.env` is absent.
-It preserves existing configuration. With no explicit DATABASE_URL, the backend
-uses its existing local SQLite default. The shipped real model runs in-process;
-a separate ML service and a new training run are not required for local startup.
+**VS Code:** open the project folder → **Terminal → Run Task… → "ScamGuard: Run (backend + frontend)"**, or just press **Ctrl+Shift+B**.
 
-## macOS / Linux
+**Terminal:** in the project folder run
 
-```bash
-python3 setup_local.py
-python3 -m venv backend/.venv
-backend/.venv/bin/python -m pip install -r backend/requirements.txt -r backend/requirements-ml.txt
-cd frontend
-npm ci
-cd ..
-```
+| OS | Command |
+| --- | --- |
+| Windows | `py run.py` (or `python run.py`, or double-click `start_all.bat`) |
+| macOS / Linux | `python3 run.py` (or `./start.sh`) |
 
-Terminal 1:
+The **first run** installs everything (2–5 minutes). After that it starts in seconds.
+When you see **"Everything is running"**, the browser opens http://localhost:3000.
 
-```bash
-cd backend
-.venv/bin/python -m uvicorn app_service.main:app --host 127.0.0.1 --port 8000
-```
+- Frontend: http://localhost:3000
+- Backend API docs: http://127.0.0.1:8000/docs
+- Sign in with **"Try the demo account"**, or register (the CAPTCHA is a small sum).
+- **Ctrl+C** in that terminal stops both servers.
 
-Terminal 2:
+Options: `python run.py --backend-only`, `--setup-only` (install/repair only), `--no-browser`.
 
-```bash
-cd frontend
-npm run dev
-```
+## 3. Troubleshooting
 
-## OCR, QR, camera, voice
+| What you see | Why | Fix |
+| --- | --- | --- |
+| "Server busy" / "Too many quick checks" | An old version enforced the public rate limit locally | `git pull`, then run `python run.py` again (local runs have no rate limit now) |
+| "Could not reach the server" / "Server waking up" | The backend isn't running, or an old one is frozen | Run `python run.py`: it stops an old ScamGuard server on ports 8000/3000 and starts fresh |
+| "Port 8000 (or 3000) is used by another program" | A different app uses that port | Close it (or restart the computer) and run again |
+| `'python' is not recognized` (Windows) | Python isn't on PATH | Use `py run.py`, or reinstall Python with "Add python.exe to PATH" ticked |
+| `npm` / `node` not found | Node.js isn't installed or VS Code wasn't restarted | Install Node LTS, restart VS Code |
+| Package install fails mentioning "Microsoft Visual C++" or a compiler | Very new or very old Python | Use Python 3.12 or 3.13, delete `backend/.venv`, run again |
+| Frontend install fails | A previous `npm run dev` is still running, or a broken install | Close other terminals, delete `frontend/node_modules`, run again |
+| Screenshot (OCR) scan says OCR unavailable | The Tesseract program isn't installed (optional) | Install Tesseract OCR; if not on PATH, add `TESSERACT_CMD=C:\Program Files\Tesseract-OCR\tesseract.exe` to `backend/.env` |
+| QR scan error | The ZBar library is missing (optional; Mac: `brew install zbar`, Linux: `sudo apt install libzbar0`) | Install it, or paste the QR link as text instead |
+| Anything else | | Look at `.run-logs/backend.log` and `.run-logs/frontend.log` |
 
-- OCR needs the **Tesseract executable**, in addition to the Python dependencies.
-  Install Tesseract for your OS. If it is not on PATH, set `TESSERACT_CMD` in
-  `backend/.env` to its executable path. Missing OCR returns an extraction error.
-- QR decoding uses **pyzbar/ZBar**. Linux needs `libzbar0`; macOS needs ZBar.
-  On Windows, pyzbar's native DLLs and their runtime dependencies must be present.
-  Decoder failures produce an error rather than a verdict. Docker app images
-  include ZBar and Tesseract; Docker itself was not executed in this verification.
-- Camera requires localhost or HTTPS and a browser camera permission. It sends
-  a captured frame to the existing image/OCR path. Use the QR upload tab for QR.
-- Live voice uses the browser SpeechRecognition capability and may send audio
-  to the browser vendor. Availability depends on browser, microphone, permission,
-  and network. A pasted transcript uses the same real voice-analysis pipeline.
-- Audio uploads have no implemented transcription provider in this project.
-  Setting a provider name/key alone does not implement one. The API reports
-  this limitation; it never substitutes a transcript.
+To start completely fresh: close the terminal, delete `backend/.venv`, `frontend/node_modules`, `backend/.env` and `frontend/.env.local`, then run `python run.py` again.
 
-## Quality checks
+## 4. Tests
 
-From `backend` with the virtual environment active:
+- VS Code: **Terminal → Run Task… → "ScamGuard: Backend tests"** (820 tests) and **"Frontend checks"**.
+- Terminal: `backend/.venv/bin/python -m pytest -q` from `backend/` (Windows: `.venv\Scripts\python -m pytest -q`), and `npm run typecheck && npm run lint && npm test` from `frontend/`.
 
-```bash
-python -m pytest -q
-```
+## 5. What runs where
 
-From `frontend`:
+- **Backend**: FastAPI on http://127.0.0.1:8000, local SQLite database (`backend/app_service/scam_detection.db`, created automatically). The production model (logistic regression v4, trained on ScamGuard-IN-2026) runs in-process.
+- **Frontend**: Next.js dev server on http://localhost:3000; it forwards `/backend-api/*` to the backend, so the browser talks to one address.
+- **Live site** (separate): https://scamguard-ai-zeta.vercel.app (Vercel + Render + Neon).
 
-```bash
-npm run typecheck
-npm run lint
-npm run build
-npm run start
-```
-
-`setup_local.py` writes APP_SERVICE_URL before building. Next.js compiles the
-proxy destination into its build: **rebuild after changing the backend URL**.
-
-## Deployment notes
-
-Keep `.env` files private. Docker Compose requires an explicit private SECRET_KEY;
-it no longer accepts a public fallback. Set it in your deployment environment
-before using the existing Compose setup. The frontend Dockerfile defaults its
-build-time backend URL to `http://app_service:8000` for that setup.
-
-The shipped registry records **19 training rows and 5 evaluation rows**. This is
-an experimental classifier, not a validated enterprise detection model. The UI
-redesign does not change or improve the model's demonstrated accuracy.
-
-See `VERIFICATION.md` for changes, test results, tested flows, and limitations.
+Keep `backend/.env` private: it holds your local secret key and is git-ignored.

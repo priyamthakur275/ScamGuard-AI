@@ -8,7 +8,7 @@ ScamGuard is a full-stack, production-grade cybersecurity intelligence platform 
 
 **https://scamguard-ai-zeta.vercel.app** — use **"Try the demo account"** on the sign-in page, or paste a message into the quick check on the home page (no account needed).
 
-Hosted on Render's free tier (frontend + `app_service` + PostgreSQL). The backend keeps both services awake 08:00–22:00 IST (`app_service/services/keep_alive.py`); outside that window the first request can take up to a minute while the server wakes. ML inference runs in-process inside `app_service`; a separate `ml_service` container exists only in the local `docker-compose` setup.
+Hosted for free: the Next.js frontend on **Vercel**, the FastAPI backend (with the model running in-process) on **Render**, and PostgreSQL on **Neon**. The backend keeps itself awake 24/7 (`app_service/services/keep_alive.py`).
 
 ---
 
@@ -94,75 +94,38 @@ The frontend needs no `.env` for local dev beyond what Next.js generates (`front
 
 ---
 
-### Option A: One-Command Startup with Docker Compose (Recommended)
+### Run it locally (Windows, macOS, Linux)
 
-From the project root directory, run:
+**You need:** Python **3.10 to 3.14** and Node.js **18 or newer** (LTS). That's all: no database, no `.env` file, no Docker.
+
+**In VS Code:** open the project folder, then **Terminal → Run Task… → "ScamGuard: Run (backend + frontend)"** (or press **Ctrl+Shift+B**).
+
+**Or in any terminal**, from the project folder:
+
+```bash
+python run.py        # Windows (or: py run.py, or double-click start_all.bat)
+python3 run.py       # macOS / Linux (or: ./start.sh)
+```
+
+The first run creates `backend/.venv`, installs the Python and npm packages and writes local config (about 2–5 minutes). Then it starts the backend on http://127.0.0.1:8000 and the frontend on http://localhost:3000, checks both answer, and opens the browser. Later runs start in seconds. **Ctrl+C stops both.** Logs are in `.run-logs/`.
+
+It also stops an old ScamGuard server that was left running (the usual cause of "server busy / down" locally), and repairs settings from older setups. Problems? See **START_HERE.md → Troubleshooting**.
+
+Other VS Code tasks: *Backend only*, *Install / repair setup*, *Backend tests*, *Frontend checks*. The Run and Debug panel has *Backend: FastAPI (debug)*, *Frontend: Next.js dev* and *Debug both*.
+
+### Docker Compose (optional, full multi-service setup)
 
 ```bash
 docker compose up --build
 ```
 
-This starts all services together:
-- **Web UI**: [http://localhost:3000](http://localhost:3000) (or via Nginx on port 80)
-- **Backend API**: [http://localhost:8000](http://localhost:8000)
-- **API Docs (Swagger)**: [http://localhost:8000/docs](http://localhost:8000/docs)
-- **ML Service**: [http://localhost:8002](http://localhost:8002)
-- **PostgreSQL**: localhost:5432
-
----
-
-### Quickest: one command (macOS / Linux)
-
-```bash
-./start.sh
-```
-
-First run installs everything (Python virtual environment in `backend/.venv` and npm packages), then it starts the backend on :8000 and the frontend on :3000, waits until both answer and opens http://localhost:3000. Ctrl+C stops both. Logs are in `.run-logs/`. No `.env` file is needed for local use.
-
-### Option B: Local Setup Without Docker (VS Code / Terminal)
-
-Open **three terminal windows** in your IDE/command prompt:
-
-#### Terminal 1 — Backend App Service
-```bash
-cd backend
-python -m venv venv
-# Windows:
-venv\Scripts\activate
-# macOS/Linux:
-# source venv/bin/activate
-
-pip install -r requirements.txt
-# Starts on http://localhost:8000 (uses local SQLite database automatically if PostgreSQL is not set)
-uvicorn app_service.main:app --port 8000 --reload
-```
-
-#### Terminal 2 — ML Inference Service
-```bash
-cd backend
-# Windows:
-venv\Scripts\activate
-# macOS/Linux:
-# source venv/bin/activate
-
-pip install -r requirements-ml.txt
-# Starts on http://localhost:8002 (uses pre-trained models bundled in backend/artifacts)
-uvicorn ml_service.main:app --port 8002 --reload
-```
-
-#### Terminal 3 — Frontend UI
-```bash
-cd frontend
-npm install
-npm run dev
-```
-Open **[http://localhost:3000](http://localhost:3000)** in your browser.
+Starts PostgreSQL, the backend, the optional separate ML service and the frontend (see `backend/docs/ML_SERVICE.md`).
 
 ---
 
 ## 🧪 Testing and Verification
 
-The project includes an automated test suite with **509 unit and integration tests**, all passing as of the last verified run.
+The project includes **820 backend tests** (pytest) and **14 frontend tests** (Vitest), verified on Python 3.10 to 3.14.
 
 Run all tests:
 ```bash
