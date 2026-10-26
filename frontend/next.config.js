@@ -4,7 +4,7 @@
 //   python3 -c "import hashlib,base64; s=open('src/app/layout.tsx').read(); \
 //     import re; m=re.search(r'const THEME_INIT_SCRIPT = \`(.*?)\`;', s, re.DOTALL); \
 //     print('sha256-' + base64.b64encode(hashlib.sha256(m.group(1).encode()).digest()).decode())"
-const THEME_SCRIPT_CSP_HASH = "sha256-VlNa/BXw4f7LgPFa9vvDvmiArIAuuCZ5o0j3Waqm/J8=";
+const THEME_SCRIPT_CSP_HASH = "sha256-07k15woImKBCgBrUxzjMxwUqRuWLy6ceVa24IkjMSdE=";
 
 const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
