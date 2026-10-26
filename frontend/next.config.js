@@ -58,7 +58,10 @@ const nextConfig = {
     let appServiceUrl = process.env.APP_SERVICE_URL;
     if (!appServiceUrl || (!appServiceUrl.startsWith("http://") && !appServiceUrl.startsWith("https://"))) {
       appServiceUrl = process.env.NODE_ENV === "development"
-        ? "http://localhost:8000"
+        // 127.0.0.1, not localhost: Node 17+ resolves localhost to IPv6 (::1)
+        // first, while uvicorn listens on IPv4 127.0.0.1, so the proxy got
+        // "connection refused" and the page said the backend was down.
+        ? "http://127.0.0.1:8000"
         : "https://scamguard-ai-ecnj.onrender.com";
     }
 
