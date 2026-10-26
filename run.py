@@ -63,11 +63,44 @@ def fail(msg: str, hint: str = "") -> None:
 
 
 # ---------------------------------------------------------------- checks ----
+def _find_newer_python() -> str | None:
+    """macOS ships Python 3.9 as `python3`; a newer one is often installed
+    alongside it (python.org installer, Homebrew, pyenv). Find it."""
+    names = [f"python3.{m}" for m in (13, 12, 14, 11, 10)]
+    dirs = ["/opt/homebrew/bin", "/usr/local/bin", os.path.expanduser("~/.pyenv/shims")]
+    dirs += [f"/Library/Frameworks/Python.framework/Versions/3.{m}/bin" for m in (13, 12, 14, 11, 10)]
+    candidates = [shutil.which(n) for n in names]
+    candidates += [os.path.join(d, n) for d in dirs for n in names]
+    if WINDOWS and shutil.which("py"):
+        for m in (13, 12, 14, 11, 10):
+            r = subprocess.run(["py", f"-3.{m}", "-c", "import sys;print(sys.executable)"], capture_output=True, text=True)
+            if r.returncode == 0 and r.stdout.strip():
+                candidates.append(r.stdout.strip())
+    for c in candidates:
+        if not c or not os.path.exists(c):
+            continue
+        r = subprocess.run([c, "-c", "import sys;print(sys.version_info[:2]>=(3,10) and sys.version_info[:2]<(3,15))"],
+                           capture_output=True, text=True)
+        if r.stdout.strip() == "True":
+            return c
+    return None
+
+
 def check_python() -> None:
     v = sys.version_info
     if v < (3, 10) or v >= (3, 15):
-        fail(f"Python {v.major}.{v.minor} found; ScamGuard needs Python 3.10 to 3.14.",
-             "Install Python 3.12 or 3.13 from https://www.python.org/downloads/ and run this again.")
+        newer = _find_newer_python()
+        if newer and not os.environ.get("SCAMGUARD_REEXEC"):
+            info(f"Python {v.major}.{v.minor} is too old; switching to {newer}")
+            os.environ["SCAMGUARD_REEXEC"] = "1"
+            if WINDOWS:
+                sys.exit(subprocess.call([newer, str(ROOT / "run.py"), *sys.argv[1:]]))
+            os.execv(newer, [newer, str(ROOT / "run.py"), *sys.argv[1:]])
+        hint = ("Install Python 3.13 from https://www.python.org/downloads/ (macOS: the 'macOS 64-bit universal2 installer'),"
+                " then close and reopen the terminal and run this again.")
+        if sys.platform == "darwin" and shutil.which("brew"):
+            hint = "Run:  brew install python@3.13   then run this again."
+        fail(f"Python {v.major}.{v.minor} found; ScamGuard needs Python 3.10 to 3.14.", hint)
     ok(f"Python {v.major}.{v.minor}.{v.micro}")
 
 
