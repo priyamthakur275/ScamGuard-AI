@@ -130,10 +130,10 @@ class Settings(BaseSettings):
     # Keep-alive (see services/keep_alive.py). Production only.
     KEEPALIVE_ENABLED: bool = True
     KEEPALIVE_URL: str = "https://scamguard-ai-ecnj.onrender.com/api/v1/health"
-    # Daily window until keep_alive.ALWAYS_ON_FROM, then 24/7: with the
-    # frontend on Vercel the backend is the only always-awake free Render
-    # service, and a full 31-day month (744 h) fits in the 750 free hours.
-    KEEPALIVE_WINDOW_IST: str = "06:00-01:00"
+    # 24/7 ("00:00-00:00" = always). With the frontend on Vercel the backend
+    # is the only always-awake free Render service, and a full 31-day month
+    # (744 h) fits in the 750 free instance-hours.
+    KEEPALIVE_WINDOW_IST: str = "00:00-00:00"
     RATE_LIMIT_AUTH: str = "10/minute"
 
     # ---- Logging ----

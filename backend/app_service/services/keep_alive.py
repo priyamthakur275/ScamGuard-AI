@@ -31,9 +31,9 @@ def parse_window(spec: str) -> tuple[time, time]:
     return time.fromisoformat(start), time.fromisoformat(end)
 
 
-# Until this date, stay inside the configured window so the month's shared
-# 750 free Render hours can't run out; from it on, ping around the clock.
-ALWAYS_ON_FROM = datetime(2026, 11, 1, tzinfo=IST)
+# Kept for an optional future cutover; None = follow the configured window,
+# which now defaults to around the clock (see config.KEEPALIVE_WINDOW_IST).
+ALWAYS_ON_FROM: datetime | None = None
 
 
 def in_window(now: datetime, spec: str, always_on_from: datetime | None = None) -> bool:
