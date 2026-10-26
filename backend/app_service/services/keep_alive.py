@@ -31,8 +31,17 @@ def parse_window(spec: str) -> tuple[time, time]:
     return time.fromisoformat(start), time.fromisoformat(end)
 
 
-def in_window(now: datetime, spec: str) -> bool:
+# Until this date, stay inside the configured window so the month's shared
+# 750 free Render hours can't run out; from it on, ping around the clock.
+ALWAYS_ON_FROM = datetime(2026, 11, 1, tzinfo=IST)
+
+
+def in_window(now: datetime, spec: str, always_on_from: datetime | None = None) -> bool:
+    if always_on_from is not None and now >= always_on_from:
+        return True
     start, end = parse_window(spec)
+    if start == end:  # e.g. "00:00-00:00" = around the clock
+        return True
     current = now.astimezone(IST).time()
     if start <= end:
         return start <= current < end
@@ -45,7 +54,7 @@ async def keep_alive_loop(url: str, window: str, first_delay: float = 60) -> Non
     async with httpx.AsyncClient(timeout=90, follow_redirects=True) as client:
         while True:
             try:
-                if in_window(datetime.now(timezone.utc), window):
+                if in_window(datetime.now(timezone.utc), window, ALWAYS_ON_FROM):
                     resp = await client.get(url)
                     logger.info("Keep-alive ping %s -> %s", url, resp.status_code)
             except asyncio.CancelledError:

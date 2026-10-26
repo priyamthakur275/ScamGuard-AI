@@ -17,3 +17,14 @@ def test_window_is_in_india_time():
 def test_window_crossing_midnight():
     assert in_window(_utc(19, 0), "22:00-02:00")  # 00:30 IST
     assert not in_window(_utc(6, 0), "22:00-02:00")  # 11:30 IST
+
+
+def test_equal_start_and_end_means_always():
+    for h in (0, 6, 12, 19, 23):
+        assert in_window(_utc(h), "00:00-00:00")
+
+
+def test_always_on_after_cutover():
+    cut = datetime(2026, 11, 1, tzinfo=timezone.utc)
+    assert not in_window(_utc(21, 0), "06:00-01:00", cut)  # 02:30 IST, before cutover
+    assert in_window(datetime(2026, 11, 2, 21, 0, tzinfo=timezone.utc), "06:00-01:00", cut)

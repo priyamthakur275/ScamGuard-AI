@@ -11,7 +11,8 @@ settings = get_settings()
 database_url = settings.get_sqlalchemy_database_url
 connect_args = {}
 if make_url(database_url).drivername.startswith("postgresql"):
-    connect_args = {"connect_timeout": 5}
+    # Neon suspends idle databases; give it time to wake up.
+    connect_args = {"connect_timeout": 20}
 elif make_url(database_url).drivername.startswith("sqlite"):
     connect_args = {"check_same_thread": False}
 
@@ -23,8 +24,9 @@ engine_kwargs: dict = {
 
 if make_url(database_url).drivername.startswith("postgresql"):
     engine_kwargs.update({
-        "pool_size": 20,
+        "pool_size": 5,
         "max_overflow": 10,
+        "pool_recycle": 240,  # Neon drops idle connections after ~5 min
     })
 
 engine = create_engine(database_url, **engine_kwargs)
