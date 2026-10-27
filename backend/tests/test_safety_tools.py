@@ -141,3 +141,33 @@ def test_timeline_harmless_chat_and_validation(client):
     assert client.post("/api/v1/tools/timeline", json={"text": "just one single line here"}).status_code == 422
     assert client.post("/api/v1/tools/timeline", json={"text": "x"}).status_code == 422
 
+
+
+def test_model_xray_parts_add_up_to_the_model_output(client):
+    import math
+
+    scam = client.post("/api/v1/tools/model-xray", json={"text": "Your SBI account will be blocked today. Update KYC now at http://sbi-kyc.xyz"}).json()
+    total = scam["bias"] + scam["words_up_total"] + scam["words_down_total"] + scam["char_total"]
+    assert abs(total - scam["logit"]) < 1e-3
+    assert abs(1 / (1 + math.exp(-scam["logit"])) - scam["probability"]) < 1e-3
+    assert scam["probability"] > 0.9 and scam["words_up"] and scam["words_up"][0]["push"] > 0
+    assert all(w["push"] < 0 for w in scam["words_down"])
+    assert scam["vocabulary"] > 1000 and scam["active_features"] > 0
+
+    genuine = client.post("/api/v1/tools/model-xray", json={"text": "Report spam calls and SMS to 1909. Never share your OTP with anyone. -Airtel"}).json()
+    assert genuine["probability"] < 0.1 and genuine["words_down_total"] < 0
+
+
+def test_research_export_matches_the_paper():
+    """The Research Lab page must show exactly the reported confusion matrix."""
+    import json
+    import os
+
+    path = os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "public", "research", "test_scores.json")
+    if not os.path.exists(path):
+        pytest.skip("frontend not present")
+    rows = json.load(open(path, encoding="utf-8"))["rows"]
+    assert len(rows) == 1874
+    tp = sum(1 for r in rows if r["y"] == 1 and r["f"] >= 0.5)
+    fp = sum(1 for r in rows if r["y"] == 0 and r["f"] >= 0.5)
+    assert (tp, fp) == (1175, 21)

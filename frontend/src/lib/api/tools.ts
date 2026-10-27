@@ -42,3 +42,23 @@ export interface TimelineResult {
   note: string;
 }
 export const checkTimeline = (text: string) => apiRequest<TimelineResult>("/tools/timeline", { method: "POST", body: { text }, auth: false });
+
+export interface XrayFeature { feature: string; push: number }
+export interface ModelXrayResult {
+  bias: number;
+  words_up: XrayFeature[];
+  words_down: XrayFeature[];
+  words_up_total: number;
+  words_down_total: number;
+  words_up_count: number;
+  words_down_count: number;
+  char_total: number;
+  char_count: number;
+  char_examples: XrayFeature[];
+  logit: number;
+  probability: number;
+  active_features: number;
+  vocabulary: number;
+  model: string;
+}
+export const modelXray = (text: string) => apiRequest<ModelXrayResult>("/tools/model-xray", { method: "POST", body: { text }, auth: false });

@@ -37,6 +37,8 @@ const config: Config = {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
         },
+        safe: "hsl(var(--safe))",
+        caution: "hsl(var(--caution))",
         risk: {
           "very-low": "hsl(var(--risk-very-low))",
           low: "hsl(var(--risk-low))",

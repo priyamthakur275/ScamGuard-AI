@@ -8,7 +8,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Lock, ScanSearch, ShieldAlert, Sparkles, CheckCircle2, MessageCircleQuestion, FileOutput } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { BackendWarmup } from "@/components/layout/backend-warmup";
 import { QuickCheck } from "@/components/landing/quick-check";
@@ -94,6 +94,7 @@ export default function HomePage() {
         <div className="flex items-center gap-4">
           <InstallAppButton />
           <LanguageToggle />
+          <Link href="/research" className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground md:inline">Research Lab</Link>
           <Link href="/trends" className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground md:inline">Scam trends</Link>
           <Link href="/simulator" className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground md:inline">Simulator</Link>
           <ThemeToggle />
@@ -142,11 +143,37 @@ export default function HomePage() {
             <motion.p variants={itemVariants} className="mt-5 text-sm text-muted-foreground">
               No sign-up needed for a quick check. Nothing you paste is stored.
             </motion.p>
+            <motion.p variants={itemVariants} className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm">
+              <Link href="/demo" className="font-medium text-primary underline-offset-4 hover:underline">Watch the 6-step guided demo</Link>
+              <Link href="/research" className="font-medium text-primary underline-offset-4 hover:underline">See how it was tested</Link>
+            </motion.p>
           </motion.div>
           <HeroXray />
         </section>
 
         <QuickCheck />
+
+        <section className="border-t border-border px-6 py-12">
+          <div className="mx-auto grid max-w-6xl items-center gap-8 md:grid-cols-[minmax(0,1fr)_auto]">
+            <div>
+              <h2 className="text-2xl font-semibold tracking-tight">Tested on 1,874 real messages it had never seen</h2>
+              <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+                Every test message comes from a scam campaign kept out of training. You can move the decision threshold and read
+                every mistake yourself.
+              </p>
+              <dl className="mt-5 grid max-w-xl grid-cols-3 gap-4">
+                {[["97.1%", "accuracy"], ["3.2%", "false alarms"], ["< 4 ms", "per message"]].map(([v, l]) => (
+                  <div key={l}>
+                    <dt className="sr-only">{l}</dt>
+                    <dd className="font-mono text-2xl font-semibold tabular-nums">{v}</dd>
+                    <dd className="text-xs text-muted-foreground">{l}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+            <Link href="/research" className={buttonVariants({ variant: "outline", size: "lg" })}>Open the Research Lab</Link>
+          </div>
+        </section>
 
         {/* Feature Section */}
         <section className="border-t border-border bg-card/30 px-6 py-20">
@@ -223,6 +250,7 @@ export default function HomePage() {
             AI-powered scam detection & threat intelligence.
           </p>
           <div className="flex gap-4">
+            <Link href="/research" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Research Lab</Link>
             <Link href="/trends" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Scam trends</Link>
             <Link href="/simulator" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Scam simulator</Link>
             <Link href="/extension" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Browser extension</Link>

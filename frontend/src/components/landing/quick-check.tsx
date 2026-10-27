@@ -7,6 +7,7 @@ import { quickCheck } from "@/lib/api/public";
 import { ApiError } from "@/lib/api/client";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ShareWarning, displayToken } from "@/components/analysis/share-warning";
+import { ModelXray } from "@/components/analysis/model-xray";
 import { cn, scamCategoryLabel } from "@/lib/utils";
 import type { AnalysisResult } from "@/types";
 import { useLanguage } from "@/lib/i18n/language-context";
@@ -173,6 +174,9 @@ export function QuickCheck({ initialText = "", autoRun = false, heading }: Quick
             </div>
             <div className="mt-4">
               <WhatIf result={result} />
+            </div>
+            <div className="mt-4">
+              <ModelXray text={result.text} />
             </div>
 
             {((result.metadata?.community_reports as { display: string; report_count: number }[] | undefined) ?? []).map((c) => (
