@@ -89,6 +89,13 @@ def what_if(request: Request, payload: WhatIfRequest) -> dict:
     return st.what_if(payload.text)
 
 
+@router.post("/model-xray")
+@limiter.limit("30/minute")
+def model_xray(request: Request, payload: WhatIfRequest) -> dict:
+    """Exact breakdown of the classifier's probability for one message."""
+    return st.model_breakdown(payload.text)
+
+
 class TimelineRequest(BaseModel):
     text: str = Field(min_length=10, max_length=st.MAX_CHAT_CHARS)
 

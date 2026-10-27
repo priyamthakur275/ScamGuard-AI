@@ -238,6 +238,65 @@ def check_file(filename: str, data: bytes) -> ToolResult:
     return ToolResult(risk, summary, flags, facts)
 
 
+# ---------------------------------------------------------------- model x-ray
+def model_breakdown(text: str, top: int = 8) -> dict:
+    """Open up the classifier for one message. Logistic regression is linear,
+    so its probability is exactly sigmoid(bias + sum of weight x TF-IDF value)
+    over the features present in the message. This returns that sum split into
+    readable parts: the bias, the words pushing towards scam, the words pushing
+    towards genuine, and the character patterns (which catch spellings like
+    K.Y.C or bl0cked). Nothing is approximated: the parts add up to the
+    model's own output, which is checked before returning."""
+    import math
+
+    from app_service.services.message_service import get_in_process_prediction_service
+
+    engine = get_in_process_prediction_service()._engine
+    _tokens, features = engine.transform(text)
+    est = engine.estimator
+    coef = est.coef_[0]
+    bias = float(est.intercept_[0])
+    names = engine.feature_names
+    row = features.tocoo()
+    words: list[tuple[str, float]] = []
+    char_total, char_n, char_top = 0.0, 0, []
+    for j, x in zip(row.col, row.data):
+        c = float(coef[j]) * float(x)
+        name = names[j]
+        if name.startswith("~"):
+            char_total += c
+            char_n += 1
+            char_top.append((name[1:], c))
+        else:
+            words.append((name, c))
+    logit = bias + char_total + sum(c for _n, c in words)
+    prob = 1 / (1 + math.exp(-logit))
+    model_prob = float(est.predict_proba(features)[0][1])
+    if abs(prob - model_prob) > 1e-6:  # never show a decomposition that doesn't add up
+        raise RuntimeError("decomposition does not match the model output")
+    up = sorted((w for w in words if w[1] > 0), key=lambda w: -w[1])
+    down = sorted((w for w in words if w[1] < 0), key=lambda w: w[1])
+    char_top.sort(key=lambda w: -abs(w[1]))
+    r = lambda v: round(v, 4)  # noqa: E731
+    return {
+        "bias": r(bias),
+        "words_up": [{"feature": n, "push": r(c)} for n, c in up[:top]],
+        "words_down": [{"feature": n, "push": r(c)} for n, c in down[:top]],
+        "words_up_total": r(sum(c for _n, c in up)),
+        "words_down_total": r(sum(c for _n, c in down)),
+        "words_up_count": len(up),
+        "words_down_count": len(down),
+        "char_total": r(char_total),
+        "char_count": char_n,
+        "char_examples": [{"feature": n, "push": r(c)} for n, c in char_top[:6]],
+        "logit": r(logit),
+        "probability": r(model_prob),
+        "active_features": int(row.nnz),
+        "vocabulary": len(names),
+        "model": f"{engine.version_info.model_name} {engine.version_info.version}",
+    }
+
+
 # ---------------------------------------------------------------- what-if
 _INTENT_LABELS = {
     "asks_for_secret": "asking for your OTP / PIN / password",

@@ -4,6 +4,8 @@ export const STRINGS = {
   "nav.quick": { en: "Quick check", hi: "तुरंत जाँच" },
   "nav.trends": { en: "Scam trends", hi: "स्कैम ट्रेंड" },
   "nav.tools": { en: "Safety tools", hi: "सुरक्षा टूल" },
+  "nav.research": { en: "Research Lab", hi: "रिसर्च लैब" },
+  "nav.demo": { en: "Guided demo", hi: "डेमो" },
   "tl.seeWhy": { en: "See why", hi: "क्यों, देखें" },
   "tl.hide": { en: "Hide", hi: "छिपाएँ" },
   "tl.classifier": { en: "Classifier probability", hi: "मॉडल की संभावना" },

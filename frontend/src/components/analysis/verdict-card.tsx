@@ -1,5 +1,6 @@
 "use client";
 
+import { ModelXray } from "@/components/analysis/model-xray";
 import { ThreatLevelBadge } from "./threat-level-badge";
 import { ShieldAlert, ShieldCheck, ThumbsDown, ThumbsUp, Sparkles, Activity } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -184,6 +185,9 @@ export function VerdictCard({ result, onFeedback }: VerdictCardProps) {
                 </div>
               </div>
             )}
+
+            {/* Exact decomposition of the classifier score */}
+            <ModelXray text={result.text} />
 
             {/* Recommended Actions */}
             <RecommendedActions actions={result.recommended_actions} />
