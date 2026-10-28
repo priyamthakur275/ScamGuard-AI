@@ -156,3 +156,36 @@ def test_model_xray_parts_add_up_to_the_model_output(client):
 
     genuine = client.post("/api/v1/tools/model-xray", json={"text": "Report spam calls and SMS to 1909. Never share your OTP with anyone. -Airtel"}).json()
     assert genuine["probability"] < 0.1 and genuine["words_down_total"] < 0
+
+
+def test_payment_screenshot_rules():
+    from datetime import date
+
+    today = date(2026, 10, 29)
+    good = st.payment_screenshot_text_check("Google Pay  ₹2,500 Payment successful  29 Oct 2026, 10:42 am  UPI transaction ID 430219876543", today)
+    assert good["risk"] == "low" and good["facts"]["utr"] == "430219876543" and good["facts"]["amount"] == "₹2,500"
+    fake = st.payment_screenshot_text_check("PhonePe ₹15,000 Payment Successful 12 Nov 2026 UTR: 12345678", today)
+    titles = [f["title"] for f in fake["flags"]]
+    assert fake["risk"] == "high" and "UTR is not 12 digits" in titles and "Date is in the future" in titles
+    pend = st.payment_screenshot_text_check("Paytm Rs 999 Payment Pending 29/10/2026 UTR 430219876543", today)
+    assert pend["risk"] == "high"
+    assert st.payment_screenshot_text_check("hello how are you", today)["flags"][0]["title"] == "No payment details found"
+
+
+def test_payment_screenshot_endpoint(client):
+    from PIL import Image, ImageDraw, ImageFont
+
+    img = Image.new("RGB", (900, 400), "white")
+    d = ImageDraw.Draw(img)
+    try:
+        f = ImageFont.truetype("DejaVuSans.ttf", 34)
+    except OSError:
+        pytest.skip("font not available")
+    for i, line in enumerate(["PhonePe", "Payment Pending", "Rs 15000", "UTR: 12345678"]):
+        d.text((40, 30 + 85 * i), line, fill="black", font=f)
+    buf = io.BytesIO()
+    img.save(buf, "PNG")
+    r = client.post("/api/v1/tools/payment-screenshot", files={"file": ("pay.png", buf.getvalue(), "image/png")})
+    if r.status_code == 422 and "OCR" in r.text:
+        pytest.skip("tesseract not installed")
+    assert r.status_code == 200 and r.json()["risk"] == "high"

@@ -1,17 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { AlertTriangle, CheckCircle2, FileWarning, Info, Loader2, MessagesSquare, QrCode, ShieldAlert, Upload, Wallet } from "lucide-react";
+import { AlertTriangle, CheckCircle2, FileWarning, ReceiptIndianRupee, Info, Loader2, MessagesSquare, QrCode, ShieldAlert, Upload, Wallet } from "lucide-react";
 import { PublicShell } from "@/components/layout/public-shell";
-import { checkFile, checkQr, checkTimeline, getPayReasons, payCheck, type QrResult, type TimelineResult, type ToolFlag, type ToolResult } from "@/lib/api/tools";
+import { checkFile, checkPaymentScreenshot, checkQr, checkTimeline, getPayReasons, payCheck, type QrResult, type TimelineResult, type ToolFlag, type ToolResult } from "@/lib/api/tools";
 import { useLanguage } from "@/lib/i18n/language-context";
 import type { StringKey } from "@/lib/i18n/strings";
 import { cn, scamCategoryLabel } from "@/lib/utils";
 
-type Tab = "qr" | "pay" | "file" | "chat";
+type Tab = "qr" | "pay" | "proof" | "file" | "chat";
 const TABS: { id: Tab; label: StringKey; icon: typeof QrCode; blurb: string }[] = [
   { id: "qr", label: "tools.qr", icon: QrCode, blurb: "See who a QR code really pays, how much, or where its link goes, before you scan it in your UPI app." },
   { id: "pay", label: "tools.pay", icon: Wallet, blurb: "Someone asked you to pay? Check the UPI ID and the reason against known payment scams." },
+  { id: "proof", label: "tools.proof", icon: ReceiptIndianRupee, blurb: "Selling something and got a 'payment successful' screenshot? Check it for signs of a fake or edited payment before you hand anything over." },
   { id: "file", label: "tools.file", icon: FileWarning, blurb: "Got an attachment on WhatsApp or email? Find out what it really is before you open or install it." },
   { id: "chat", label: "tools.chat", icon: MessagesSquare, blurb: "Paste a whole chat (a WhatsApp export or one message per line). Each message is checked, and you see where the conversation turned into a scam." },
 ];
@@ -174,6 +175,18 @@ function PayTool() {
   );
 }
 
+function ProofTool() {
+  const { busy, error, data, run } = useRun<ToolResult>();
+  return (
+    <div className="space-y-5">
+      <FilePicker accept="image/*" label="Choose the payment screenshot" busy={busy} onFile={(f) => run(() => checkPaymentScreenshot(f))}
+        hint="GPay, PhonePe, Paytm or a bank app screenshot. Checks the UTR number, the status and the date. Nothing is stored." />
+      <ErrorNote error={error} />
+      {data && <ResultView result={data} />}
+    </div>
+  );
+}
+
 function FileTool() {
   const { busy, error, data, run } = useRun<ToolResult>();
   return (
@@ -267,7 +280,7 @@ export default function ToolsPage() {
   const { t } = useLanguage();
   const [tab, setTab] = useState<Tab>("qr");
   const active = TABS.find((t) => t.id === tab)!;
-  const panels: Record<Tab, ReactNode> = { qr: <QrTool />, pay: <PayTool />, file: <FileTool />, chat: <TimelineTool /> };
+  const panels: Record<Tab, ReactNode> = { qr: <QrTool />, pay: <PayTool />, proof: <ProofTool />, file: <FileTool />, chat: <TimelineTool /> };
   return (
     <PublicShell>
       <div className="mx-auto max-w-3xl px-4 py-10 sm:py-14">

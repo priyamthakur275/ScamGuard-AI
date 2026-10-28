@@ -23,6 +23,7 @@ function upload<T>(path: string, file: File): Promise<T> {
 }
 
 export const checkQr = (file: File) => upload<QrResult>("/tools/qr", file);
+export const checkPaymentScreenshot = (file: File) => upload<ToolResult>("/tools/payment-screenshot", file);
 export const checkFile = (file: File) => upload<ToolResult>("/tools/file", file);
 export const getPayReasons = () => apiRequest<{ id: string; label: string }[]>("/tools/pay-reasons", { auth: false });
 export const payCheck = (body: { upi_id: string; payee_name: string; expected_name: string; amount: string; reason: string }) =>
