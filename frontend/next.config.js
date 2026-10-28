@@ -47,7 +47,12 @@ const nextConfig = {
     return [
       { source: "/family/:path*", destination: "/dashboard", permanent: true },
       { source: "/family", destination: "/dashboard", permanent: true },
-      { source: "/trainer", destination: "/simulator", permanent: true },
+      { source: "/trainer", destination: "/", permanent: false },
+      // Simulator, scam trends, research lab and guided demo were removed.
+      { source: "/simulator", destination: "/", permanent: false },
+      { source: "/trends", destination: "/", permanent: false },
+      { source: "/research", destination: "/", permanent: false },
+      { source: "/demo", destination: "/", permanent: false },
       { source: "/flashcards", destination: "/", permanent: false },
     ];
   },

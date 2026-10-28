@@ -8,6 +8,7 @@ import { ApiError } from "@/lib/api/client";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ShareWarning, displayToken } from "@/components/analysis/share-warning";
 import { ModelXray } from "@/components/analysis/model-xray";
+import { MoreDetails } from "@/components/analysis/more-details";
 import { cn, scamCategoryLabel } from "@/lib/utils";
 import type { AnalysisResult } from "@/types";
 import { useLanguage } from "@/lib/i18n/language-context";
@@ -173,10 +174,10 @@ export function QuickCheck({ initialText = "", autoRun = false, heading }: Quick
               <TrustLens result={result} collapsible />
             </div>
             <div className="mt-4">
-              <WhatIf result={result} />
-            </div>
-            <div className="mt-4">
-              <ModelXray text={result.text} />
+              <MoreDetails hint="What-if test and the model's exact maths for this message">
+                <WhatIf result={result} />
+                <ModelXray text={result.text} />
+              </MoreDetails>
             </div>
 
             {((result.metadata?.community_reports as { display: string; report_count: number }[] | undefined) ?? []).map((c) => (

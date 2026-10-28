@@ -2,10 +2,7 @@ export type Lang = "en" | "hi";
 
 export const STRINGS = {
   "nav.quick": { en: "Quick check", hi: "तुरंत जाँच" },
-  "nav.trends": { en: "Scam trends", hi: "स्कैम ट्रेंड" },
   "nav.tools": { en: "Safety tools", hi: "सुरक्षा टूल" },
-  "nav.research": { en: "Research Lab", hi: "रिसर्च लैब" },
-  "nav.demo": { en: "Guided demo", hi: "डेमो" },
   "tl.seeWhy": { en: "See why", hi: "क्यों, देखें" },
   "tl.hide": { en: "Hide", hi: "छिपाएँ" },
   "tl.classifier": { en: "Classifier probability", hi: "मॉडल की संभावना" },
@@ -64,7 +61,6 @@ export const STRINGS = {
   "tools.risk.high": { en: "high risk", hi: "उच्च जोखिम" },
   "tools.risk.medium": { en: "medium risk", hi: "मध्यम जोखिम" },
   "tools.risk.low": { en: "low risk", hi: "कम जोखिम" },
-  "nav.simulator": { en: "Simulator", hi: "सिम्युलेटर" },
   "nav.extension": { en: "Extension", hi: "एक्सटेंशन" },
   "nav.signin": { en: "Sign in", hi: "साइन इन" },
   "footer.lost": { en: "Lost money to a scam? Call", hi: "स्कैम में पैसे गए? तुरंत कॉल करें" },
@@ -102,16 +98,6 @@ export const STRINGS = {
   "rep.copied": { en: "Copied", hi: "कॉपी हो गया" },
 
 
-  "td.kicker": { en: "Live from ScamGuard scans", hi: "ScamGuard जाँचों से लाइव" },
-  "td.title": { en: "Scam trends in India", hi: "भारत में स्कैम ट्रेंड" },
-  "td.sub": { en: "What people are checking on ScamGuard right now. Only anonymous counts are shown — never message text, numbers or links.", hi: "लोग अभी ScamGuard पर क्या जाँच रहे हैं। केवल गुमनाम गिनती दिखाई जाती है — कभी मैसेज, नंबर या लिंक नहीं।" },
-  "td.checked": { en: "Messages checked", hi: "जाँचे गए मैसेज" },
-  "td.flagged": { en: "Flagged as scams", hi: "स्कैम पाए गए" },
-  "td.share": { en: "Share that were scams", hi: "स्कैम का प्रतिशत" },
-  "td.types": { en: "Most common scam types", hi: "सबसे आम स्कैम" },
-  "td.where": { en: "Where scams arrive from", hi: "स्कैम कहाँ से आते हैं" },
-  "td.daily": { en: "Daily checks", hi: "रोज़ की जाँचें" },
-  "td.last": { en: "Last {n} days", hi: "पिछले {n} दिन" },
 } as const;
 
 export type StringKey = keyof typeof STRINGS;
