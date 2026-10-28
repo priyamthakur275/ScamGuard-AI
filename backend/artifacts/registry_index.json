@@ -43,8 +43,8 @@
       },
       "is_production": true,
       "trained_at": "2026-10-20T08:04:33.576606+00:00",
-      "artifact_path": "/home/claude/scamguard-ai/backend/ml_training/research/../../artifacts/logistic_regression/v4/model.joblib",
-      "vectorizer_path": "/home/claude/scamguard-ai/backend/ml_training/research/../../artifacts/logistic_regression/v4/vectorizer.joblib",
+      "artifact_path": "artifacts/logistic_regression/v4/model.joblib",
+      "vectorizer_path": "artifacts/logistic_regression/v4/vectorizer.joblib",
       "train_rows": 9513,
       "test_rows": 1874
     }
