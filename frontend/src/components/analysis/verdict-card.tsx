@@ -1,5 +1,6 @@
 "use client";
 
+import { useLanguage } from "@/lib/i18n/language-context";
 import { ModelXray } from "@/components/analysis/model-xray";
 import { MoreDetails } from "@/components/analysis/more-details";
 import { ThreatLevelBadge } from "./threat-level-badge";
@@ -21,7 +22,7 @@ import { RecommendedActions } from "@/components/analysis/recommended-actions";
 import { SimilarPatterns } from "@/components/analysis/similar-patterns";
 import { Button } from "@/components/ui/button";
 import { CountUp } from "@/components/analysis/demo-polish";
-import { CampaignFingerprint, GoldenHourButton, ScamForecast } from "@/components/analysis/protect-features";
+import { CampaignFingerprint, ElderVerdict, GoldenHourButton, ScamForecast } from "@/components/analysis/protect-features";
 import { formatPercent, scamCategoryLabel, verdictLabel, inputTypeLabel } from "@/lib/utils";
 import type { AnalysisResult, UrlIntelligence, EmailForensics, VoiceEvidenceSignal, CorrelationSignal } from "@/types";
 import { motion, Variants } from "framer-motion";
@@ -49,6 +50,7 @@ const containerVariants: Variants = {
 };
 
 export function VerdictCard({ result, onFeedback }: VerdictCardProps) {
+  const { lang } = useLanguage();
   const isDemo = result.metadata?.is_demo === true;
   const severity = result.threat_level === "critical" ? "critical" : result.risk_level;
   const severityClass = { low: "text-risk-low", medium: "text-risk-medium", high: "text-risk-high", critical: "text-risk-critical" }[severity];
@@ -70,6 +72,7 @@ export function VerdictCard({ result, onFeedback }: VerdictCardProps) {
       className="flex flex-col gap-6"
     >
       {/* Scan Summary Banner */}
+      <ElderVerdict result={result} lang={lang} />
       <ScanSummary result={result} />
 
       <Card className="console-panel overflow-hidden border border-border bg-card">

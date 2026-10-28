@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { ShieldAlert } from "lucide-react";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { InstallAppButton } from "@/components/layout/install-app-button";
+import { ElderToggle } from "@/components/analysis/protect-features";
 import { LanguageToggle } from "@/components/layout/language-toggle";
 import { useLanguage } from "@/lib/i18n/language-context";
 import type { StringKey } from "@/lib/i18n/strings";
@@ -12,6 +13,7 @@ import type { StringKey } from "@/lib/i18n/strings";
 const NAV: { href: string; label: StringKey }[] = [
   { href: "/#quick-check", label: "nav.quick" },
   { href: "/tools", label: "nav.tools" },
+  { href: "/trends", label: "nav.trends" },
   { href: "/simulator", label: "nav.simulator" },
   { href: "/extension", label: "nav.extension" },
 ];
@@ -35,6 +37,7 @@ export function PublicShell({ children }: { children: ReactNode }) {
             </Link>
           ))}
           <InstallAppButton />
+          <ElderToggle />
           <LanguageToggle />
           <ThemeToggle />
           <Link href="/login" className="font-medium text-muted-foreground hover:text-foreground">

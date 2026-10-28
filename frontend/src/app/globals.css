@@ -745,3 +745,11 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 }
 
 /* ---- Elder mode: bigger, calmer, fewer details (presentation only) ---- */
+html.elder { font-size: 118%; }
+html.elder body { letter-spacing: .005em; }
+html.elder .sg-button, html.elder button, html.elder a.sg-button { min-height: 2.75rem; }
+html.elder .evidence-grid, html.elder .copilot-panel, html.elder [id^="copilot-"] { display: none !important; }
+html.elder .elder-hide { display: none !important; }
+html.elder .verdict-heading h3 { font-size: 3.25rem; }
+html.elder .text-xs { font-size: .85rem; }
+html.elder .text-muted-foreground { color: hsl(var(--foreground) / .82); }

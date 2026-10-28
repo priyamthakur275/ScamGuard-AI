@@ -8,7 +8,7 @@ import { ChevronDown } from "lucide-react";
  * opens the rest. */
 export function MoreDetails({ children, label = "Deeper analysis", hint }: { children: ReactNode; label?: string; hint?: string }) {
   return (
-    <details className="group rounded-lg border border-border bg-background/40 print:block [&[open]>summary_svg]:rotate-180">
+    <details className="elder-hide group rounded-lg border border-border bg-background/40 print:block [&[open]>summary_svg]:rotate-180">
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-4 [&::-webkit-details-marker]:hidden">
         <span>
           <span className="block text-sm font-semibold text-foreground">{label}</span>
