@@ -461,3 +461,103 @@ def chat_timeline(text: str) -> dict:
         "note": "Each message is scored on its own by the same engine as a normal scan; the overall score is for the whole chat. "
                 "Stages are marked only where a matching phrase was found.",
     }
+
+
+# ---------------------------------------------------------------- fake payment screenshot
+_UTR_LABEL = re.compile(r"(?:UTR|UPI\s*(?:Ref(?:erence)?|transaction)\s*(?:No\.?|ID|number)?|Ref(?:erence)?\s*No\.?|Transaction\s*ID|Txn\s*ID)\s*[:#.\-]?\s*([A-Z0-9 ]{6,30})", re.I)
+_BAD_STATUS = re.compile(r"\b(pending|processing|in\s*progress|failed|declined|unsuccessful|reversed|on\s*hold)\b", re.I)
+_OK_STATUS = re.compile(r"\b(payment\s+successful|successful|success|paid|completed|money\s+sent|sent\s+successfully)\b", re.I)
+_AMOUNT = re.compile(r"(?:₹|rs\.?|inr)\s*([0-9][0-9,]*(?:\.[0-9]{1,2})?)", re.I)
+_MONTHS = {m: i for i, m in enumerate(("jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"), 1)}
+_DATE_WORD = re.compile(r"\b(\d{1,2})(?:st|nd|rd|th)?\s+([A-Za-z]{3})[a-z]*,?\s+(\d{4})\b")
+_DATE_NUM = re.compile(r"\b(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{2,4})\b")
+_APPS = re.compile(r"\b(google\s*pay|gpay|phonepe|paytm|bhim|amazon\s*pay|cred|upi)\b", re.I)
+
+
+def _find_date(text: str):
+    from datetime import date
+
+    for rx, conv in ((_DATE_WORD, lambda d, m, y: (int(d), _MONTHS.get(m[:3].lower()), int(y))),
+                     (_DATE_NUM, lambda d, m, y: (int(d), int(m), int(y) + (2000 if len(y) == 2 else 0)))):
+        for mt in rx.finditer(text):
+            try:
+                d, m, y = conv(*mt.groups())
+                if m:
+                    return date(y, m, d)
+            except (ValueError, TypeError):
+                continue
+    return None
+
+
+def payment_screenshot_text_check(text: str, today=None) -> dict:
+    """Checks the text of a 'payment successful' screenshot for the signs of a
+    fake or edited one. Rule based; it can only raise doubts, never confirm a
+    payment, so it always ends by telling the user to check their bank app."""
+    from datetime import date, timedelta
+
+    today = today or date.today()
+    t = " ".join(text.split())
+    flags: list[Flag] = []
+    facts: dict = {}
+    if not (_APPS.search(t) or _OK_STATUS.search(t) or _UTR_LABEL.search(t) or _AMOUNT.search(t)):
+        return ToolResult("low", "This doesn't look like a payment screenshot.", [
+            Flag("info", "No payment details found", "Upload the 'payment successful' screen from GPay, PhonePe, Paytm or a bank app.")], {}).to_dict()
+
+    app = _APPS.search(t)
+    if app:
+        facts["app"] = app.group(1).title()
+    amt = _AMOUNT.search(t)
+    if amt:
+        facts["amount"] = "₹" + amt.group(1)
+
+    m = _UTR_LABEL.search(t)
+    utr = re.sub(r"\D", "", m.group(1)) if m else ""
+    if not m:
+        flags.append(Flag("warning", "No UTR / transaction number", "Every real UPI payment has a 12-digit UTR (UPI reference number). Ask for it and search it in your bank app."))
+    elif len(utr) != 12:
+        flags.append(Flag("danger", "UTR is not 12 digits", f"Found '{m.group(1).strip()}'. A UPI reference number is exactly 12 digits; this one looks typed or edited."))
+        facts["utr"] = m.group(1).strip()
+    else:
+        facts["utr"] = utr
+        flags.append(Flag("ok", "UTR format looks right", "12 digits. Search this number in your bank app's transaction history to confirm it reached you."))
+
+    bad = _BAD_STATUS.search(t)
+    if bad:
+        flags.append(Flag("danger", f"Status says '{bad.group(1).lower()}'", "The money has not reached you. Scammers send pending or failed screens and call them 'successful'."))
+    elif not _OK_STATUS.search(t):
+        flags.append(Flag("warning", "No 'successful' status", "The screen doesn't say the payment succeeded."))
+
+    d = _find_date(t)
+    if d:
+        facts["date"] = d.isoformat()
+        if d > today + timedelta(days=1):
+            flags.append(Flag("danger", "Date is in the future", f"The screenshot is dated {d:%d %b %Y}. Real payment screens can't be from the future; it was edited."))
+        elif d < today - timedelta(days=2):
+            flags.append(Flag("warning", "Old screenshot", f"Dated {d:%d %b %Y}. An old screenshot can be resent for a new deal."))
+    else:
+        flags.append(Flag("warning", "No date found", "Real payment screens show the date and time of the payment."))
+
+    flags.append(Flag("info", "A screenshot is never proof", "Screens are easy to edit or fake with apps. Hand over goods only after the money shows in your own bank or UPI app."))
+    risk = _risk(flags)
+    summary = {"high": "Signs of a fake or failed payment. Don't hand over anything yet.",
+               "medium": "Some details are missing. Confirm in your bank app first.",
+               "low": "No obvious signs of editing, but confirm in your bank app before trusting it."}[risk]
+    return ToolResult(risk, summary, flags, facts).to_dict()
+
+
+def payment_screenshot_check(data: bytes) -> dict:
+    from PIL import Image, ImageOps
+    import pytesseract
+
+    try:
+        img = ImageOps.grayscale(Image.open(io.BytesIO(data)))
+    except Exception as e:  # noqa: BLE001
+        raise ValueError("This file is not a readable image.") from e
+    if img.width < 1200:
+        img = img.resize((img.width * 2, img.height * 2))
+    text = pytesseract.image_to_string(img, timeout=25)
+    if not text.strip():
+        raise ValueError("No readable text was found in this image. Use a clearer screenshot.")
+    out = payment_screenshot_text_check(text)
+    out["facts"]["text_read"] = text.strip()[:400]
+    return out

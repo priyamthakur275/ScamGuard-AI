@@ -2,7 +2,7 @@
 
 import { ExampleChips } from "@/components/analysis/demo-polish";
 import { useState, useRef } from "react";
-import { FileText, Link as LinkIcon, Mail, Image as ImageIcon, File, QrCode, Mic } from "lucide-react";
+import { FileText, Link as LinkIcon, Mail, Image as ImageIcon, File, Mic } from "lucide-react";
 import { FileUploadZone } from "./file-upload-zone";
 import { VoiceScanner } from "./voice-scanner";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,6 @@ const TABS = [
   { id: "image", label: "Screenshot", icon: ImageIcon, type: "image" },
   { id: "voice", label: "Voice Call", icon: Mic, type: "voice" },
   { id: "pdf", label: "PDF", icon: File, type: "pdf" },
-  { id: "qr", label: "QR Code", icon: QrCode, type: "qr" },
 ];
 
 export function ScanTabs({ onScan, isScanning = false }: ScanTabsProps) {

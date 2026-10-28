@@ -59,6 +59,17 @@ class PayCheckRequest(BaseModel):
     reason: str = Field(default="other", max_length=30)
 
 
+@router.post("/payment-screenshot")
+@limiter.limit("15/minute")
+async def payment_screenshot(request: Request, file: UploadFile = File(...)) -> dict:
+    """Signs that a 'payment successful' screenshot is fake, edited or not a success."""
+    data = await _read(file, 8 * 1024 * 1024)
+    try:
+        return st.payment_screenshot_check(data)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e)) from e
+
+
 @router.post("/pay-check")
 @limiter.limit("30/minute")
 def pay_check(request: Request, payload: PayCheckRequest) -> dict:
