@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
-import { Mic, MicOff, MessageSquareWarning, RotateCcw, Send, Square, Trash2, Volume2, VolumeX, X } from "lucide-react";
+import { Mic, MicOff, RotateCcw, Send, Square, Trash2, Volume2, VolumeX, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { useCopilot } from "./copilot-provider";
@@ -303,19 +303,35 @@ export function ScamGuardChat() {
             <ChatPanel />
           </ErrorBoundary>
         )}
+        {!open && (
+          <button type="button" onClick={() => setOpen(true)} className="fixed bottom-[5.5rem] right-5 z-50 hidden rounded-2xl rounded-br-sm border border-border bg-card px-3 py-2 text-xs font-medium text-foreground shadow-lg sm:block">
+            Hi! How may I help you?
+          </button>
+        )}
         <button
           type="button"
           onClick={() => setOpen(!open)}
           aria-expanded={open}
           aria-label={open ? "Close ScamGuard Copilot" : "Open ScamGuard Copilot"}
           className={cn(
-            "fixed bottom-5 right-5 z-50 inline-flex h-14 items-center gap-2 rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground shadow-lg transition-transform hover:scale-105",
-            open && "hidden sm:inline-flex",
+            "fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-[999px] bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105",
+            open && "hidden sm:flex",
           )}
         >
-          {open ? <X className="h-5 w-5" /> : <MessageSquareWarning className="h-5 w-5" />}
-          <span className="hidden sm:inline">{open ? "Close" : "Ask Copilot"}</span>
-          {busy && !open && <span className="h-2 w-2 animate-pulse rounded-full bg-primary-foreground" aria-hidden />}
+          {open ? <X className="h-6 w-6" /> : (
+            <svg viewBox="0 0 32 32" className="h-9 w-9" aria-hidden="true">
+              <line x1="16" y1="3" x2="16" y2="7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <circle cx="16" cy="3" r="1.8" fill="currentColor" />
+              <rect x="6" y="7" width="20" height="16" rx="6" fill="currentColor" />
+              <circle cx="12" cy="15" r="2.4" className="fill-primary motion-safe:animate-pulse" />
+              <circle cx="20" cy="15" r="2.4" className="fill-primary motion-safe:animate-pulse" />
+              <rect x="12" y="19" width="8" height="1.6" rx="0.8" className="fill-primary" />
+              <rect x="3" y="12" width="3" height="6" rx="1.5" fill="currentColor" />
+              <rect x="26" y="12" width="3" height="6" rx="1.5" fill="currentColor" />
+              <rect x="11" y="24" width="10" height="5" rx="2" fill="currentColor" />
+            </svg>
+          )}
+          {busy && !open && <span className="absolute right-1 top-1 h-2.5 w-2.5 animate-pulse rounded-[999px] bg-caution" aria-hidden />}
         </button>
       </div>
     </ErrorBoundary>
