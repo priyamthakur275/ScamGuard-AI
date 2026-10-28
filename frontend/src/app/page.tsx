@@ -94,6 +94,7 @@ export default function HomePage() {
         <div className="flex items-center gap-4">
           <InstallAppButton />
           <LanguageToggle />
+          <Link href="/simulator" className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground md:inline">Simulator</Link>
           <ThemeToggle />
           <Link href="/login" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
             Sign in

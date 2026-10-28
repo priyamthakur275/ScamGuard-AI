@@ -189,3 +189,10 @@ def test_payment_screenshot_endpoint(client):
     if r.status_code == 422 and "OCR" in r.text:
         pytest.skip("tesseract not installed")
     assert r.status_code == 200 and r.json()["risk"] == "high"
+
+
+def test_scam_to_genuine_path_lowers_the_score(client):
+    r = client.post("/api/v1/tools/scam-to-genuine", json={"text": "URGENT: Your SBI account will be blocked today. Update KYC immediately at http://sbi-kyc-verify.xyz and share the OTP sent to your phone."}).json()
+    assert r["score"] > 0.9 and len(r["cues"]) >= 3
+    assert r["steps"] and r["steps"][-1]["score"] < 0.5
+    assert all(a["score"] >= b["score"] - 0.05 for a, b in zip(r["steps"], r["steps"][1:]))
