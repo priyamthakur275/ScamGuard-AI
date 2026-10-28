@@ -100,6 +100,13 @@ def what_if(request: Request, payload: WhatIfRequest) -> dict:
     return st.what_if(payload.text)
 
 
+@router.post("/scam-to-genuine")
+@limiter.limit("40/minute")
+def scam_to_genuine(request: Request, payload: WhatIfRequest) -> dict:
+    """Scam cues with safe replacements and the model-guided rewrite path."""
+    return st.scam_to_genuine(payload.text)
+
+
 @router.post("/model-xray")
 @limiter.limit("30/minute")
 def model_xray(request: Request, payload: WhatIfRequest) -> dict:

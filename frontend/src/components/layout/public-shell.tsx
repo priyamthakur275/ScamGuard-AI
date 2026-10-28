@@ -12,6 +12,7 @@ import type { StringKey } from "@/lib/i18n/strings";
 const NAV: { href: string; label: StringKey }[] = [
   { href: "/#quick-check", label: "nav.quick" },
   { href: "/tools", label: "nav.tools" },
+  { href: "/simulator", label: "nav.simulator" },
   { href: "/extension", label: "nav.extension" },
 ];
 
