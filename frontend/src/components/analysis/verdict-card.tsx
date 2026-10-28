@@ -1,6 +1,7 @@
 "use client";
 
 import { ModelXray } from "@/components/analysis/model-xray";
+import { MoreDetails } from "@/components/analysis/more-details";
 import { ThreatLevelBadge } from "./threat-level-badge";
 import { ShieldAlert, ShieldCheck, ThumbsDown, ThumbsUp, Sparkles, Activity } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -133,15 +134,7 @@ export function VerdictCard({ result, onFeedback }: VerdictCardProps) {
             <CampaignFingerprint result={result} />
             <ScamXray xray={(result.metadata?.xray as XrayData | undefined) ?? null} />
             <TrustLens result={result} />
-            <WhatIf result={result} />
-            <ScamForecast result={result} />
             {result.verdict !== "legitimate" && <ReportScam result={result} />}
-            {/* AI Explanation */}
-            <AIExplanation
-              explanation={result.ai_explanation}
-              executiveSummary={result.executive_summary}
-              technicalExplanation={result.technical_explanation}
-            />
 
             <div className="evidence-grid">
             {/* Risk Breakdown */}
@@ -168,32 +161,43 @@ export function VerdictCard({ result, onFeedback }: VerdictCardProps) {
 
             </div>
 
-            {/* Evidence-grounded Copilot Q&A -- only for persisted (non-demo) scans, since it needs a real prediction_id */}
-            {!result.metadata?.is_demo && <div id={`copilot-${result.id}`}><CopilotPanel predictionId={result.id} /></div>}
-
-            {/* Suspicious Keywords */}
-            {result.top_contributing_tokens.length > 0 && (
-              <div className="rounded-lg border border-border bg-background/40 p-5">
-                <p className="mb-3 flex items-center gap-2 text-xs font-semibold text-foreground">
-                  <Sparkles className="h-3.5 w-3.5 text-primary" />
-                  Signals detected
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {result.top_contributing_tokens.map((contribution) => (
-                    <TokenChip key={contribution.token} contribution={contribution} maxWeight={maxWeight} />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Exact decomposition of the classifier score */}
-            <ModelXray text={result.text} />
 
             {/* Recommended Actions */}
             <RecommendedActions actions={result.recommended_actions} />
 
-            {/* Similar Patterns */}
-            <SimilarPatterns patterns={result.similar_patterns} category={result.scam_category} />
+
+            {/* Evidence-grounded Copilot Q&A -- only for persisted (non-demo) scans, since it needs a real prediction_id */}
+            {!result.metadata?.is_demo && <div id={`copilot-${result.id}`}><CopilotPanel predictionId={result.id} /></div>}
+
+            <MoreDetails hint="Written explanation, what-if test, the model's maths and similar known scams">
+              {/* AI Explanation */}
+              <AIExplanation
+                explanation={result.ai_explanation}
+                executiveSummary={result.executive_summary}
+                technicalExplanation={result.technical_explanation}
+              />
+              <WhatIf result={result} />
+              <ScamForecast result={result} />
+              {/* Suspicious Keywords */}
+              {result.top_contributing_tokens.length > 0 && (
+                <div className="rounded-lg border border-border bg-background/40 p-5">
+                  <p className="mb-3 flex items-center gap-2 text-xs font-semibold text-foreground">
+                    <Sparkles className="h-3.5 w-3.5 text-primary" />
+                    Signals detected
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {result.top_contributing_tokens.map((contribution) => (
+                      <TokenChip key={contribution.token} contribution={contribution} maxWeight={maxWeight} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Exact decomposition of the classifier score */}
+              <ModelXray text={result.text} />
+              {/* Similar Patterns */}
+              <SimilarPatterns patterns={result.similar_patterns} category={result.scam_category} />
+            </MoreDetails>
 
             {/* Model info + Feedback */}
             <div className="flex flex-wrap gap-4 items-center justify-between border-t border-border pt-6">

@@ -14,20 +14,3 @@ export async function checkHealth(): Promise<boolean> {
     return false;
   }
 }
-
-export interface ScamTrends {
-  days: number;
-  total_scans: number;
-  flagged_scans: number;
-  flagged_rate: number;
-  top_categories: { category: string; count: number }[];
-  channels: { input_type: string; count: number }[];
-  daily: { date: string; total: number; flagged: number }[];
-  generated_at: string;
-}
-
-export function getTrends(days: 7 | 30): Promise<ScamTrends> {
-  return apiRequest<ScamTrends>(`/public/trends?days=${days}`, { auth: false });
-}
-
-

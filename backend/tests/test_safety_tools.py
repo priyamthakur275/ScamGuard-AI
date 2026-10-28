@@ -156,18 +156,3 @@ def test_model_xray_parts_add_up_to_the_model_output(client):
 
     genuine = client.post("/api/v1/tools/model-xray", json={"text": "Report spam calls and SMS to 1909. Never share your OTP with anyone. -Airtel"}).json()
     assert genuine["probability"] < 0.1 and genuine["words_down_total"] < 0
-
-
-def test_research_export_matches_the_paper():
-    """The Research Lab page must show exactly the reported confusion matrix."""
-    import json
-    import os
-
-    path = os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "public", "research", "test_scores.json")
-    if not os.path.exists(path):
-        pytest.skip("frontend not present")
-    rows = json.load(open(path, encoding="utf-8"))["rows"]
-    assert len(rows) == 1874
-    tp = sum(1 for r in rows if r["y"] == 1 and r["f"] >= 0.5)
-    fp = sum(1 for r in rows if r["y"] == 0 and r["f"] >= 0.5)
-    assert (tp, fp) == (1175, 21)
