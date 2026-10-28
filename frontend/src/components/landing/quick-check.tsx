@@ -7,6 +7,7 @@ import { quickCheck } from "@/lib/api/public";
 import { ApiError } from "@/lib/api/client";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ShareWarning, displayToken } from "@/components/analysis/share-warning";
+import { ElderVerdict } from "@/components/analysis/protect-features";
 import { ModelXray } from "@/components/analysis/model-xray";
 import { MoreDetails } from "@/components/analysis/more-details";
 import { cn, scamCategoryLabel } from "@/lib/utils";
@@ -34,7 +35,7 @@ interface QuickCheckProps {
 }
 
 export function QuickCheck({ initialText = "", autoRun = false, heading }: QuickCheckProps = {}) {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [text, setText] = useState(initialText);
   const autoRan = useRef(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
@@ -134,6 +135,7 @@ export function QuickCheck({ initialText = "", autoRun = false, heading }: Quick
               isScam ? "border-destructive/50 bg-destructive/5" : "border-risk-low/50 bg-risk-low/5",
             )}
           >
+            <div className="mb-4"><ElderVerdict result={result} lang={lang} /></div>
             {verdict ? (
               <ErrorBoundary area="The result view">
                 <RagVerdict verdict={verdict} />

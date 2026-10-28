@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { InstallAppButton } from "@/components/layout/install-app-button";
 import { HeroXray } from "@/components/landing/hero-xray";
+import { ElderToggle } from "@/components/analysis/protect-features";
 import { LanguageToggle } from "@/components/layout/language-toggle";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -93,7 +94,9 @@ export default function HomePage() {
         </div>
         <div className="flex items-center gap-4">
           <InstallAppButton />
+          <ElderToggle />
           <LanguageToggle />
+          <Link href="/trends" className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground md:inline">Scam trends</Link>
           <Link href="/simulator" className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground md:inline">Simulator</Link>
           <ThemeToggle />
           <Link href="/login" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
