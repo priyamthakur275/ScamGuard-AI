@@ -216,9 +216,10 @@ export function ElderToggle() {
       onClick={() => set(!on)}
       aria-pressed={on}
       title="Elder mode: bigger text, simpler screens"
-      className={`rounded-md border px-2.5 py-1.5 text-xs font-semibold ${on ? "border-primary bg-primary/15 text-primary" : "border-border text-muted-foreground hover:text-foreground"}`}
+      className={`whitespace-nowrap rounded-md border px-2 py-1.5 text-xs font-semibold sm:px-2.5 ${on ? "border-primary bg-primary/15 text-primary" : "border-border text-muted-foreground hover:text-foreground"}`}
     >
-      {on ? "Elder mode on" : "Elder mode"}
+      <span className="sm:hidden">{on ? "Elder ✓" : "Elder"}</span>
+      <span className="hidden sm:inline">{on ? "Elder mode on" : "Elder mode"}</span>
     </button>
   );
 }

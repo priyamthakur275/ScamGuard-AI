@@ -74,7 +74,19 @@ def _gemini_config(model: str, max_tokens: int) -> dict:
     thinking level and extra room, or the visible answer can come back empty."""
     if model.startswith("gemini-2"):
         return {"maxOutputTokens": max_tokens, "temperature": 0.3, "thinkingConfig": {"thinkingBudget": 0}}
-    return {"maxOutputTokens": max_tokens + 2048, "temperature": 0.3, "thinkingConfig": {"thinkingLevel": "low"}}
+    return {"maxOutputTokens": max_tokens + 1024, "temperature": 0.3, "thinkingConfig": {"thinkingLevel": _THINKING_LEVEL[0]}}
+
+
+# "minimal" is the fastest Gemini 3 setting; models that reject it fall back to
+# "low" once, and the choice is remembered for the rest of the process.
+_THINKING_LEVEL = ["minimal"]
+
+
+def _downgrade_thinking(status: int, body: str) -> bool:
+    if status == 400 and _THINKING_LEVEL[0] == "minimal" and "thinking" in body.lower():
+        _THINKING_LEVEL[0] = "low"
+        return True
+    return False
 
 
 class GeminiProvider(CopilotLlmProvider):
@@ -95,6 +107,8 @@ class GeminiProvider(CopilotLlmProvider):
                     "generationConfig": _gemini_config(model, max_tokens),
                 },
             )
+            if _downgrade_thinking(resp.status_code, resp.text):
+                return self.complete(system, user, max_tokens)
             resp.raise_for_status()
             parts = resp.json()["candidates"][0].get("content", {}).get("parts", [])
             return "".join(p.get("text", "") for p in parts).strip()
@@ -115,6 +129,9 @@ class GeminiProvider(CopilotLlmProvider):
                 "generationConfig": _gemini_config(model, max_tokens),
             },
         ) as resp:
+            if resp.status_code == 400 and _downgrade_thinking(400, resp.read().decode("utf-8", "replace")):
+                yield from self.stream(system, user, max_tokens)
+                return
             resp.raise_for_status()
             for line in resp.iter_lines():
                 if not line.startswith("data:"):

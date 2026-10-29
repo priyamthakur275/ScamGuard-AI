@@ -286,7 +286,25 @@ def test_chat_follow_up_gives_llm_the_scan(client):
 def test_chat_llm_failure_falls_back_to_builtin(client):
     with patch("app_service.services.copilot_llm_provider.get_configured_provider", return_value=_FakeLLM(fail=True)):
         ev = _events(client.post("/api/v1/copilot/chat", json={"message": "hello"}).text)
-    assert "Paste the message" in "".join(d["text"] for n, d in ev if n == "token")
+    assert "paste it in this chat" in "".join(d["text"] for n, d in ev if n == "token")
+
+
+class _SlowLLM:
+    def stream(self, system, user, max_tokens=400):
+        import time
+        time.sleep(1.5)
+        yield "too late"
+
+
+def test_chat_slow_llm_falls_back_quickly(client):
+    import time
+    with patch("app_service.services.copilot_llm_provider.get_configured_provider", return_value=_SlowLLM()), \
+         patch("app_service.api.v1.copilot_chat.FIRST_TOKEN_SECONDS", 0.3):
+        t0 = time.time()
+        ev = _events(client.post("/api/v1/copilot/chat", json={"message": "how do I report a scam?"}).text)
+    text = "".join(d["text"] for n, d in ev if n == "token")
+    assert "1930" in text and "too late" not in text and ev[-1][0] == "done"
+    assert time.time() - t0 < 1.4
 
 
 class _StreamingLLM:
@@ -316,7 +334,7 @@ def test_chat_llm_stream_interrupted_midway(client):
 def test_chat_llm_fails_before_first_piece_uses_builtin(client):
     with patch("app_service.services.copilot_llm_provider.get_configured_provider", return_value=_StreamingLLM(["x"], fail_after=0)):
         ev = _events(client.post("/api/v1/copilot/chat", json={"message": "hello"}).text)
-    assert "Paste the message" in "".join(d["text"] for n, d in ev if n == "token") and ev[-1][0] == "done"
+    assert "paste it in this chat" in "".join(d["text"] for n, d in ev if n == "token") and ev[-1][0] == "done"
 
 
 def _mock_client(body: str):
@@ -361,7 +379,7 @@ def test_gemini_config_per_generation():
 
     assert _gemini_config("gemini-2.5-flash", 900)["thinkingConfig"] == {"thinkingBudget": 0}
     g3 = _gemini_config("gemini-3.8-flash", 900)
-    assert g3["thinkingConfig"] == {"thinkingLevel": "low"} and g3["maxOutputTokens"] > 900
+    assert g3["thinkingConfig"] == {"thinkingLevel": "minimal"} and g3["maxOutputTokens"] > 900
 
 
 def test_llm_self_check_flags_empty_reply():
@@ -396,5 +414,17 @@ def test_chat_falls_back_when_llm_cap_reached(client):
         first = _events(client.post("/api/v1/copilot/chat", json={"message": "what is phishing?"}).text)
         second = _events(client.post("/api/v1/copilot/chat", json={"message": "what is vishing?"}).text)
     assert "".join(d["text"] for n, d in first if n == "token") == "AI answer"
-    assert "Paste the message" in "".join(d["text"] for n, d in second if n == "token")
+    assert "paste it in this chat" in "".join(d["text"] for n, d in second if n == "token")
     llm_budget.reset()
+
+
+def test_gemini_thinking_falls_back_to_low_once():
+    from app_service.services import copilot_llm_provider as p
+
+    p._THINKING_LEVEL[0] = "minimal"
+    try:
+        assert p._downgrade_thinking(400, '{"error": "thinking_level minimal is not supported"}')
+        assert p._THINKING_LEVEL[0] == "low"
+        assert not p._downgrade_thinking(400, "thinking")  # only once
+    finally:
+        p._THINKING_LEVEL[0] = "minimal"

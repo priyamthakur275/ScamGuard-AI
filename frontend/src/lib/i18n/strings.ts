@@ -14,6 +14,7 @@ export const STRINGS = {
   "td.where": { en: "Where scams arrive from", hi: "स्कैम कहाँ से आते हैं" },
   "td.daily": { en: "Daily checks", hi: "रोज़ की जाँचें" },
   "td.last": { en: "Last {n} days", hi: "पिछले {n} दिन" },
+  "nav.howto": { en: "How to use", hi: "कैसे इस्तेमाल करें" },
   "nav.tools": { en: "Safety tools", hi: "सुरक्षा टूल" },
   "tl.seeWhy": { en: "See why", hi: "क्यों, देखें" },
   "tl.hide": { en: "Hide", hi: "छिपाएँ" },
