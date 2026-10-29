@@ -64,4 +64,3 @@ export interface ModelXrayResult {
 }
 export const modelXray = (text: string) => apiRequest<ModelXrayResult>("/tools/model-xray", { method: "POST", body: { text }, auth: false });
 
-export const riskScore = (text: string) => apiRequest<{ score: number }>("/tools/score", { method: "POST", body: { text }, auth: false });

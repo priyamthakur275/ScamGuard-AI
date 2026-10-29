@@ -100,13 +100,6 @@ def what_if(request: Request, payload: WhatIfRequest) -> dict:
     return st.what_if(payload.text)
 
 
-@router.post("/score")
-@limiter.limit("60/minute")
-def score(request: Request, payload: WhatIfRequest) -> dict:
-    """The final risk score for a text, as the full pipeline computes it."""
-    return {"score": round(st._score(payload.text), 4)}
-
-
 @router.post("/model-xray")
 @limiter.limit("30/minute")
 def model_xray(request: Request, payload: WhatIfRequest) -> dict:

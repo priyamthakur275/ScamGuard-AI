@@ -189,9 +189,3 @@ def test_payment_screenshot_endpoint(client):
     if r.status_code == 422 and "OCR" in r.text:
         pytest.skip("tesseract not installed")
     assert r.status_code == 200 and r.json()["risk"] == "high"
-
-
-def test_score_endpoint(client):
-    scam = client.post("/api/v1/tools/score", json={"text": "Your SBI account will be blocked today. Share the OTP now."}).json()["score"]
-    real = client.post("/api/v1/tools/score", json={"text": "Your SBI account KYC is due for renewal. Update it at your branch or in the YONO app. SBI never asks for your OTP."}).json()["score"]
-    assert scam > 0.9 and real < 0.2
