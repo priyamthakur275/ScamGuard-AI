@@ -164,12 +164,50 @@ GENERAL_FALLBACK = (
     "Here is the short version. To check a message, link, email or call, paste it in this chat and I'll show whether it "
     "is a scam and why. Never share an OTP, PIN, password or card number with anyone. If you lost money, call 1930 "
     "straight away and report at cybercrime.gov.in; for a scam call or SMS without a loss, report it on Chakshu at "
-    "sancharsaathi.gov.in. Ask me again in a moment for a fuller answer."
+    "sancharsaathi.gov.in."
 )
+
+_GENERAL = [
+    (re.compile(r"\b(who are (you|u)|what are (you|u)|your name|kaun ho|aap kaun|tum kaun|introduce)\b", re.I),
+     "I'm ScamGuard Copilot, the assistant inside ScamGuard. I check messages, links, emails and call transcripts for scams "
+     "and explain the exact words that give them away, using ScamGuard's detection model. I can also tell you what to do "
+     "if you were targeted. Paste a suspicious message here to try it."),
+    (re.compile(r"\b(what can (you|u) do|how (can|do) (you|u) help|help me|kya kar sakte|features?)\b", re.I),
+     "I can: 1. check a pasted SMS, WhatsApp message, email or link and say whether it is a scam and why; 2. explain a "
+     "scam you already checked; 3. tell you what to do if you shared an OTP or lost money; 4. show how to report a scam "
+     "in India. Paste a message to start."),
+    (re.compile(r"\b(lost money|paid|sent money|money (is )?gone|paise (chale|bhej|gaye)|fraud ho gaya|thag)\b", re.I),
+     "Act now, the first hour matters. 1. Call 1930 (the national cyber helpline) right away. 2. Report at "
+     "cybercrime.gov.in with the UTR/transaction ID, the scammer's number or UPI ID and screenshots. 3. Call your bank "
+     "on the number on your card and ask them to block the transaction. 4. Don't pay anyone who promises to 'recover' it."),
+    (re.compile(r"\b(shared|gave|told).{0,20}\b(otp|pin|password|cvv)\b|\botp (de|bata) diya\b", re.I),
+     "Change your banking password and UPI PIN now, then call your bank on the number printed on your card to block the "
+     "account or card. If any money left your account, call 1930 straight away and report at cybercrime.gov.in."),
+    (re.compile(r"\b(report|complain|complaint|shikayat)\b", re.I),
+     "To report: if you lost money, call 1930 and file at cybercrime.gov.in. For a scam call, SMS or WhatsApp without a "
+     "loss, report the number on Chakshu at sancharsaathi.gov.in. Forward spam SMS to 1909."),
+    (re.compile(r"\bdigital arrest\b", re.I),
+     "There is no such thing as a 'digital arrest' in Indian law. Police, CBI or customs never arrest anyone over a "
+     "video call or ask for money to 'clear' a case. Hang up, don't transfer anything, and report it at 1930."),
+    (re.compile(r"^\s*(hi|hello|hey|namaste|hii+|yo)\b", re.I),
+     "Hello! Paste a message, link or email you're unsure about and I'll tell you if it's a scam, or ask me anything about "
+     "staying safe online."),
+    (re.compile(r"\b(thanks|thank you|thx|dhanyavad|shukriya)\b", re.I),
+     "You're welcome. Stay safe, and never share an OTP or PIN with anyone."),
+]
+
+
+def general_answer(message: str) -> str:
+    """Built-in answer for common questions when the AI model is unavailable."""
+    for rx, text in _GENERAL:
+        if rx.search(message):
+            return text
+    return GENERAL_FALLBACK
+
 
 # The model must start answering within this many seconds, or the built-in
 # answer is sent instead, so the chat never hangs on a slow AI provider.
-FIRST_TOKEN_SECONDS = 9.0
+FIRST_TOKEN_SECONDS = 15.0
 NEXT_TOKEN_SECONDS = 20.0
 
 GUIDANCE = (
@@ -207,7 +245,7 @@ def chat(request: Request, payload: ChatRequest, db: Session = Depends(get_db)) 
         else:
             previous = next((t.content for t in reversed(payload.history) if t.role == "user" and looks_like_evidence(t.content)), None)
             if previous is None:
-                answer = GENERAL_FALLBACK
+                answer = general_answer(payload.message)
                 llm = ai_stream(payload.message, payload.history, visitor=get_client_ip(request))
             else:
                 kind = "follow_up"

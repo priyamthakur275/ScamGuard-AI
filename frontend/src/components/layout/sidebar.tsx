@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, History, LayoutDashboard, LogOut, ScanSearch, Settings, ShieldAlert, X, Wrench, MessagesSquare, TrendingUp } from "lucide-react";
+import { BarChart3, History, LayoutDashboard, LogOut, ScanSearch, Settings, ShieldAlert, X, Wrench, BookOpen, TrendingUp } from "lucide-react";
 import { useDialogFocus } from "@/hooks/use-dialog-focus";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth/auth-context";
@@ -58,7 +58,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     { href: "/analytics", label: "Analytics", icon: BarChart3 },
     { href: "/tools", label: "Safety Tools", icon: Wrench },
     { href: "/trends", label: "Scam Trends", icon: TrendingUp },
-    { href: "/simulator", label: "Scam Simulator", icon: MessagesSquare },
+    { href: "/flashcards", label: "Flashcards", icon: BookOpen },
     { href: "/settings", label: "Settings", icon: Settings },
     ...(user?.role === "admin" ? [{ href: "/admin", label: "Admin Console", icon: ShieldAlert }] : []),
   ];
