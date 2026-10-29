@@ -207,7 +207,7 @@ def general_answer(message: str) -> str:
 
 # The model must start answering within this many seconds, or the built-in
 # answer is sent instead, so the chat never hangs on a slow AI provider.
-FIRST_TOKEN_SECONDS = 15.0
+FIRST_TOKEN_SECONDS = 45.0
 NEXT_TOKEN_SECONDS = 20.0
 
 GUIDANCE = (
@@ -272,8 +272,24 @@ def chat(request: Request, payload: ChatRequest, db: Session = Depends(get_db)) 
                 try:
                     while True:
                         wait = NEXT_TOKEN_SECONDS if started else FIRST_TOKEN_SECONDS
+                        task = asyncio.ensure_future(asyncio.to_thread(next, llm, None))
+                        waited = 0.0
+                        # While the model thinks, a comment line every few
+                        # seconds keeps proxies and the browser from closing
+                        # the stream as idle.
+                        while not task.done() and waited < wait:
+                            step = min(4.0, wait - waited)
+                            await asyncio.wait({task}, timeout=step)
+                            waited += step
+                            if not task.done():
+                                yield ": thinking\n\n"
+                                if await request.is_disconnected():
+                                    task.cancel()
+                                    return
                         try:
-                            piece = await asyncio.wait_for(asyncio.to_thread(next, llm, None), timeout=wait)
+                            if not task.done():
+                                raise asyncio.TimeoutError
+                            piece = task.result()
                         except asyncio.TimeoutError:
                             logger.warning("Copilot LLM too slow (%ss without a token); using the built-in answer", wait)
                             if started:

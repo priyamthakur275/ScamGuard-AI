@@ -9,7 +9,7 @@ import time
 from collections import deque
 from datetime import datetime, timezone
 
-PER_VISITOR = 10           # AI answers per visitor ...
+PER_VISITOR = 40           # AI answers per visitor (all visitors can share one proxy IP) ...
 PER_VISITOR_WINDOW = 600   # ... per 10 minutes
 _lock = threading.Lock()
 _visitors: dict[str, deque[float]] = {}
