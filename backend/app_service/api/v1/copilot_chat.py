@@ -143,10 +143,10 @@ def ai_stream(message: str, history: list[ChatTurn], scan_context: str | None = 
     user = "\n\n".join(parts)
     stream = getattr(provider, "stream", None)
     if stream is not None:
-        return iter(stream(COPILOT_PERSONA, user, 900))
+        return iter(stream(COPILOT_PERSONA, user, 600))
 
     def once():
-        yield provider.complete(COPILOT_PERSONA, user, 900)
+        yield provider.complete(COPILOT_PERSONA, user, 600)
 
     return once()
 
@@ -158,6 +158,19 @@ def _sse(event: str, data: dict) -> str:
 def _chunks(text: str) -> list[str]:
     return re.findall(r"\S+\s*", text)
 
+
+# Used when the AI model is unavailable or too slow to start answering.
+GENERAL_FALLBACK = (
+    "Here is the short version. To check a message, link, email or call, paste it in this chat and I'll show whether it "
+    "is a scam and why. Never share an OTP, PIN, password or card number with anyone. If you lost money, call 1930 "
+    "straight away and report at cybercrime.gov.in; for a scam call or SMS without a loss, report it on Chakshu at "
+    "sancharsaathi.gov.in. Ask me again in a moment for a fuller answer."
+)
+
+# The model must start answering within this many seconds, or the built-in
+# answer is sent instead, so the chat never hangs on a slow AI provider.
+FIRST_TOKEN_SECONDS = 9.0
+NEXT_TOKEN_SECONDS = 20.0
 
 GUIDANCE = (
     "Paste the message, link, email or call transcript you want me to check, and I'll tell you whether it is a scam, "
@@ -178,7 +191,7 @@ def analyze(request: Request, payload: AnalyzeRequest, db: Session = Depends(get
 @router.post("/chat")
 @limiter.limit("20/minute")
 def chat(request: Request, payload: ChatRequest, db: Session = Depends(get_db)) -> StreamingResponse:
-    from app_service.services.copilot_service import get_answer
+    from app_service.services.copilot_service import answer_question
 
     events: list[str] = []
     kind = "guidance"
@@ -186,18 +199,20 @@ def chat(request: Request, payload: ChatRequest, db: Session = Depends(get_db)) 
     try:
         if looks_like_evidence(payload.message):
             kind = "evidence"
-            outcome = analyze_evidence(db, payload.message)
+            # The verdict comes from the detection engine alone (no LLM review),
+            # as on the quick check, so it arrives in about a second.
+            outcome = analyze_evidence(db, payload.message, llm_review=False)
             events.append(_sse("verdict", outcome.verdict.model_dump()))
             answer = outcome.answer
         else:
             previous = next((t.content for t in reversed(payload.history) if t.role == "user" and looks_like_evidence(t.content)), None)
             if previous is None:
-                answer = GUIDANCE
+                answer = GENERAL_FALLBACK
                 llm = ai_stream(payload.message, payload.history, visitor=get_client_ip(request))
             else:
                 kind = "follow_up"
                 outcome = analyze_evidence(db, previous, llm_review=False)  # context only
-                answer = get_answer(payload.message, outcome.analysis).answer
+                answer = answer_question(payload.message, outcome.analysis).answer
                 llm = ai_stream(payload.message, payload.history, outcome.answer, visitor=get_client_ip(request))
     except Exception:
         logger.exception("Copilot chat failed")
@@ -218,7 +233,15 @@ def chat(request: Request, payload: ChatRequest, db: Session = Depends(get_db)) 
                 started = False
                 try:
                     while True:
-                        piece = await asyncio.to_thread(next, llm, None)
+                        wait = NEXT_TOKEN_SECONDS if started else FIRST_TOKEN_SECONDS
+                        try:
+                            piece = await asyncio.wait_for(asyncio.to_thread(next, llm, None), timeout=wait)
+                        except asyncio.TimeoutError:
+                            logger.warning("Copilot LLM too slow (%ss without a token); using the built-in answer", wait)
+                            if started:
+                                yield _sse("done", {"kind": kind})
+                                return
+                            break
                         if piece is None:
                             break
                         if not started and not piece.strip():

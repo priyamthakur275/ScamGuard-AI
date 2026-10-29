@@ -290,10 +290,20 @@ def get_answer(question: str, scan: AnalysisResult) -> CopilotAnswer:
     """
     from app_service.services.copilot_llm_provider import get_llm_answer, CopilotLlmUnavailableError
 
+    from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeout
+
     try:
         grounding_context = _build_grounding_context(scan)
-        llm_text = get_llm_answer(question, grounding_context)
+        # A slow provider must not hold the panel: past 10 s the
+        # evidence-grounded engine answers instead.
+        pool = ThreadPoolExecutor(max_workers=1)
+        try:
+            llm_text = pool.submit(get_llm_answer, question, grounding_context).result(timeout=10)
+        finally:
+            pool.shutdown(wait=False)
         return CopilotAnswer(llm_text, ("llm_grounded_context",), "llm", classify_intent(question))
+    except FutureTimeout:
+        return answer_question(question, scan)
     except CopilotLlmUnavailableError:
         return answer_question(question, scan)
     except Exception:

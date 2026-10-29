@@ -94,7 +94,9 @@ async function parseErrorBody(response: Response): Promise<ApiErrorBody> {
     if (response.status >= 500) {
       return {
         error_code: "SERVICE_UNAVAILABLE",
-        message: "The backend server is starting up or temporarily busy. Please wait a moment and try again.",
+        message: process.env.NODE_ENV === "development"
+          ? "The local backend isn't answering on 127.0.0.1:8000. Start everything with `python run.py` from the project folder."
+          : "The server is waking up. This takes a few seconds on the free plan; please try again.",
       };
     }
     return { error_code: "UNKNOWN_ERROR", message: `Request failed with status ${response.status}.` };
@@ -143,10 +145,23 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   // single blip never surfaces as a failed sign-in or scan. A 429/502/503
   // means the request was never processed, so retrying is safe for any
   // method; 504 may have been processed, so it is retried for GET only.
+  // A 500 whose body is not our JSON error comes from the proxy in front of
+  // the API (the upstream connection was refused or reset, e.g. while Render
+  // swaps instances on a deploy), so the request never reached the app and is
+  // retried too. Network errors get three quick retries.
   const fetchWithRetry = async (urlBase: string): Promise<Response> => {
     for (let attempt = 0; ; attempt++) {
-      const res = await doFetch(urlBase);
-      const retryable = res.status === 429 || res.status === 502 || res.status === 503 || (res.status === 504 && method === "GET");
+      let res: Response;
+      try {
+        res = await doFetch(urlBase);
+      } catch (error) {
+        const aborted = error instanceof DOMException && error.name === "AbortError";
+        if (aborted || attempt >= 3) throw error;
+        await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+        continue;
+      }
+      const proxyError = res.status === 500 && !(res.headers.get("content-type") ?? "").includes("application/json");
+      const retryable = proxyError || res.status === 429 || res.status === 502 || res.status === 503 || (res.status === 504 && method === "GET");
       if (!retryable || attempt >= MAX_RETRIES) return res;
       const retryAfter = Number(res.headers.get("retry-after"));
       const delay = Number.isFinite(retryAfter) && retryAfter > 0 ? Math.min(retryAfter * 1000, 8000) : Math.min(800 * 2 ** attempt, 15000);

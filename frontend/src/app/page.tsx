@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { BackendWarmup } from "@/components/layout/backend-warmup";
 import { QuickCheck } from "@/components/landing/quick-check";
+import { HowToCards } from "@/components/landing/how-to-cards";
 import { FullPageSpinner } from "@/components/ui/spinner";
 import { motion, Variants } from "framer-motion";
 import { Card } from "@/components/ui/card";
@@ -99,7 +100,7 @@ export default function HomePage() {
           <Link href="/trends" className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground md:inline">Scam trends</Link>
           <Link href="/simulator" className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground md:inline">Simulator</Link>
           <ThemeToggle />
-          <Link href="/login" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+          <Link href="/login" className="whitespace-nowrap text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
             Sign in
           </Link>
           <Button onClick={() => router.push("/register")} size="sm" className="hidden sm:flex">
@@ -149,6 +150,7 @@ export default function HomePage() {
         </section>
 
         <QuickCheck />
+        <HowToCards />
 
         {/* Feature Section */}
         <section className="border-t border-border bg-card/30 px-6 py-20">
