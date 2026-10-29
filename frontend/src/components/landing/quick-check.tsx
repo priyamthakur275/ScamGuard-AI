@@ -7,7 +7,7 @@ import { quickCheck } from "@/lib/api/public";
 import { ApiError } from "@/lib/api/client";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ShareWarning, displayToken } from "@/components/analysis/share-warning";
-import { ElderVerdict } from "@/components/analysis/protect-features";
+import { ElderQuestions, ElderVerdict } from "@/components/analysis/elder";
 import { ModelXray } from "@/components/analysis/model-xray";
 import { MoreDetails } from "@/components/analysis/more-details";
 import { cn, scamCategoryLabel } from "@/lib/utils";
@@ -97,7 +97,8 @@ export function QuickCheck({ initialText = "", autoRun = false, heading }: Quick
           {t("qc.sub")}
         </p>
 
-        <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-3">
+        <div className="mt-6"><ElderQuestions lang={lang} /></div>
+        <form onSubmit={onSubmit} className="flex flex-col gap-3">
           <textarea
             aria-label="Message to check"
             value={text}

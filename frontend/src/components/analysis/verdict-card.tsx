@@ -1,6 +1,7 @@
 "use client";
 
 import { useLanguage } from "@/lib/i18n/language-context";
+import { ElderVerdict } from "@/components/analysis/elder";
 import { ModelXray } from "@/components/analysis/model-xray";
 import { MoreDetails } from "@/components/analysis/more-details";
 import { ThreatLevelBadge } from "./threat-level-badge";
@@ -22,7 +23,7 @@ import { RecommendedActions } from "@/components/analysis/recommended-actions";
 import { SimilarPatterns } from "@/components/analysis/similar-patterns";
 import { Button } from "@/components/ui/button";
 import { CountUp } from "@/components/analysis/demo-polish";
-import { CampaignFingerprint, ElderVerdict, GoldenHourButton, ScamForecast } from "@/components/analysis/protect-features";
+import { CampaignFingerprint, GoldenHourButton, ScamForecast } from "@/components/analysis/protect-features";
 import { formatPercent, scamCategoryLabel, verdictLabel, inputTypeLabel } from "@/lib/utils";
 import type { AnalysisResult, UrlIntelligence, EmailForensics, VoiceEvidenceSignal, CorrelationSignal } from "@/types";
 import { motion, Variants } from "framer-motion";
