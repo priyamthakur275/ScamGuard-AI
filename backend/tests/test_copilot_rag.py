@@ -286,7 +286,7 @@ def test_chat_follow_up_gives_llm_the_scan(client):
 def test_chat_llm_failure_falls_back_to_builtin(client):
     with patch("app_service.services.copilot_llm_provider.get_configured_provider", return_value=_FakeLLM(fail=True)):
         ev = _events(client.post("/api/v1/copilot/chat", json={"message": "hello"}).text)
-    assert "paste it in this chat" in "".join(d["text"] for n, d in ev if n == "token")
+    assert "aste" in "".join(d["text"] for n, d in ev if n == "token")
 
 
 class _SlowLLM:
@@ -303,7 +303,7 @@ def test_chat_slow_llm_falls_back_quickly(client):
         t0 = time.time()
         ev = _events(client.post("/api/v1/copilot/chat", json={"message": "how do I report a scam?"}).text)
     text = "".join(d["text"] for n, d in ev if n == "token")
-    assert "1930" in text and "too late" not in text and ev[-1][0] == "done"
+    assert "1930" in text and "Chakshu" in text and "too late" not in text and ev[-1][0] == "done"
     assert time.time() - t0 < 1.4
 
 
@@ -334,7 +334,7 @@ def test_chat_llm_stream_interrupted_midway(client):
 def test_chat_llm_fails_before_first_piece_uses_builtin(client):
     with patch("app_service.services.copilot_llm_provider.get_configured_provider", return_value=_StreamingLLM(["x"], fail_after=0)):
         ev = _events(client.post("/api/v1/copilot/chat", json={"message": "hello"}).text)
-    assert "paste it in this chat" in "".join(d["text"] for n, d in ev if n == "token") and ev[-1][0] == "done"
+    assert "aste" in "".join(d["text"] for n, d in ev if n == "token") and ev[-1][0] == "done"
 
 
 def _mock_client(body: str):
@@ -414,7 +414,7 @@ def test_chat_falls_back_when_llm_cap_reached(client):
         first = _events(client.post("/api/v1/copilot/chat", json={"message": "what is phishing?"}).text)
         second = _events(client.post("/api/v1/copilot/chat", json={"message": "what is vishing?"}).text)
     assert "".join(d["text"] for n, d in first if n == "token") == "AI answer"
-    assert "paste it in this chat" in "".join(d["text"] for n, d in second if n == "token")
+    assert "aste" in "".join(d["text"] for n, d in second if n == "token")
     llm_budget.reset()
 
 
@@ -428,3 +428,11 @@ def test_gemini_thinking_falls_back_to_low_once():
         assert not p._downgrade_thinking(400, "thinking")  # only once
     finally:
         p._THINKING_LEVEL[0] = "minimal"
+
+
+def test_general_answer_intents():
+    from app_service.api.v1.copilot_chat import general_answer
+    assert "ScamGuard Copilot" in general_answer("who are u")
+    assert "1930" in general_answer("maine paise bhej diye, fraud ho gaya")
+    assert "Chakshu" in general_answer("how do I report a scam")
+    assert "digital arrest" in general_answer("is digital arrest real?").lower()

@@ -194,17 +194,13 @@ with sync_playwright() as p:
         qc.get_by_role("button").filter(has_text=re.compile("Check",re.I)).first.click()
         p5.get_by_text("Looks genuine").first.wait_for(timeout=60000); c5.close()
     check("genuine salary credit SMS is not flagged",genuine_salary)
-    def simulator():
-        c6=b.new_context(); p6=c6.new_page(); p6.goto(BASE+"/simulator"); p6.wait_for_load_state("networkidle")
-        p6.get_by_role("tab",name="Bank KYC call").click()
-        p6.get_by_text("fraud index").first.wait_for(timeout=60000)
-        p6.get_by_role("button",name="Okay, please help me update it quickly.").click()
-        p6.get_by_role("button",name="Reads out the OTP.").click()
-        p6.get_by_role("button",name="Hang up, block the number and report it on Chakshu.").click()
-        p6.get_by_text("would have taken Rs 49,999").wait_for(timeout=10000); c6.close()
-    check("scam simulator: engine reading, scoring and money lost",simulator)
+    def flashcards():
+        c6=b.new_context(); p6=c6.new_page(); p6.goto(BASE+"/flashcards"); p6.wait_for_load_state("networkidle")
+        cards=p6.locator("#how-to-use button[aria-pressed]"); assert cards.count()==8, cards.count()
+        cards.first.click(); p6.get_by_text("Copy the message you received.").wait_for(timeout=5000); c6.close()
+    check("flashcards: eight cards flip to show steps",flashcards)
     def retired_routes():
-        for old,new in [("/family","/dashboard"),("/trainer","/simulator")]:
+        for old,new in [("/family","/dashboard"),("/trainer","/flashcards")]:
             r=page.request.get(BASE+old,max_redirects=0)
             assert r.status==308 and r.headers.get("location","").endswith(new),(old,r.status,r.headers.get("location"))
     check("retired pages redirect permanently",retired_routes)
@@ -228,7 +224,7 @@ with sync_playwright() as p:
         m=b.new_context(viewport={"width":390,"height":844}, storage_state=ctx.storage_state())
         mp=m.new_page()
         problems=[]
-        for path,shot in [("/","22_m_landing"),("/dashboard","23_m_dashboard"),("/analyze","24_m_analyze"),("/history","25_m_history"),("/analytics","33_m_analytics"),("/settings","35_m_settings"),("/simulator","36_m_simulator")]:
+        for path,shot in [("/","22_m_landing"),("/dashboard","23_m_dashboard"),("/analyze","24_m_analyze"),("/history","25_m_history"),("/analytics","33_m_analytics"),("/settings","35_m_settings"),("/flashcards","36_m_flashcards")]:
             mp.goto(BASE+path); mp.wait_for_load_state("networkidle"); mp.wait_for_timeout(900)
             sw=mp.evaluate("document.documentElement.scrollWidth")
             if sw>390: problems.append(f"{path} page overflow {sw}")

@@ -98,7 +98,6 @@ export default function HomePage() {
           <ElderToggle />
           <LanguageToggle />
           <Link href="/trends" className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground md:inline">Scam trends</Link>
-          <Link href="/simulator" className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground md:inline">Simulator</Link>
           <ThemeToggle />
           <Link href="/login" className="whitespace-nowrap text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
             Sign in
