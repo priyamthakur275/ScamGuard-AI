@@ -64,7 +64,4 @@ export interface ModelXrayResult {
 }
 export const modelXray = (text: string) => apiRequest<ModelXrayResult>("/tools/model-xray", { method: "POST", body: { text }, auth: false });
 
-export interface GenuineCue { label: string; phrase: string; replacement: string }
-export interface GenuineStep extends GenuineCue { text: string; score: number }
-export interface ScamToGenuine { score: number; cues: GenuineCue[]; steps: GenuineStep[] }
-export const scamToGenuine = (text: string) => apiRequest<ScamToGenuine>("/tools/scam-to-genuine", { method: "POST", body: { text }, auth: false });
+export const riskScore = (text: string) => apiRequest<{ score: number }>("/tools/score", { method: "POST", body: { text }, auth: false });

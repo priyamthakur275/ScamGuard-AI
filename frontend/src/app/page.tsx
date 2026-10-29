@@ -120,7 +120,7 @@ export default function HomePage() {
           >
             <motion.h1
               variants={itemVariants}
-              className="mb-6 max-w-3xl font-display text-5xl font-extrabold leading-[1.02] tracking-[-0.04em] sm:text-6xl xl:text-[4.6rem]"
+              className="mb-6 max-w-3xl font-display text-4xl font-bold leading-tight tracking-tight sm:text-5xl"
             >
               Forward the message. We&apos;ll show you the trap.
             </motion.h1>

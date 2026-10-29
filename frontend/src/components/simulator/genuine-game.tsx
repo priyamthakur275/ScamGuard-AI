@@ -1,169 +1,160 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Lightbulb, Loader2, RotateCcw, Sparkles, Wand2 } from "lucide-react";
-import { scamToGenuine, type GenuineCue, type ScamToGenuine } from "@/lib/api/tools";
+import { RotateCcw } from "lucide-react";
+import { riskScore } from "@/lib/api/tools";
 import { cn } from "@/lib/utils";
 
-const SAMPLES = [
-  "URGENT: Your SBI account will be blocked today. Update KYC immediately at http://sbi-kyc-verify.xyz and share the OTP sent to your phone.",
-  "This is CBI Mumbai. You are under digital arrest. Do not tell anyone. Transfer Rs 50,000 to the verification account.",
-  "Dear customer, your electricity will be disconnected tonight at 9:30 pm. Call officer 9123456780 immediately to update your bill.",
+type Trap = { find: string; fix: string; label: string; why: string };
+type Case = { title: string; sender: string; realSender: string; text: string; traps: Trap[] };
+
+/* Hand-written fixes, so the end result reads like a real notice. Every score
+ * shown is computed live by the same engine as the rest of the site. */
+const CASES: Case[] = [
+  {
+    title: "Bank KYC",
+    sender: "+91 98765 41207",
+    realSender: "VM-SBIBNK",
+    text: "URGENT: Your SBI account will be blocked today. Update KYC immediately at http://sbi-kyc-verify.xyz and share the OTP sent to your phone.",
+    traps: [
+      { find: "URGENT: ", fix: "", label: "Urgency", why: "Banks don't shout or rush you." },
+      { find: "will be blocked today", fix: "KYC is due for renewal", label: "Threat", why: "A real notice gives a due date, not a same-day block." },
+      { find: "Update KYC immediately at http://sbi-kyc-verify.xyz", fix: "Update it at your branch or in the YONO app", label: "Link", why: "KYC is done at the branch or in the official app, never through a link in an SMS." },
+      { find: " and share the OTP sent to your phone.", fix: ". SBI never asks for your OTP.", label: "OTP request", why: "No bank ever asks for your OTP." },
+    ],
+  },
+  {
+    title: "Digital arrest",
+    sender: "+91 70214 88310",
+    realSender: "VM-MUMPOL",
+    text: "This is CBI Mumbai. You are under digital arrest. Do not tell anyone. Transfer Rs 50,000 to the verification account.",
+    traps: [
+      { find: "This is CBI Mumbai.", fix: "Cyber awareness message from Mumbai Police:", label: "Fake authority", why: "CBI and the police don't arrest people over a phone message." },
+      { find: "You are under digital arrest.", fix: "There is no such thing as a digital arrest.", label: "Legal threat", why: "'Digital arrest' does not exist in Indian law." },
+      { find: "Do not tell anyone.", fix: "If anyone threatens you on a call, tell your family.", label: "Secrecy", why: "Scammers cut you off from help. Officials never ask you to hide it." },
+      { find: "Transfer Rs 50,000 to the verification account.", fix: "Never transfer money on a call. Report fraud at 1930.", label: "Money request", why: "No agency asks you to move money to 'verify' it." },
+    ],
+  },
+  {
+    title: "Electricity cut",
+    sender: "+91 91234 56780",
+    realSender: "VM-BESCOM",
+    text: "Dear customer, your electricity will be disconnected tonight at 9:30 pm. Call officer 9123456780 immediately to update your bill.",
+    traps: [
+      { find: "will be disconnected tonight at 9:30 pm", fix: "bill of Rs 1,240 is due on 5 Nov", label: "Threat", why: "Boards send a due date, not a same-night cut-off." },
+      { find: "Call officer 9123456780 immediately to update your bill.", fix: "Pay in the official app or at any office counter. We never ask for payment over a call.", label: "Call this number", why: "Bills are paid in the official app or at the office, never to a mobile number." },
+    ],
+  },
 ];
 
 const pct = (v: number) => Math.round(v * 100);
 
-function Meter({ score }: { score: number }) {
-  const p = pct(score);
-  const tone = score >= 0.5 ? "bg-destructive" : score >= 0.25 ? "bg-caution" : "bg-safe";
-  return (
-    <div>
-      <div className="flex items-baseline justify-between">
-        <span className="text-sm font-medium">{score >= 0.5 ? "Looks like a scam" : score >= 0.25 ? "Still suspicious" : "Looks genuine"}</span>
-        <span className="font-mono text-3xl font-semibold tabular-nums">{p}%</span>
-      </div>
-      <div className="mt-2 h-3 overflow-hidden rounded-[999px] bg-muted">
-        <div className={cn("h-full rounded-[999px] transition-all duration-500", tone)} style={{ width: `${Math.max(2, p)}%` }} />
-      </div>
-      <p className="mt-1 text-[11px] text-muted-foreground">Live risk score from ScamGuard&apos;s real engine</p>
-    </div>
-  );
-}
+export function GenuineGame() {
+  const [ci, setCi] = useState(0);
+  const c = CASES[ci]!;
+  const [fixed, setFixed] = useState<number[]>([]);
+  const [scores, setScores] = useState<number[]>([]);
+  const [error, setError] = useState(false);
+  const [busy, setBusy] = useState(false);
 
-/** Highlight each remaining cue in the message as a clickable trap. */
-function Marked({ text, cues, onFix, busy }: { text: string; cues: GenuineCue[]; onFix: (c: GenuineCue) => void; busy: boolean }) {
-  const parts = useMemo(() => {
-    const found = cues.map((c) => ({ c, i: text.indexOf(c.phrase) })).filter((x) => x.i >= 0).sort((a, b) => a.i - b.i);
-    const out: Array<string | GenuineCue> = [];
+  const text = useMemo(() => fixed.reduce((t, i) => t.replace(c.traps[i]!.find, c.traps[i]!.fix), c.text), [c, fixed]);
+  const allFixed = fixed.length === c.traps.length;
+
+  useEffect(() => {
+    let live = true;
+    setBusy(true);
+    setError(false);
+    riskScore(text)
+      .then((r) => live && setScores((s) => { const n = s.slice(0, fixed.length); n[fixed.length] = r.score; return n; }))
+      .catch(() => live && setError(true))
+      .finally(() => live && setBusy(false));
+    return () => { live = false; };
+  }, [text, fixed.length]);
+
+  const reset = (i = ci) => { setCi(i); setFixed([]); setScores([]); };
+  const score = scores[fixed.length];
+
+  // Split the current text into plain runs and clickable traps.
+  const pieces = useMemo(() => {
+    const hits = c.traps.map((t, i) => ({ i, at: fixed.includes(i) ? -1 : text.indexOf(t.find) })).filter((h) => h.at >= 0).sort((a, b) => a.at - b.at);
+    const out: Array<string | number> = [];
     let at = 0;
-    for (const { c, i } of found) {
-      if (i < at) continue;
-      out.push(text.slice(at, i), c);
-      at = i + c.phrase.length;
-    }
+    for (const h of hits) { out.push(text.slice(at, h.at), h.i); at = h.at + c.traps[h.i]!.find.length; }
     out.push(text.slice(at));
     return out;
-  }, [text, cues]);
-  return (
-    <p className="text-base leading-loose">
-      {parts.map((p, k) =>
-        typeof p === "string" ? <span key={k}>{p}</span> : (
-          <button key={k} type="button" disabled={busy} onClick={() => onFix(p)} title={`${p.label}: click to fix`}
-            className="mx-0.5 rounded bg-destructive/15 px-1 font-medium text-destructive underline decoration-destructive/60 decoration-2 underline-offset-4 transition-colors hover:bg-destructive/25 disabled:opacity-60">
-            {p.phrase}
-          </button>
-        ),
-      )}
-    </p>
-  );
-}
-
-/** "Scam to genuine": fix the traps one by one and watch the real risk score
- * fall, or let ScamGuard show the shortest path (a counterfactual explanation). */
-export function GenuineGame() {
-  const [start, setStart] = useState(SAMPLES[0]!);
-  const [text, setText] = useState(start);
-  const [data, setData] = useState<ScamToGenuine | null>(null);
-  const [first, setFirst] = useState<number | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [fixed, setFixed] = useState<GenuineCue[]>([]);
-  const [solution, setSolution] = useState<number>(-1);
-
-  const load = async (t: string, reset = false) => {
-    setBusy(true);
-    setError(null);
-    try {
-      const d = await scamToGenuine(t);
-      setData(d);
-      setText(t);
-      if (reset) setFirst(d.score);
-    } catch {
-      setError("The server didn't answer. It may be waking up: try again in a few seconds.");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  useEffect(() => {
-    setFixed([]);
-    setSolution(-1);
-    void load(start, true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [start]);
-
-  const fix = (c: GenuineCue) => {
-    setFixed((f) => [...f, c]);
-    const next = text.replace(c.phrase, c.replacement ? ` ${c.replacement} ` : " ").split(/\s+/).join(" ").replace(/^[\s:;,.-]+/, "").trim();
-    void load(next);
-  };
-
-  // Play the model's own path step by step.
-  useEffect(() => {
-    if (solution < 0 || !data) return;
-    if (solution >= data.steps.length) return;
-    const t = setTimeout(() => setSolution((s) => s + 1), 1100);
-    return () => clearTimeout(t);
-  }, [solution, data]);
-
-  const showingSolution = solution >= 0 && data && data.steps.length > 0;
-  const step = showingSolution ? data!.steps[Math.min(solution, data!.steps.length) - 1] : null;
-  const shownText = step ? step.text : text;
-  const shownScore = step ? step.score : data?.score ?? first ?? 1;
-  const won = !showingSolution && data && data.score < 0.25 && fixed.length > 0;
+  }, [c, text, fixed]);
 
   return (
-    <div className="mt-6 space-y-6">
+    <div className="mt-6">
       <div className="flex flex-wrap gap-2">
-        {SAMPLES.map((s, i) => (
-          <button key={i} type="button" onClick={() => setStart(s)}
-            className={cn("rounded-md border px-3 py-1.5 text-xs", s === start ? "border-primary bg-primary text-primary-foreground" : "border-border text-muted-foreground hover:text-foreground")}>
-            Scam {i + 1}
+        {CASES.map((x, i) => (
+          <button key={x.title} type="button" onClick={() => reset(i)}
+            className={cn("rounded-md border px-3 py-1.5 text-sm", i === ci ? "border-foreground font-medium text-foreground" : "border-border text-muted-foreground hover:text-foreground")}>
+            {x.title}
           </button>
         ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
-        <div className="rounded-2xl border border-border bg-card p-5">
-          <p className="mb-3 flex items-center gap-2 text-xs text-muted-foreground"><Lightbulb className="h-3.5 w-3.5 text-primary" />
-            {showingSolution ? "ScamGuard is fixing the biggest trap first…" : "Click each red trap to replace it with what a real bank would write."}
-          </p>
-          {!data && busy ? <div className="h-24 animate-pulse rounded bg-muted" /> : showingSolution ? (
-            <p className="text-base leading-loose">{shownText}</p>
-          ) : (
-            <Marked text={text} cues={data?.cues ?? []} onFix={fix} busy={busy} />
-          )}
-          {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
-          {won && <p className="mt-4 flex items-center gap-2 rounded-lg bg-safe/10 p-3 text-sm font-medium text-safe"><Sparkles className="h-4 w-4" /> Done: it now reads like a genuine message. That is exactly what to look for next time.</p>}
-          <div className="mt-5 flex flex-wrap gap-3">
-            <button type="button" disabled={busy || !data?.steps.length} onClick={() => { setText(start); setSolution(0); }}
-              className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50">
-              <Wand2 className="h-4 w-4" /> Show me how
-            </button>
-            <button type="button" disabled={busy} onClick={() => { setFixed([]); setSolution(-1); void load(start, true); }}
-              className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm disabled:opacity-50">
-              <RotateCcw className="h-4 w-4" /> Start again
-            </button>
-            {busy && <Loader2 className="h-4 w-4 animate-spin self-center text-muted-foreground" />}
+      <div className="mt-5 grid gap-6 md:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
+        {/* The message, as it would look on a phone */}
+        <div className="rounded-xl border border-border bg-card">
+          <div className="border-b border-border px-4 py-2.5 text-sm">
+            <span className="text-muted-foreground">From </span>
+            <span className="font-medium">{allFixed ? c.realSender : c.sender}</span>
+          </div>
+          <div className="p-4">
+            <div className="rounded-lg rounded-tl-none bg-muted px-3.5 py-3 text-[15px] leading-relaxed">
+              {pieces.map((p, k) => typeof p === "string" ? <span key={k}>{p}</span> : (
+                <button key={k} type="button" onClick={() => setFixed((f) => [...f, p])} title={`Fix: ${c.traps[p]!.label}`}
+                  className="rounded-sm bg-destructive/15 text-left text-destructive underline decoration-dotted underline-offset-2 hover:bg-destructive/25">
+                  {c.traps[p]!.find.trim()}
+                </button>
+              ))}
+            </div>
+            {allFixed && <p className="mt-3 text-xs text-muted-foreground">A real notice would also come from a registered sender ID like {c.realSender}, not a mobile number.</p>}
           </div>
         </div>
 
-        <div className="space-y-4">
-          <div className="rounded-2xl border border-border bg-card p-5"><Meter score={shownScore} /></div>
-          <div className="rounded-2xl border border-border bg-card p-5">
-            <p className="text-sm font-semibold">What changed</p>
-            <ol className="mt-3 space-y-2 text-sm">
-              {(showingSolution ? data!.steps.slice(0, solution) : fixed).map((c, i) => (
-                <li key={i} className="rounded-lg bg-muted/60 p-2.5">
-                  <span className="block text-xs text-muted-foreground first-letter:uppercase">{c.label}</span>
-                  <p><s className="text-destructive">{c.phrase}</s>{" → "}<span className="text-safe">{c.replacement || "removed"}</span>
-                    {"score" in c && <span className="ml-2 font-mono text-xs text-muted-foreground">{pct((c as { score: number }).score)}%</span>}
+        <div>
+          <div className="flex items-baseline justify-between border-b border-border pb-3">
+            <div>
+              <p className="text-sm text-muted-foreground">Risk score</p>
+              <p className={cn("text-3xl font-semibold tabular-nums", score === undefined ? "text-muted-foreground" : score >= 0.5 ? "text-destructive" : "text-safe")}>
+                {score === undefined ? "–" : `${pct(score)}%`}
+              </p>
+            </div>
+            <p className="text-sm">{score === undefined ? (busy ? "Checking…" : "") : score >= 0.5 ? "Reads as a scam" : "Reads as genuine"}</p>
+          </div>
+          {error && <p className="mt-3 text-sm text-destructive">Couldn&apos;t reach the server. It may be waking up; try again in a few seconds.</p>}
+
+          {fixed.length === 0 ? (
+            <p className="mt-4 text-sm text-muted-foreground">
+              Tap a red part of the message to replace it with what the real {c.title === "Digital arrest" ? "police" : "company"} would write. Watch what it takes for the score to drop.
+            </p>
+          ) : (
+            <ol className="mt-4 space-y-3 text-sm">
+              {fixed.map((i, n) => (
+                <li key={i} className="border-l-2 border-border pl-3">
+                  <p className="flex justify-between gap-3">
+                    <span className="font-medium">{n + 1}. {c.traps[i]!.label}</span>
+                    {scores[n + 1] !== undefined && <span className="tabular-nums text-muted-foreground">{pct(scores[n] ?? 0)}% → {pct(scores[n + 1] ?? 0)}%</span>}
                   </p>
+                  <p className="mt-0.5 text-muted-foreground">{c.traps[i]!.why}</p>
                 </li>
               ))}
-              {!(showingSolution ? solution : fixed.length) && <li className="text-muted-foreground">Nothing yet.</li>}
             </ol>
-          </div>
+          )}
+
+          {allFixed && score !== undefined && (
+            <p className="mt-5 rounded-md bg-muted p-3 text-sm">
+              Notice how the score stayed high until the last trap was gone. One trap is enough to make a message a scam, so check for every one of them.
+            </p>
+          )}
+          {fixed.length > 0 && (
+            <button type="button" onClick={() => reset()} className="mt-4 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+              <RotateCcw className="h-3.5 w-3.5" /> Start again
+            </button>
+          )}
         </div>
       </div>
     </div>
