@@ -85,20 +85,27 @@ class AnalyzeResponse(BaseModel):
     answer: str
 
 
-def looks_like_evidence(text: str) -> bool:
-    """True when a chat turn is something to check, not a question about it."""
-    from app_service.services.copilot_service import classify_intent
+_ASKING = re.compile(
+    r"^\s*(who|what|whats|what's|why|how|when|where|which|is|are|am|can|could|should|would|will|do|does|did|"
+    r"write|give|tell|explain|make|create|help|list|show|suggest|translate|summari[sz]e|define|"
+    r"kya|kaise|kyu|kyon|kab|kahan|kaun|kitna|kitne|mujhe|batao|bata|samjhao)\b",
+    re.I,
+)
 
+
+def looks_like_evidence(text: str) -> bool:
+    """True when a chat turn is a message to check, not a question or request
+    for the Copilot. Links, numbers and UPI IDs are always checked; anything
+    phrased as a question or an instruction goes to the assistant."""
     words = text.split()
     if _URL.search(text) or _PHONE_OR_UPI.search(text):
         return True
-    if text.rstrip().endswith("?") and len(words) < 40 and not _FORWARDED.search(text):
-        return False  # a question to the Copilot, however long
-    if len(words) >= 12:
-        return True
-    if classify_intent(text) != "unknown":
+    forwarded = bool(_FORWARDED.search(text))
+    if not forwarded and (_ASKING.search(text) or (text.rstrip().endswith("?") and len(words) < 40)):
         return False
-    return len(words) >= 6
+    if forwarded and len(words) >= 6:
+        return True
+    return len(words) >= 20
 
 
 _FORWARDED = re.compile(r"\b(dear (customer|user|sir|madam)|your (account|kyc|card|parcel|order)|click|otp|congratulations|you have won)\b", re.I)

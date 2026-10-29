@@ -436,3 +436,13 @@ def test_general_answer_intents():
     assert "1930" in general_answer("maine paise bhej diye, fraud ho gaya")
     assert "Chakshu" in general_answer("how do I report a scam")
     assert "digital arrest" in general_answer("is digital arrest real?").lower()
+
+
+def test_questions_and_requests_go_to_the_assistant():
+    from app_service.api.v1.copilot_chat import looks_like_evidence as ev
+    for q in ["write a 2 line poem about rain", "who won the 2011 cricket world cup", "give me a recipe for maggi",
+              "tell me a joke", "meri girlfriend naraz hai kya karu?", "how does UPI work"]:
+        assert not ev(q), q
+    for m in ["Dear customer your SBI account will be blocked today, update KYC now",
+              "Your parcel is on hold, pay Rs 25 at http://indiapost-help.xyz", "call 9876543210 now to claim your prize"]:
+        assert ev(m), m
