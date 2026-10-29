@@ -25,7 +25,7 @@ Authentication-Results: spf=fail dkim=fail
 
 Dear customer, your account is suspended. Click http://sbi-login-verify.top to verify your password and OTP within 24 hours."""
 def wait_verdict(page, timeout=60000):
-    page.locator("text=/scam probability/").first.wait_for(timeout=timeout)
+    page.locator("text=/scam likelihood/").first.wait_for(timeout=timeout)
 def go_tab(page,label):
     page.get_by_role("button",name=re.compile(label)).first.click()
 with sync_playwright() as p:
