@@ -189,3 +189,23 @@ def test_payment_screenshot_endpoint(client):
     if r.status_code == 422 and "OCR" in r.text:
         pytest.skip("tesseract not installed")
     assert r.status_code == 200 and r.json()["risk"] == "high"
+
+
+def test_scanned_pdf_is_read_with_ocr(tmp_path):
+    from PIL import Image, ImageDraw, ImageFont
+    from fastapi import UploadFile
+    from app_service.services.extraction import ExtractionService
+    import shutil
+    if not shutil.which("tesseract"):
+        pytest.skip("tesseract not installed")
+    try:
+        f = ImageFont.truetype("DejaVuSans.ttf", 40)
+    except OSError:
+        pytest.skip("font not available")
+    im = Image.new("RGB", (1200, 300), "white")
+    ImageDraw.Draw(im).text((40, 100), "Share the OTP to unblock your SBI account", fill="black", font=f)
+    path = tmp_path / "scan.pdf"
+    im.save(path)
+    with open(path, "rb") as fh:
+        text, _ = ExtractionService.extract(UploadFile(file=fh, filename="scan.pdf"), None, "PDF")
+    assert "OTP" in text

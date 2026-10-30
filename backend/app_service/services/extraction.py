@@ -39,6 +39,26 @@ class UnsafeUrlError(ValueError):
     """
 
 
+def _ocr_pdf_images(pages) -> str:
+    """OCR the embedded images of scanned PDF pages. Returns '' on any failure."""
+    try:
+        from PIL import Image, ImageOps
+        import pytesseract
+
+        if getattr(settings, "TESSERACT_CMD", None):
+            pytesseract.pytesseract.tesseract_cmd = settings.TESSERACT_CMD
+        out = []
+        for page in pages:
+            for img in list(page.images)[:2]:
+                im = ImageOps.grayscale(Image.open(io.BytesIO(img.data)))
+                if im.width > 2200:
+                    im = im.resize((2200, int(im.height * 2200 / im.width)))
+                out.append(pytesseract.image_to_string(im, timeout=20))
+        return "\n".join(t for t in out if t.strip()).strip()
+    except Exception:
+        return ""
+
+
 def _read_upload_bounded(file: UploadFile) -> bytes:
     content = file.file.read(MAX_UPLOAD_BYTES + 1)
     if len(content) > MAX_UPLOAD_BYTES:
@@ -463,7 +483,10 @@ class ExtractionService:
 
                 extracted_text = extracted_text.strip()
                 if not extracted_text:
-                    raise ValueError("This PDF has no extractable text. Upload a page image for OCR or paste the document text.")
+                    # Scanned PDF: read the page images with OCR (first 3 pages).
+                    extracted_text = _ocr_pdf_images(reader.pages[:3])
+                if not extracted_text:
+                    raise ValueError("This PDF has no readable text. Upload a clearer scan or a screenshot of the page.")
 
                 return extracted_text[:MAX_EXTRACTED_LENGTH].strip(), {"pages": len(reader.pages)}
             except Exception as e:
