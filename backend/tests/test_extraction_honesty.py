@@ -33,7 +33,7 @@ def test_blank_pdf_is_not_analyzed():
     document.showPage()
     document.save()
     data.seek(0)
-    with pytest.raises(ValueError, match='no extractable text'):
+    with pytest.raises(ValueError, match='no readable text'):
         ExtractionService.extract(UploadFile(filename='blank.pdf', file=data), None, 'PDF')
 
 
