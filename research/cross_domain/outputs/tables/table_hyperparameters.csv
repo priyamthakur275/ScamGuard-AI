@@ -1,0 +1,7 @@
+model,feature,chosen,CV spam F1 on A-train
+Naive Bayes,word,{'alpha': 0.03},0.9441
+Naive Bayes,char,{'alpha': 0.03},0.9513
+Logistic Regression,word,{'C': 100},0.9391
+Logistic Regression,char,{'C': 10},0.9642
+Linear SVM,word,{'C': 1},0.9464
+Linear SVM,char,{'C': 1},0.9641

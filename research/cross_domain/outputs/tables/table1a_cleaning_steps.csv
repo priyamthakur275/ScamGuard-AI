@@ -1,0 +1,8 @@
+dataset,step,rows
+A,raw rows,5574
+A,after removing missing or invalid rows,5574
+A,after removing 416 exact duplicates,5158
+B,raw rows,2267
+B,after removing missing or invalid rows,2266
+B,after removing 215 exact duplicates,2051
+B,after removing 1 message(s) also in A,2050

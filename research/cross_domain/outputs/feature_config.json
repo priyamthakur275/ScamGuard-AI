@@ -1,0 +1,17 @@
+{
+ "word": {
+  "analyzer": "word",
+  "ngram_range": [
+   1,
+   2
+  ],
+  "max_features": 20000
+ },
+ "char": {
+  "analyzer": "char_wb",
+  "ngram_range": [
+   3,
+   5
+  ]
+ }
+}

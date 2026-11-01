@@ -3,6 +3,7 @@ export type Lang = "en" | "hi";
 export const STRINGS = {
   "nav.quick": { en: "Quick check", hi: "तुरंत जाँच" },
   "nav.trends": { en: "Scam trends", hi: "स्कैम ट्रेंड" },
+  "nav.xdomain": { en: "Cross-domain study", hi: "क्रॉस-डोमेन अध्ययन" },
   "td.kicker": { en: "Live from ScamGuard scans", hi: "ScamGuard जाँचों से लाइव" },
   "td.title": { en: "Scam trends in India", hi: "भारत में स्कैम ट्रेंड" },
   "td.sub": { en: "What people are checking on ScamGuard right now. Only anonymous counts are shown — never message text, numbers or links.", hi: "लोग अभी ScamGuard पर क्या जाँच रहे हैं। केवल गुमनाम गिनती दिखाई जाती है — कभी मैसेज, नंबर या लिंक नहीं।" },

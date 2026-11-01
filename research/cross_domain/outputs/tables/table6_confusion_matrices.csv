@@ -1,0 +1,5 @@
+Evaluation setting,TN,FP,FN,TP
+"Source-only on target B, Naive Bayes",383,11,128,93
+"Adapted (40%) on target B, Naive Bayes",390,4,2,219
+"Source-only on target B, Logistic Regression",384,10,96,125
+"Adapted (40%) on target B, Logistic Regression",385,9,3,218
