@@ -1,7 +1,7 @@
 """The cross-domain study's models, as served by the public API."""
+import csv
 import os
 
-import pandas as pd
 import pytest
 from sklearn.metrics import f1_score
 from sklearn.model_selection import train_test_split
@@ -53,9 +53,11 @@ def test_results_endpoint_returns_the_measured_study(client):
 @pytest.mark.skipif(not os.path.exists(os.path.join(STUDY, "data", "clean", "dataset_B_india_clean.csv")), reason="study data not present")
 def test_served_models_reproduce_the_notebook_numbers():
     """The files the API serves give exactly the F1 the notebook recorded on its final target test set."""
-    b = pd.read_csv(os.path.join(STUDY, "data", "clean", "dataset_B_india_clean.csv"))
-    _, test = train_test_split(b, test_size=0.30, stratify=b["label"], random_state=42)
+    with open(os.path.join(STUDY, "data", "clean", "dataset_B_india_clean.csv"), newline="", encoding="utf-8") as fh:
+        rows = list(csv.DictReader(fh))
+    texts, labels = [r["message"] for r in rows], [int(r["label"]) for r in rows]
+    _, x_test, _, y_test = train_test_split(texts, labels, test_size=0.30, stratify=labels, random_state=42)
     saved = spam_lab.results()["saved_models"]
     for key, info in saved.items():
         pipe = spam_lab._load(key)
-        assert f1_score(test["label"], pipe.predict(test["message"])) == pytest.approx(info["target_test_f1"], abs=1e-9)
+        assert f1_score(y_test, pipe.predict(x_test)) == pytest.approx(info["target_test_f1"], abs=1e-9)
