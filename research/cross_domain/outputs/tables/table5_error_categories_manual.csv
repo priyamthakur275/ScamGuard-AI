@@ -1,0 +1,10 @@
+manual_category,source-only,adapted 40%
+Lost characters (????),1,0
+Code-mixed Hinglish promotion,2,0
+Market or work commentary with spam-like words (ham),2,1
+Loan or debt message,3,0
+"Fraud with disguised spelling (0 for o, fake wallet credit)",6,2
+Very short / context-free chat (ham),8,8
+Questionable label: safety advice or receipt labelled spam,9,1
+"Operator service notice (data alert, pack expiry, missed call)",14,0
+Indian brand or telecom promotion with unfamiliar vocabulary,61,0
