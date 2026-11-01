@@ -14,6 +14,7 @@ const NAV: { href: string; label: StringKey }[] = [
   { href: "/#quick-check", label: "nav.quick" },
   { href: "/flashcards", label: "nav.howto" },
   { href: "/tools", label: "nav.tools" },
+  { href: "/cross-domain", label: "nav.xdomain" },
   { href: "/trends", label: "nav.trends" },
   { href: "/extension", label: "nav.extension" },
 ];

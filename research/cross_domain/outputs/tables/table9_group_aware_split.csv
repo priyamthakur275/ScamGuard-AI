@@ -1,0 +1,9 @@
+Model,Target data added,"F1, random split","F1, group-aware split"
+Logistic Regression,0%,0.6809 ± 0.0254,0.6524 ± 0.0619
+Logistic Regression,10%,0.9637 ± 0.0040,0.9520 ± 0.0084
+Logistic Regression,20%,0.9678 ± 0.0046,0.9611 ± 0.0102
+Logistic Regression,40%,0.9745 ± 0.0046,0.9693 ± 0.0108
+Naive Bayes,0%,0.5815 ± 0.0182,0.5510 ± 0.0170
+Naive Bayes,10%,0.9498 ± 0.0061,0.9374 ± 0.0150
+Naive Bayes,20%,0.9669 ± 0.0070,0.9536 ± 0.0157
+Naive Bayes,40%,0.9782 ± 0.0092,0.9603 ± 0.0147

@@ -1,0 +1,801 @@
+{
+ "seeds": [
+  42,
+  123,
+  2026
+ ],
+ "hyperparameters": {
+  "naive_bayes|word": {
+   "alpha": 0.03
+  },
+  "naive_bayes|char": {
+   "alpha": 0.03
+  },
+  "logistic_regression|word": {
+   "C": 100
+  },
+  "logistic_regression|char": {
+   "C": 10
+  },
+  "linear_svm|word": {
+   "C": 1
+  },
+  "linear_svm|char": {
+   "C": 1
+  }
+ },
+ "group_aware": [
+  {
+   "Model": "Logistic Regression",
+   "Target data added": "0%",
+   "F1, random split": "0.6809 \u00b1 0.0254",
+   "F1, group-aware split": "0.6524 \u00b1 0.0619"
+  },
+  {
+   "Model": "Logistic Regression",
+   "Target data added": "10%",
+   "F1, random split": "0.9637 \u00b1 0.0040",
+   "F1, group-aware split": "0.9520 \u00b1 0.0084"
+  },
+  {
+   "Model": "Logistic Regression",
+   "Target data added": "20%",
+   "F1, random split": "0.9678 \u00b1 0.0046",
+   "F1, group-aware split": "0.9611 \u00b1 0.0102"
+  },
+  {
+   "Model": "Logistic Regression",
+   "Target data added": "40%",
+   "F1, random split": "0.9745 \u00b1 0.0046",
+   "F1, group-aware split": "0.9693 \u00b1 0.0108"
+  },
+  {
+   "Model": "Naive Bayes",
+   "Target data added": "0%",
+   "F1, random split": "0.5815 \u00b1 0.0182",
+   "F1, group-aware split": "0.5510 \u00b1 0.0170"
+  },
+  {
+   "Model": "Naive Bayes",
+   "Target data added": "10%",
+   "F1, random split": "0.9498 \u00b1 0.0061",
+   "F1, group-aware split": "0.9374 \u00b1 0.0150"
+  },
+  {
+   "Model": "Naive Bayes",
+   "Target data added": "20%",
+   "F1, random split": "0.9669 \u00b1 0.0070",
+   "F1, group-aware split": "0.9536 \u00b1 0.0157"
+  },
+  {
+   "Model": "Naive Bayes",
+   "Target data added": "40%",
+   "F1, random split": "0.9782 \u00b1 0.0092",
+   "F1, group-aware split": "0.9603 \u00b1 0.0147"
+  }
+ ],
+ "nb_default_alpha": {
+  "setting": "Naive Bayes, default alpha = 1.0, word TF-IDF",
+  "A-test F1": 0.7263681592039801,
+  "B F1": 0.01349527665317139
+ },
+ "adapt_fractions": [
+  0.0,
+  0.1,
+  0.2,
+  0.4
+ ],
+ "features": {
+  "word": {
+   "analyzer": "word",
+   "ngram_range": [
+    1,
+    2
+   ],
+   "max_features": 20000
+  },
+  "char": {
+   "analyzer": "char_wb",
+   "ngram_range": [
+    3,
+    5
+   ]
+  }
+ },
+ "dataset_statistics": [
+  {
+   "Dataset": "UCI SMS Spam",
+   "Total rows (raw)": 5574,
+   "Rows after cleaning": 5158,
+   "Ham": 4517,
+   "Spam": 641,
+   "Spam share": "12.4%",
+   "Missing removed": 0,
+   "Duplicates removed": 416,
+   "Notes / provenance": "UCI repository, CC BY 4.0"
+  },
+  {
+   "Dataset": "Indian SMS candidate",
+   "Total rows (raw)": 2267,
+   "Rows after cleaning": 2050,
+   "Ham": 1314,
+   "Spam": 736,
+   "Spam share": "35.9%",
+   "Missing removed": 1,
+   "Duplicates removed": 216,
+   "Notes / provenance": "GitHub junioralive, MIT; crowd-sourced; 1 message shared with A removed"
+  }
+ ],
+ "cleaning_steps": [
+  {
+   "dataset": "A",
+   "step": "raw rows",
+   "rows": 5574
+  },
+  {
+   "dataset": "A",
+   "step": "after removing missing or invalid rows",
+   "rows": 5574
+  },
+  {
+   "dataset": "A",
+   "step": "after removing 416 exact duplicates",
+   "rows": 5158
+  },
+  {
+   "dataset": "B",
+   "step": "raw rows",
+   "rows": 2267
+  },
+  {
+   "dataset": "B",
+   "step": "after removing missing or invalid rows",
+   "rows": 2266
+  },
+  {
+   "dataset": "B",
+   "step": "after removing 215 exact duplicates",
+   "rows": 2051
+  },
+  {
+   "dataset": "B",
+   "step": "after removing 1 message(s) also in A",
+   "rows": 2050
+  }
+ ],
+ "within_vs_cross": [
+  {
+   "Model": "Naive Bayes",
+   "Feature": "Word TF-IDF",
+   "Test domain": "Source A",
+   "Accuracy": 0.9777131782945736,
+   "Precision": 0.9487179487179487,
+   "Recall": 0.8671875,
+   "F1-score": 0.9061224489795918
+  },
+  {
+   "Model": "Naive Bayes",
+   "Feature": "Word TF-IDF",
+   "Test domain": "Target B",
+   "Accuracy": 0.7658536585365854,
+   "Precision": 0.8832335329341318,
+   "Recall": 0.4008152173913043,
+   "F1-score": 0.5514018691588785
+  },
+  {
+   "Model": "Logistic Regression",
+   "Feature": "Word TF-IDF",
+   "Test domain": "Source A",
+   "Accuracy": 0.9786821705426356,
+   "Precision": 0.9416666666666667,
+   "Recall": 0.8828125,
+   "F1-score": 0.9112903225806451
+  },
+  {
+   "Model": "Logistic Regression",
+   "Feature": "Word TF-IDF",
+   "Test domain": "Target B",
+   "Accuracy": 0.8180487804878048,
+   "Precision": 0.9311163895486936,
+   "Recall": 0.532608695652174,
+   "F1-score": 0.6776145203111495
+  }
+ ],
+ "cross_domain_full_B": [
+  {
+   "Model": "Naive Bayes",
+   "Feature": "word",
+   "Source A F1": 0.9061224489795918,
+   "Target B F1": 0.5514018691588785,
+   "F1 gap (A - B)": 0.35472057982071337,
+   "Target accuracy": 0.7658536585365854,
+   "Target precision": 0.8832335329341318,
+   "Target recall": 0.4008152173913043,
+   "Target TN": 1275,
+   "Target FP": 39,
+   "Target FN": 441,
+   "Target TP": 295
+  },
+  {
+   "Model": "Logistic Regression",
+   "Feature": "word",
+   "Source A F1": 0.9112903225806451,
+   "Target B F1": 0.6776145203111495,
+   "F1 gap (A - B)": 0.23367580226949558,
+   "Target accuracy": 0.8180487804878048,
+   "Target precision": 0.9311163895486936,
+   "Target recall": 0.532608695652174,
+   "Target TN": 1285,
+   "Target FP": 29,
+   "Target FN": 344,
+   "Target TP": 392
+  },
+  {
+   "Model": "Linear SVM",
+   "Feature": "word",
+   "Source A F1": 0.9135802469135802,
+   "Target B F1": 0.6152433425160698,
+   "F1 gap (A - B)": 0.29833690439751037,
+   "Target accuracy": 0.795609756097561,
+   "Target precision": 0.9490084985835694,
+   "Target recall": 0.45516304347826086,
+   "Target TN": 1296,
+   "Target FP": 18,
+   "Target FN": 401,
+   "Target TP": 335
+  },
+  {
+   "Model": "Naive Bayes",
+   "Feature": "char",
+   "Source A F1": 0.9477911646586346,
+   "Target B F1": 0.6841659610499576,
+   "F1 gap (A - B)": 0.2636252036086769,
+   "Target accuracy": 0.8180487804878048,
+   "Target precision": 0.9078651685393259,
+   "Target recall": 0.5489130434782609,
+   "Target TN": 1273,
+   "Target FP": 41,
+   "Target FN": 332,
+   "Target TP": 404
+  },
+  {
+   "Model": "Logistic Regression",
+   "Feature": "char",
+   "Source A F1": 0.9397590361445783,
+   "Target B F1": 0.637915543575921,
+   "F1 gap (A - B)": 0.3018434925686574,
+   "Target accuracy": 0.8034146341463415,
+   "Target precision": 0.9416445623342176,
+   "Target recall": 0.48233695652173914,
+   "Target TN": 1292,
+   "Target FP": 22,
+   "Target FN": 381,
+   "Target TP": 355
+  },
+  {
+   "Model": "Linear SVM",
+   "Feature": "char",
+   "Source A F1": 0.943089430894309,
+   "Target B F1": 0.5781990521327014,
+   "F1 gap (A - B)": 0.36489037876160757,
+   "Target accuracy": 0.7829268292682927,
+   "Target precision": 0.9561128526645768,
+   "Target recall": 0.41440217391304346,
+   "Target TN": 1300,
+   "Target FP": 14,
+   "Target FN": 431,
+   "Target TP": 305
+  }
+ ],
+ "domain_characteristics": [
+  {
+   "Domain": "A test (UCI)",
+   "Messages": 1032,
+   "Median length (chars)": 59.0,
+   "Has URL": 0.015503875968992248,
+   "Has a number": 0.24224806201550386,
+   "Has currency (rs/inr/\u20b9/\u00a3)": 0.0377906976744186,
+   "Mean share of words unseen in A-train": 0.07768010646312881
+  },
+  {
+   "Domain": "B (India)",
+   "Messages": 2050,
+   "Median length (chars)": 81.0,
+   "Has URL": 0.3121951219512195,
+   "Has a number": 0.42292682926829267,
+   "Has currency (rs/inr/\u20b9/\u00a3)": 0.0897560975609756,
+   "Mean share of words unseen in A-train": 0.20690225142083774
+  },
+  {
+   "Domain": "B spam",
+   "Messages": 736,
+   "Median length (chars)": 153.0,
+   "Has URL": 0.8695652173913043,
+   "Has a number": 0.9211956521739131,
+   "Has currency (rs/inr/\u20b9/\u00a3)": 0.24320652173913043,
+   "Mean share of words unseen in A-train": 0.27056841889119476
+  },
+  {
+   "Domain": "B ham",
+   "Messages": 1314,
+   "Median length (chars)": 39.0,
+   "Has URL": 0.0,
+   "Has a number": 0.14383561643835616,
+   "Has currency (rs/inr/\u20b9/\u00a3)": 0.00380517503805175,
+   "Mean share of words unseen in A-train": 0.17049331648829477
+  }
+ ],
+ "adaptation_summary": [
+  {
+   "model": "logistic_regression",
+   "feature": "char",
+   "target_fraction": 0.0,
+   "B_accuracy_mean": 0.8124661246612467,
+   "B_accuracy_std": 0.012204152031650593,
+   "B_precision_mean": 0.9541294802045766,
+   "B_precision_std": 0.02216087162144729,
+   "B_recall_mean": 0.502262443438914,
+   "B_recall_std": 0.028257909495015356,
+   "B_f1_mean": 0.6578456623926946,
+   "B_f1_std": 0.02674848219698723,
+   "A_f1_mean": 0.9422954977805961,
+   "A_f1_std": 0.004393280425031982
+  },
+  {
+   "model": "logistic_regression",
+   "feature": "char",
+   "target_fraction": 0.1,
+   "B_accuracy_mean": 0.9766937669376694,
+   "B_accuracy_std": 0.004967561728949317,
+   "B_precision_mean": 0.9755012021367162,
+   "B_precision_std": 0.0050431800117790625,
+   "B_recall_mean": 0.9592760180995475,
+   "B_recall_std": 0.015674667941799763,
+   "B_f1_mean": 0.9672616465914601,
+   "B_f1_std": 0.007195817071626603,
+   "A_f1_mean": 0.9454290182726552,
+   "A_f1_std": 0.004106991015482324
+  },
+  {
+   "model": "logistic_regression",
+   "feature": "char",
+   "target_fraction": 0.2,
+   "B_accuracy_mean": 0.9799457994579944,
+   "B_accuracy_std": 0.003755123702046328,
+   "B_precision_mean": 0.9772696655874226,
+   "B_precision_std": 0.011836309590388503,
+   "B_recall_mean": 0.9668174962292609,
+   "B_recall_std": 0.009419303165005092,
+   "B_f1_mean": 0.9719561128205726,
+   "B_f1_std": 0.005174967236907283,
+   "A_f1_mean": 0.9426279398534892,
+   "A_f1_std": 0.009743717258240806
+  },
+  {
+   "model": "logistic_regression",
+   "feature": "char",
+   "target_fraction": 0.4,
+   "B_accuracy_mean": 0.9848238482384825,
+   "B_accuracy_std": 0.000938780925511518,
+   "B_precision_mean": 0.9776146384479718,
+   "B_precision_std": 0.011571438349421544,
+   "B_recall_mean": 0.9803921568627452,
+   "B_recall_std": 0.010449778627866566,
+   "B_f1_mean": 0.9789195968533807,
+   "B_f1_std": 0.0011761062128965518,
+   "A_f1_mean": 0.942754498306484,
+   "A_f1_std": 0.005889882708908416
+  },
+  {
+   "model": "logistic_regression",
+   "feature": "char",
+   "target_fraction": 1.0,
+   "B_accuracy_mean": 0.9924119241192412,
+   "B_accuracy_std": 0.004092051184428559,
+   "B_precision_mean": 0.9925393234216764,
+   "B_precision_std": 0.009283508691720756,
+   "B_recall_mean": 0.9864253393665159,
+   "B_recall_std": 0.01567466794179981,
+   "B_f1_mean": 0.989382401347668,
+   "B_f1_std": 0.005808272898788161,
+   "A_f1_mean": 0.9361951718931124,
+   "A_f1_std": 0.003243793970871934
+  },
+  {
+   "model": "logistic_regression",
+   "feature": "word",
+   "target_fraction": 0.0,
+   "B_accuracy_mean": 0.8200542005420054,
+   "B_accuracy_std": 0.009245919842402129,
+   "B_precision_mean": 0.9372339293316304,
+   "B_precision_std": 0.011177343450029282,
+   "B_recall_mean": 0.5354449472096531,
+   "B_recall_std": 0.03455939438126575,
+   "B_f1_mean": 0.6809150884012382,
+   "B_f1_std": 0.025398827823858983,
+   "A_f1_mean": 0.9279165573913803,
+   "A_f1_std": 0.014454670148719928
+  },
+  {
+   "model": "logistic_regression",
+   "feature": "word",
+   "target_fraction": 0.1,
+   "B_accuracy_mean": 0.9739837398373984,
+   "B_accuracy_std": 0.0028163427765347786,
+   "B_precision_mean": 0.9652562708087719,
+   "B_precision_std": 0.006514099678054267,
+   "B_recall_mean": 0.9622926093514329,
+   "B_recall_std": 0.009419303165005092,
+   "B_f1_mean": 0.9637381596673654,
+   "B_f1_std": 0.004031223698282294,
+   "A_f1_mean": 0.927806501121192,
+   "A_f1_std": 0.023081887875786525
+  },
+  {
+   "model": "logistic_regression",
+   "feature": "word",
+   "target_fraction": 0.2,
+   "B_accuracy_mean": 0.9766937669376694,
+   "B_accuracy_std": 0.0033848227633595357,
+   "B_precision_mean": 0.96137189321836,
+   "B_precision_std": 0.008824307860180066,
+   "B_recall_mean": 0.9743589743589743,
+   "B_recall_std": 0.0052248893139332465,
+   "B_f1_mean": 0.9677995473706534,
+   "B_f1_std": 0.0045752378482049345,
+   "A_f1_mean": 0.9255127688172043,
+   "A_f1_std": 0.021153301933184463
+  },
+  {
+   "model": "logistic_regression",
+   "feature": "word",
+   "target_fraction": 0.4,
+   "B_accuracy_mean": 0.9815718157181572,
+   "B_accuracy_std": 0.003384822763359565,
+   "B_precision_mean": 0.9702130243980465,
+   "B_precision_std": 0.010838694937425175,
+   "B_recall_mean": 0.9788838612368025,
+   "B_recall_std": 0.0069118788762532425,
+   "B_f1_mean": 0.9744869166628276,
+   "B_f1_std": 0.004602512270275824,
+   "A_f1_mean": 0.9269533492322498,
+   "A_f1_std": 0.020740862648581212
+  },
+  {
+   "model": "logistic_regression",
+   "feature": "word",
+   "target_fraction": 1.0,
+   "B_accuracy_mean": 0.9907859078590787,
+   "B_accuracy_std": 0.0024837808644747163,
+   "B_precision_mean": 0.980667811469381,
+   "B_precision_std": 0.00509184202331628,
+   "B_recall_mean": 0.9939668174962293,
+   "B_recall_std": 0.0026124446569666233,
+   "B_f1_mean": 0.9872692463713776,
+   "B_f1_std": 0.0034183622278926135,
+   "A_f1_mean": 0.9209600283858626,
+   "A_f1_std": 0.027000243413585426
+  },
+  {
+   "model": "naive_bayes",
+   "feature": "char",
+   "target_fraction": 0.0,
+   "B_accuracy_mean": 0.824390243902439,
+   "B_accuracy_std": 0.007451342593424133,
+   "B_precision_mean": 0.8937155420260443,
+   "B_precision_std": 0.017652677109200546,
+   "B_recall_mean": 0.5806938159879337,
+   "B_recall_std": 0.02492113369812718,
+   "B_f1_mean": 0.7036462561299098,
+   "B_f1_std": 0.017119787928649124,
+   "A_f1_mean": 0.9406739231042863,
+   "A_f1_std": 0.00652989109379266
+  },
+  {
+   "model": "naive_bayes",
+   "feature": "char",
+   "target_fraction": 0.1,
+   "B_accuracy_mean": 0.9582655826558266,
+   "B_accuracy_std": 0.008184102368857204,
+   "B_precision_mean": 0.9350208795902447,
+   "B_precision_std": 0.019357881110507,
+   "B_recall_mean": 0.9502262443438915,
+   "B_recall_std": 0.013574660633484198,
+   "B_f1_mean": 0.9424454613736195,
+   "B_f1_std": 0.010890829225669462,
+   "A_f1_mean": 0.9381477401870791,
+   "A_f1_std": 0.005074986636086397
+  },
+  {
+   "model": "naive_bayes",
+   "feature": "char",
+   "target_fraction": 0.2,
+   "B_accuracy_mean": 0.9680216802168022,
+   "B_accuracy_std": 0.008955399263879879,
+   "B_precision_mean": 0.9393285049403918,
+   "B_precision_std": 0.02256612430512992,
+   "B_recall_mean": 0.9743589743589743,
+   "B_recall_std": 0.0052248893139332465,
+   "B_f1_mean": 0.9564208043806665,
+   "B_f1_std": 0.011693568779777718,
+   "A_f1_mean": 0.9356417670162398,
+   "A_f1_std": 0.0042969042113144874
+  },
+  {
+   "model": "naive_bayes",
+   "feature": "char",
+   "target_fraction": 0.4,
+   "B_accuracy_mean": 0.9750677506775068,
+   "B_accuracy_std": 0.00980116060705975,
+   "B_precision_mean": 0.9510670334199746,
+   "B_precision_std": 0.028917161842731364,
+   "B_recall_mean": 0.9819004524886878,
+   "B_recall_std": 0.009049773755656146,
+   "B_f1_mean": 0.9660192998210508,
+   "B_f1_std": 0.01282311237307604,
+   "A_f1_mean": 0.9342287524080061,
+   "A_f1_std": 0.0022282636255854
+  },
+  {
+   "model": "naive_bayes",
+   "feature": "char",
+   "target_fraction": 1.0,
+   "B_accuracy_mean": 0.9821138211382113,
+   "B_accuracy_std": 0.007451342593424125,
+   "B_precision_mean": 0.962371107902004,
+   "B_precision_std": 0.023442176235100375,
+   "B_recall_mean": 0.9894419306184012,
+   "B_recall_std": 0.011387382255310342,
+   "B_f1_mean": 0.9755455674492874,
+   "B_f1_std": 0.009908350207638437,
+   "A_f1_mean": 0.9274197348906217,
+   "A_f1_std": 0.0038525140653792697
+  },
+  {
+   "model": "naive_bayes",
+   "feature": "word",
+   "target_fraction": 0.0,
+   "B_accuracy_mean": 0.7777777777777777,
+   "B_accuracy_std": 0.006571466478581139,
+   "B_precision_mean": 0.8990308181484652,
+   "B_precision_std": 0.0041906074048281864,
+   "B_recall_mean": 0.4298642533936652,
+   "B_recall_std": 0.01972352463140575,
+   "B_f1_mean": 0.5814589245287891,
+   "B_f1_std": 0.018192103234514072,
+   "A_f1_mean": 0.9265734594096483,
+   "A_f1_std": 0.020625137087790443
+  },
+  {
+   "model": "naive_bayes",
+   "feature": "word",
+   "target_fraction": 0.1,
+   "B_accuracy_mean": 0.9642276422764228,
+   "B_accuracy_std": 0.0043020346521375884,
+   "B_precision_mean": 0.9585177121060519,
+   "B_precision_std": 0.004695566556964614,
+   "B_recall_mean": 0.9411764705882352,
+   "B_recall_std": 0.00783733397089987,
+   "B_f1_mean": 0.9497645727574467,
+   "B_f1_std": 0.006119734794571151,
+   "A_f1_mean": 0.9297535266172542,
+   "A_f1_std": 0.016143977184440467
+  },
+  {
+   "model": "naive_bayes",
+   "feature": "word",
+   "target_fraction": 0.2,
+   "B_accuracy_mean": 0.9761517615176153,
+   "B_accuracy_std": 0.004967561728949433,
+   "B_precision_mean": 0.9654410674233397,
+   "B_precision_std": 0.006719026741200551,
+   "B_recall_mean": 0.9683257918552036,
+   "B_recall_std": 0.011971725389432494,
+   "B_f1_mean": 0.9668506688949844,
+   "B_f1_std": 0.007004591500743604,
+   "A_f1_mean": 0.9299534466492414,
+   "A_f1_std": 0.01608211235389282
+  },
+  {
+   "model": "naive_bayes",
+   "feature": "word",
+   "target_fraction": 0.4,
+   "B_accuracy_mean": 0.9842818428184282,
+   "B_accuracy_std": 0.006571466478581088,
+   "B_precision_mean": 0.9745342859461825,
+   "B_precision_std": 0.0069629744455763564,
+   "B_recall_mean": 0.9819004524886878,
+   "B_recall_std": 0.011971725389432572,
+   "B_f1_mean": 0.9781958530801887,
+   "B_f1_std": 0.00918279105438594,
+   "A_f1_mean": 0.9301484480431849,
+   "A_f1_std": 0.022068503690590192
+  },
+  {
+   "model": "naive_bayes",
+   "feature": "word",
+   "target_fraction": 1.0,
+   "B_accuracy_mean": 0.9907859078590787,
+   "B_accuracy_std": 0.004693904627557958,
+   "B_precision_mean": 0.9850382460676578,
+   "B_precision_std": 0.010239850039360326,
+   "B_recall_mean": 0.9894419306184012,
+   "B_recall_std": 0.0026124446569666233,
+   "B_f1_mean": 0.9872252444625215,
+   "B_f1_std": 0.0064518577033850204,
+   "A_f1_mean": 0.9185646967355336,
+   "A_f1_std": 0.022229809566964392
+  }
+ ],
+ "consistency": [
+  {
+   "model": "Logistic Regression",
+   "feature": "char",
+   "fraction": "10%",
+   "mean_delta_F1": 0.3094159841987655,
+   "sd_delta_F1": 0.03366411555647646,
+   "seeds_improved": "3/3",
+   "seeds_p_below_0_05": "3/3"
+  },
+  {
+   "model": "Logistic Regression",
+   "feature": "char",
+   "fraction": "20%",
+   "mean_delta_F1": 0.3141104504278779,
+   "sd_delta_F1": 0.03161914182027398,
+   "seeds_improved": "3/3",
+   "seeds_p_below_0_05": "3/3"
+  },
+  {
+   "model": "Logistic Regression",
+   "feature": "char",
+   "fraction": "40%",
+   "mean_delta_F1": 0.32107393446068605,
+   "sd_delta_F1": 0.025704888777518226,
+   "seeds_improved": "3/3",
+   "seeds_p_below_0_05": "3/3"
+  },
+  {
+   "model": "Logistic Regression",
+   "feature": "word",
+   "fraction": "10%",
+   "mean_delta_F1": 0.28282307126612727,
+   "sd_delta_F1": 0.02640296208711757,
+   "seeds_improved": "3/3",
+   "seeds_p_below_0_05": "3/3"
+  },
+  {
+   "model": "Logistic Regression",
+   "feature": "word",
+   "fraction": "20%",
+   "mean_delta_F1": 0.2868844589694152,
+   "sd_delta_F1": 0.029959460078760963,
+   "seeds_improved": "3/3",
+   "seeds_p_below_0_05": "3/3"
+  },
+  {
+   "model": "Logistic Regression",
+   "feature": "word",
+   "fraction": "40%",
+   "mean_delta_F1": 0.2935718282615894,
+   "sd_delta_F1": 0.029373140491974193,
+   "seeds_improved": "3/3",
+   "seeds_p_below_0_05": "3/3"
+  },
+  {
+   "model": "Naive Bayes",
+   "feature": "char",
+   "fraction": "10%",
+   "mean_delta_F1": 0.2387992052437096,
+   "sd_delta_F1": 0.016890954640167814,
+   "seeds_improved": "3/3",
+   "seeds_p_below_0_05": "3/3"
+  },
+  {
+   "model": "Naive Bayes",
+   "feature": "char",
+   "fraction": "20%",
+   "mean_delta_F1": 0.2527745482507565,
+   "sd_delta_F1": 0.02640867817001958,
+   "seeds_improved": "3/3",
+   "seeds_p_below_0_05": "3/3"
+  },
+  {
+   "model": "Naive Bayes",
+   "feature": "char",
+   "fraction": "40%",
+   "mean_delta_F1": 0.26237304369114084,
+   "sd_delta_F1": 0.027689808871037606,
+   "seeds_improved": "3/3",
+   "seeds_p_below_0_05": "3/3"
+  },
+  {
+   "model": "Naive Bayes",
+   "feature": "word",
+   "fraction": "10%",
+   "mean_delta_F1": 0.3683056482286576,
+   "sd_delta_F1": 0.02069925087828149,
+   "seeds_improved": "3/3",
+   "seeds_p_below_0_05": "3/3"
+  },
+  {
+   "model": "Naive Bayes",
+   "feature": "word",
+   "fraction": "20%",
+   "mean_delta_F1": 0.3853917443661952,
+   "sd_delta_F1": 0.02472961521762966,
+   "seeds_improved": "3/3",
+   "seeds_p_below_0_05": "3/3"
+  },
+  {
+   "model": "Naive Bayes",
+   "feature": "word",
+   "fraction": "40%",
+   "mean_delta_F1": 0.3967369285513997,
+   "sd_delta_F1": 0.026768769922256918,
+   "seeds_improved": "3/3",
+   "seeds_p_below_0_05": "3/3"
+  }
+ ],
+ "confusion_seed42": [
+  {
+   "Evaluation setting": "Source-only on target B, Naive Bayes",
+   "TN": 383,
+   "FP": 11,
+   "FN": 128,
+   "TP": 93
+  },
+  {
+   "Evaluation setting": "Adapted (40%) on target B, Naive Bayes",
+   "TN": 390,
+   "FP": 4,
+   "FN": 2,
+   "TP": 219
+  },
+  {
+   "Evaluation setting": "Source-only on target B, Logistic Regression",
+   "TN": 384,
+   "FP": 10,
+   "FN": 96,
+   "TP": 125
+  },
+  {
+   "Evaluation setting": "Adapted (40%) on target B, Logistic Regression",
+   "TN": 385,
+   "FP": 9,
+   "FN": 3,
+   "TP": 218
+  }
+ ],
+ "saved_models": {
+  "logistic_regression_word_baseline": {
+   "path": "outputs/models/logistic_regression_word_baseline.joblib",
+   "train_messages": 4126,
+   "seed": 42,
+   "target_test_f1": 0.702247191011236
+  },
+  "logistic_regression_word_adapted40": {
+   "path": "outputs/models/logistic_regression_word_adapted40.joblib",
+   "train_messages": 4700,
+   "seed": 42,
+   "target_test_f1": 0.9732142857142857
+  },
+  "naive_bayes_word_baseline": {
+   "path": "outputs/models/naive_bayes_word_baseline.joblib",
+   "train_messages": 4126,
+   "seed": 42,
+   "target_test_f1": 0.5723076923076923
+  },
+  "naive_bayes_word_adapted40": {
+   "path": "outputs/models/naive_bayes_word_adapted40.joblib",
+   "train_messages": 4700,
+   "seed": 42,
+   "target_test_f1": 0.9864864864864865
+  }
+ },
+ "versions": {
+  "pandas": "3.1.0",
+  "numpy": "2.5.4",
+  "scikit-learn": "1.7.2"
+ }
+}
