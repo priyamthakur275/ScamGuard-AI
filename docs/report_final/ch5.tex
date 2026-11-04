@@ -1,0 +1,198 @@
+% ======================================================================
+\chapter{Methodology}
+
+\section{Tools and Techniques}
+\begin{itemize}
+\item \textbf{TF-IDF} weights a term by how often it occurs in a message and how rare it is across messages~\cite{salton1988term}. The main detector uses word unigrams and bigrams together with character 2--5-grams; the cross-domain study compares word unigrams and bigrams with character 3--5-grams.
+\item \textbf{Logistic regression} gives a linear, interpretable model whose coefficients show which words push a message towards scam.
+\item \textbf{Multinomial Naive Bayes} models word frequencies per class and applies Bayes' rule; it is the classical baseline of the cross-domain study.
+\item \textbf{MinHash with locality-sensitive hashing}~\cite{broder1997resemblance} groups near-identical messages into campaigns.
+\item \textbf{Confident learning}~\cite{northcutt2021confident} guides a second review of labels that a cross-validated model contradicts.
+\item \textbf{Regular-expression intent rules} detect requests for OTPs, payments to receive money, remote-access apps and legal threats, and protective signals such as ``do not share your OTP''.
+\item \textbf{Supervised domain adaptation} by pooling source data with a labelled target sample~\cite{daume2007frustratingly,pan2010survey}.
+\item \textbf{Bootstrap confidence intervals, mean $\pm$ SD over seeds and McNemar's test}~\cite{mcnemar1947note,dietterich1998approximate} quantify uncertainty and compare models on the same messages.
+\item \textbf{scikit-learn}~\cite{pedregosa2011scikit} implements the models; \textbf{ftfy} repairs broken text encodings; FastAPI, Next.js and Streamlit implement the applications.
+\end{itemize}
+
+\section{Data Set with Explanation}
+
+\subsection{ScamGuard-IN-2026 (main detector)}
+Indian scam messages and Indian genuine service messages share most of their vocabulary, and public smishing data contains only reported messages with unverified labels. ScamGuard-IN-2026 was built to provide real Indian genuine messages, checked labels and current scam types. Table~\ref{tab:sources} lists its sources.
+
+\begin{table}[H]
+\centering
+\caption{Sources of ScamGuard-IN-2026}
+\label{tab:sources}
+\small
+\begin{tabular}{|L{3.6cm}|L{2.1cm}|L{1.4cm}|L{1.2cm}|L{3.6cm}|}
+\hline
+\textbf{Source} & \textbf{Licence} & \textbf{Genuine} & \textbf{Scam} & \textbf{Use} \\
+\hline
+R1: IMC 2025 smishing collection, India subset, audited~\cite{agarwal2025fishing} & CC BY 4.0 & 963 & 3,987 & train, development, test \\
+\hline
+R2: India Spam SMS collection, audited~\cite{indiasms2024} & MIT & 1,694 & 6 & train, development, test \\
+\hline
+R3: 2025--26 advisory and news texts & Quoted with source & 1 & 11 & test only \\
+\hline
+S: Synthetic templates & Project & 2,950 & 1,787 & training only \\
+\hline
+\textbf{Total} & & \textbf{5,608} & \textbf{5,791} & \textbf{11,399 messages} \\
+\hline
+\end{tabular}
+\end{table}
+
+\textbf{Label audit.} The IMC 2025 messages are messages that users \emph{reported}. We made 2,922 audit decisions on the reported near-duplicate groups: 1,253 were confirmed as scams by rule (a strong fraud cue such as an account threat with a KYC instruction, a prize with a fee or a request to share an OTP, and no genuine cue; a spot check of 40 found no error), and 1,669 were read one by one (583 scam, 867 genuine, 219 unclear and dropped). A cross-validated model then flagged 44 rows whose label it strongly contradicted; each was re-read, giving 19 corrections and 7 removals. After the audit, 963 of 4,950 retained IMC rows (19.5\%) are genuine.
+
+\textbf{Campaigns and splits.} Messages are grouped into a campaign when their MinHash-estimated Jaccard similarity over word 3-shingles is at least 0.6. The 6,662 real messages form 4,085 campaigns. Each campaign goes entirely to training (60\%), development (15\%) or test (25\%), chosen by a hash of its first message (Table~\ref{tab:splits}).
+
+\begin{table}[H]
+\centering
+\caption{ScamGuard-IN-2026 splits}
+\label{tab:splits}
+\begin{tabular}{|l|r|r|l|}
+\hline
+\textbf{Split} & \textbf{Genuine} & \textbf{Scam} & \textbf{Content} \\
+\hline
+Train & 4,581 & 4,064 & real and synthetic \\
+\hline
+Development & 361 & 507 & real only \\
+\hline
+Test & 665 & 1,209 & real only, unseen campaigns \\
+\hline
+2026 test & 1 & 11 & advisories \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Datasets of the cross-domain study}
+\textbf{Dataset A (source)} is the UCI SMS Spam Collection~\cite{almeida2011contributions} (CC BY 4.0): 5,574 UK messages, 4,827 ham and 747 spam, documented in its original paper. \textbf{Dataset B (target)} is the India Spam SMS Classification dataset~\cite{indiasms2024} (MIT licence, 2024): 2,267 messages with fields \texttt{Msg} and \texttt{Label}, 1,522 ham and 745 spam, contributed through an online form without a documented labelling procedure.
+
+\textbf{Audit.} Dataset B had one empty message and 204 exact duplicates; 176 rows stored emoji and punctuation as broken byte sequences, and 40 rows had Devanagari text irrecoverably replaced by question marks. No message had two different labels. A spot check of ten messages per class found plausible labels: Indian spam is mostly operator, bank and retail promotions with links, and ham is mostly short personal or group-chat messages. One message (``ok'') occurred in both datasets and was removed from B.
+
+\textbf{Cleaning.} The same steps were applied to both datasets: labels mapped to spam = 1 and ham = 0, invalid rows dropped, broken encodings repaired with ftfy, text lowercased, spaces normalised, and exact duplicates removed. URLs, numbers and punctuation were kept because they carry spam signals. Table~\ref{tab:xdata} gives the result, and Figures~\ref{fig:classdist} and~\ref{fig:lendist} show the class and length distributions.
+
+\begin{table}[H]
+\centering
+\caption{Cross-domain datasets before and after cleaning}
+\label{tab:xdata}
+\begin{tabular}{|l|r|r|r|r|r|}
+\hline
+\textbf{Dataset} & \textbf{Raw} & \textbf{Clean} & \textbf{Ham} & \textbf{Spam} & \textbf{Spam \%} \\
+\hline
+A: UCI SMS Spam Collection & 5,574 & 5,158 & 4,517 & 641 & 12.4 \\
+\hline
+B: India Spam SMS & 2,267 & 2,050 & 1,314 & 736 & 35.9 \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\linewidth]{figures/fig1_class_distribution.png}
+\caption{Class distribution of Dataset A (UCI) and Dataset B (India) before cleaning}
+\label{fig:classdist}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.65\linewidth]{figures/fig2_length_distribution.png}
+\caption{Message length distribution of the two datasets}
+\label{fig:lendist}
+\end{figure}
+
+\section{Flowchart of Methodology from Start to End}
+Figure~\ref{fig:flow} shows the methodology of the main detector, and Figure~\ref{fig:xflow} the methodology of the cross-domain study.
+
+\input{flow_old.tex}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=5mm,
+  box/.style={draw, rounded corners=2pt, align=center, font=\small, minimum width=7cm, minimum height=8mm, fill=white},
+  arr/.style={-{Stealth[length=2.2mm]}, thick}]
+\node[box] (a) {Load Dataset A (UCI, source) and Dataset B (India, target)};
+\node[box, below=of a] (b) {Audit: counts, missing values, duplicates, encoding, labels, provenance};
+\node[box, below=of b] (c) {Clean both the same way; remove duplicates and A--B overlap};
+\node[box, below=of c] (d) {Split A 80/20; split B 70/30 into adaptation pool and final test};
+\node[box, below=of d] (e) {Word and character TF-IDF; choose $\alpha$, $C$ on A-train only};
+\node[box, below=of e] (f) {Train NB and LR on A-train; test on A-test and on B (cross-domain)};
+\node[box, below=of f] (g) {Add 10\%, 20\%, 40\% of the pool; refit; test on the same B-test};
+\node[box, below=of g] (h) {Repeat for seeds 42, 123, 2026; mean $\pm$ SD; McNemar test};
+\node[box, below=of h] (i) {Near-duplicate check; manual error analysis};
+\node[box, below=of i] (j) {Save baseline and adapted models; serve in the web app and Streamlit};
+\foreach \x/\y in {a/b,b/c,c/d,d/e,e/f,f/g,g/h,h/i,i/j} \draw[arr] (\x) -- (\y);
+\end{tikzpicture}
+\caption{Flow of the cross-domain study}
+\label{fig:xflow}
+\end{figure}
+
+\section{Explanation of Methodology in detail with Equations and Formulae}
+
+\subsection{Problem definition}
+For a message $x$, the detector computes a score $s(x)\in[0,1]$ and predicts
+\begin{equation}
+\hat{y}=\begin{cases}1 \;(\text{scam/spam}) & \text{if } s(x)\ge 0.5\\ 0 \;(\text{legitimate/ham}) & \text{otherwise.}\end{cases}
+\end{equation}
+
+\subsection{Preprocessing}
+In the main detector, the cleaner replaces e-mail addresses, URLs (including bare links such as \texttt{bit.ly/x}) and phone numbers with placeholder tokens, lowercases the text, removes punctuation while keeping Devanagari vowel signs, and replaces remaining numbers with a number token. The tokenizer keeps Latin and Devanagari words, removes English stop words and applies a light suffix stemmer. For example, \textit{``Dear customer, your SBI account will be blocked today. Update your KYC at http://sbi-kyc.xyz and share the OTP''} becomes \texttt{dear customer sbi account will block today update kyc \_\_url\_\_ share otp}. The same code runs in training and in the live service. Because punctuation and digits are removed before feature extraction, dotted or digit-substituted spellings such as \textit{K.Y.C} or \textit{bl0cked} lose their keyword; such messages are caught by the other words and by the intent rules. In the cross-domain study the cleaning is lighter, as the guide specified: text is only lowercased and whitespace-normalised, so URLs, numbers and punctuation remain in the text; the word vectorizer splits on punctuation, while the character vectorizer keeps it.
+
+\subsection{Feature extraction}
+For a term $t$ in message $d$, with $N$ training messages and document frequency $\mathrm{df}(t)$, the TF-IDF weight is
+\begin{equation}
+w_{t,d}=g(\mathrm{tf}_{t,d})\cdot\left(\ln\frac{1+N}{1+\mathrm{df}(t)}+1\right),
+\end{equation}
+followed by normalising each message vector to unit length. The main detector uses sublinear term frequency, $g(\mathrm{tf})=1+\ln\mathrm{tf}$, with word 1--2-grams (up to 30,000) and character 2--5-grams (up to 60,000), giving 35,148 features after pruning. The cross-domain study uses raw term frequency, $g(\mathrm{tf})=\mathrm{tf}$, with word 1--2-grams (up to 20,000) or character 3--5-grams within word boundaries. Every vectorizer is fitted on training data only.
+
+\textit{Worked example.} For the three messages ``update kyc now'', ``kyc update otp'' and ``order delivered today'' ($N=3$), the first message has $\mathrm{df}=2$ for \textit{update} and \textit{kyc} and $\mathrm{df}=1$ for \textit{now}, so their IDF values are $\ln(4/3)+1=1.288$ and $\ln 2+1=1.693$. After normalisation the vector is $(0.518, 0.518, 0.681)$: the rarest word receives the largest weight.
+
+\subsection{Logistic regression}
+Logistic regression estimates
+\begin{equation}
+p(x)=\sigma\!\left(\mathbf{w}^{\top}\phi(x)+b\right)=\frac{1}{1+e^{-(\mathbf{w}^{\top}\phi(x)+b)}},
+\end{equation}
+by minimising the class-weighted, $\ell_2$-regularised log-loss
+\begin{equation}
+\min_{\mathbf{w},b}\;\frac{1}{2}\|\mathbf{w}\|^2 + C\sum_{i=1}^{n}\alpha_{y_i}\Big[-y_i\ln p(x_i)-(1-y_i)\ln\big(1-p(x_i)\big)\Big],
+\end{equation}
+with class weights $\alpha_c=n/(2n_c)$. The main detector uses $C=16$; in the cross-domain study $C$ was chosen by cross-validation on the source training data ($C=100$ for word and $C=10$ for character features). In the main model the bias is $b=-4.82$, and the largest weights include \textit{will block} $+2.87$, \textit{kyc} $+2.69$ and \textit{prize} $+2.98$ towards scam, and \textit{not share} $-1.85$ and \textit{branch} $-2.22$ towards genuine. For the SBI message above $z=\mathbf{w}^\top\phi(x)+b=8.99$ and $p=0.9999$; for the genuine message ``482913 is your OTP for Rs 2,499 at Amazon. Do not share it with anyone'' $z=-5.53$ and $p=0.004$.
+
+\subsection{Multinomial Naive Bayes}
+Naive Bayes predicts the class with the larger posterior,
+\begin{equation}
+\hat{c}=\arg\max_{c\in\{0,1\}}\Big[\ln P(c)+\sum_{t} x_t \ln P(t\mid c)\Big],\qquad P(t\mid c)=\frac{N_{tc}+\alpha}{N_c+\alpha|V|},
+\end{equation}
+where $x_t$ is the TF-IDF value of term $t$, $N_{tc}$ the total weight of $t$ in class $c$, $N_c$ the total weight of class $c$, $|V|$ the vocabulary size and $\alpha$ the smoothing. Cross-validation on the source training data chose $\alpha=0.03$; the library default $\alpha=1$ is reported for comparison.
+
+\subsection{Intent evidence and fusion}
+Thirty-one patterns detect 26 scam intents with hand-set weights $w_i$, and ten protective signals have weights $v_j$. With $E^{+}=\sum_{i\in I(x)}w_i$ (halved when only weak context cues match) and $E^{-}=\sum_{j\in P(x)}v_j$ (halved when $E^{+}\ge 0.5$), the final score is
+\begin{equation}
+s(x)=\sigma\!\Big(\operatorname{clip}\big(\operatorname{logit}p(x),-4,4\big)+5\,(E^{+}-E^{-})\Big),
+\end{equation}
+capped at 0.15 when the message has the shape of a genuine transaction alert or service notice without any blocking cue. A ``decoy'' rule catches messages that say ``never share your OTP'' and then ask for it.
+
+\subsection{Near-duplicate grouping}
+Each message is reduced to the set $S$ of its word 3-shingles after replacing links and digits. Two messages belong to the same campaign when
+\begin{equation}
+J(S_1,S_2)=\frac{|S_1\cap S_2|}{|S_1\cup S_2|}\ \ge\ 0.6,
+\end{equation}
+estimated with 96 MinHash permutations and locality-sensitive hashing.
+
+\subsection{Domain adaptation}
+Let $A_{train}$ be the source training split, $P$ the target adaptation pool and $S_f\subset P$ a stratified sample with $|S_f|=\lfloor f\,|P|\rfloor$. The adapted model is trained on
+\begin{equation}
+D_f=A_{train}\cup S_f,\qquad f\in\{0, 0.1, 0.2, 0.4\},
+\end{equation}
+with the vectorizer refitted on $D_f$, so that target words enter the vocabulary. With $|P|=1{,}435$, the samples contain 143, 287 and 574 messages. Every $f$ is scored on the same final target test set $B_{test}$ (615 messages).
+
+\subsection{Evaluation metrics}
+With scam or spam as the positive class:
+\begin{align}
+\text{Accuracy}&=\frac{TP+TN}{TP+TN+FP+FN}, & \text{Precision}&=\frac{TP}{TP+FP},\\
+\text{Recall}&=\frac{TP}{TP+FN}, & F_1&=\frac{2\cdot\text{Precision}\cdot\text{Recall}}{\text{Precision}+\text{Recall}},\\
+\text{False-alarm rate}&=\frac{FP}{FP+TN}. & &
+\end{align}
+Confidence intervals come from 1,000 bootstrap resamples, and results over seeds are reported as mean $\pm$ standard deviation.
+
+\subsection{Statistical test}
+To compare two models on the same test messages, let $b$ be the number of messages only the first model classifies correctly and $c$ the number only the second classifies correctly. Under the null hypothesis that both models are equally accurate, $\min(b,c)$ follows a binomial distribution with $n=b+c$ and probability $0.5$; the exact McNemar test~\cite{mcnemar1947note,dietterich1998approximate} gives the two-sided $p$-value.

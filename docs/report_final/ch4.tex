@@ -1,0 +1,116 @@
+% ======================================================================
+\chapter{Designs}
+
+\section{System Architecture Overview}
+ScamGuard is a three-tier web application. The \textbf{presentation tier} is a Next.js front end hosted on Vercel; it proxies all API calls through its own origin. The \textbf{application tier} is a FastAPI back end hosted on Render, which runs the detector, the intent rules, the cross-domain models, authentication and the safety tools in one process. The \textbf{data tier} is a PostgreSQL database on Neon that stores users, scans, cases and reports. Models are trained offline and stored as versioned files that the back end loads once at start-up. Figure~\ref{fig:arch} shows the components and their connections.
+
+\input{arch_fig.tex}
+
+\section{Module/Component Design}
+Table~\ref{tab:subsys} lists the modules of ScamGuard, their responsibility and their interfaces.
+
+\begin{table}[H]
+\centering
+\caption{Modules of ScamGuard and their interfaces}
+\label{tab:subsys}
+\begin{tabular}{|L{3.0cm}|L{5.3cm}|L{4.4cm}|}
+\hline
+\textbf{Module} & \textbf{Responsibility} & \textbf{Interface} \\
+\hline
+Dataset builder & Collect sources, audit labels, group campaigns, split & Python script; writes one CSV file \\
+\hline
+Training pipeline & Train and compare models; register the selected one & Model registry (vectorizer and model files) \\
+\hline
+Detector & Clean, classify, apply rules, fuse, explain & Python function \texttt{predict(text)} \\
+\hline
+Cross-domain study & Audit and clean UCI and Indian data, run the 7 experiments over 3 seeds, save results and models & Jupyter notebook; CSV tables, figures, \texttt{results.json}, joblib models \\
+\hline
+Cross-domain service & Serve the baseline and adapted models with explanations & \texttt{POST /public/cross-domain/classify}, \texttt{GET /public/cross-domain/results} \\
+\hline
+Back end (API) & Authentication, rate limits, storage, reports, safety tools & REST over HTTPS, JSON \\
+\hline
+Front end & Quick check, analysis, dashboard, tools, cross-domain page, Hindi & Browser; calls the REST API \\
+\hline
+Streamlit app & Stand-alone demonstration of the study & Loads the saved models; never retrains \\
+\hline
+Copilot & Answers follow-up questions & REST endpoint; external LLM API with limits \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Detailed Design}
+
+\subsection{Client--server communication}
+The web client and the back end communicate over HTTPS with JSON bodies. Figure~\ref{fig:seq} shows the sequence for one analysis.
+
+\input{seq_fig.tex}
+
+\begin{itemize}
+\item \textbf{Endpoints.} \texttt{POST /api/v1/public/quick-check} serves visitors without an account (10 requests per minute); \texttt{POST /api/v1/messages/analyze} serves signed-in users (30 per minute); \texttt{POST /api/v1/public/cross-domain/classify} serves the cross-domain page (30 per minute). Other routes handle authentication, history, cases, analytics, the copilot and the safety tools.
+\item \textbf{Authentication.} Signed access tokens with refresh tokens; passwords stored as bcrypt hashes.
+\item \textbf{Robustness.} Message text is limited to 4,000 characters (2,000 for the public endpoints).
+\end{itemize}
+
+\subsection{Dataset construction}
+Algorithm~\ref{alg:build} summarises how ScamGuard-IN-2026 is built and split.
+
+\input{alg_build.tex}
+
+\subsection{Cross-domain experiment design}
+Algorithm~\ref{alg:xdomain} gives the protocol of the cross-domain study. All choices are made on source data; the final target test set is used only for scoring.
+
+\begin{algorithm}[H]
+\caption{Cross-domain evaluation and lightweight domain adaptation}
+\label{alg:xdomain}
+\begin{algorithmic}[1]
+\Require cleaned source set $A$ (UCI), cleaned target set $B$ (Indian), seeds $\{42, 123, 2026\}$, fractions $\{0, 0.1, 0.2, 0.4\}$
+\State choose $\alpha$ (Naive Bayes) and $C$ (Logistic Regression) by 5-fold cross-validation on $A_{train}$
+\For{each seed}
+  \State split $A$ 80/20 into $A_{train}, A_{test}$ and $B$ 70/30 into pool $P$ and test $B_{test}$ (stratified)
+  \For{each fraction $f$}
+    \State $S_f \gets$ stratified sample of $f\cdot|P|$ messages from $P$
+    \State fit TF-IDF and the classifier on $A_{train}\cup S_f$
+    \State score $A_{test}$ and $B_{test}$; store predictions
+  \EndFor
+\EndFor
+\State report mean $\pm$ SD over seeds; McNemar test of each adapted model against $f=0$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Inference procedure}
+\input{alg_infer.tex}
+
+\section{Data Design}
+
+\subsection{Database}
+Table~\ref{tab:db} lists the main tables of the PostgreSQL database.
+
+\begin{table}[H]
+\centering
+\caption{Main database tables}
+\label{tab:db}
+\begin{tabular}{|L{3.6cm}|L{9.9cm}|}
+\hline
+\textbf{Table} & \textbf{Contents} \\
+\hline
+\texttt{users} & Account, hashed password, role, preferences \\
+\hline
+\texttt{refresh\_tokens} & Issued refresh tokens for rotation and revocation \\
+\hline
+\texttt{messages} & Each analysed input with its type (text, URL, e-mail, image, PDF, QR) \\
+\hline
+\texttt{predictions} & Verdict, classifier probability, risk score, category, explanation, model version \\
+\hline
+\texttt{cases}, \texttt{case\_scan\_links}, \texttt{case\_timeline\_entries} & Investigation cases, the scans linked to them and their notes \\
+\hline
+\texttt{community\_reports} & One report per user for a number, link domain, UPI ID or e-mail \\
+\hline
+\texttt{alerts}, \texttt{audit\_log}, \texttt{model\_registry\_meta} & Alerts, security audit trail and registered model versions \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Datasets}
+\textbf{ScamGuard-IN-2026} has seven attributes per row: \texttt{text}, \texttt{label} (scam or legitimate), \texttt{source}, \texttt{subtype}, \texttt{is\_synthetic}, \texttt{campaign} (near-duplicate group) and \texttt{split} (train, development, test or 2026 test).
+
+The \textbf{cross-domain datasets} are stored after cleaning with the attributes \texttt{message}, \texttt{label} (spam = 1, ham = 0) and \texttt{domain} (UCI or India). The study also writes every result table as CSV, the error-annotation sheet with a \texttt{manual\_category} column, a \texttt{results.json} summary and four joblib models: Naive Bayes and Logistic Regression, each in a baseline and an adapted version.

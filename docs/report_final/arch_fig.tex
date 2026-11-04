@@ -1,0 +1,29 @@
+\begin{figure}[H]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[
+  node distance=5mm and 7mm,
+  box/.style={draw, rounded corners=2pt, align=center, font=\small, minimum height=9mm, inner sep=3pt, fill=white},
+  off/.style={box, fill=gray!12},
+  arr/.style={-{Stealth[length=2mm]}, thick}]
+\node[box] (ui) {Web app\\(Next.js)};
+\node[box, right=of ui] (api) {FastAPI\\back end};
+\node[box, right=of api] (pre) {Cleaner +\\tokenizer};
+\node[box, right=of pre] (clf) {TF-IDF +\\logistic regression};
+\node[box, below=of clf] (rules) {Intent and\\protective rules};
+\node[box, left=of rules] (fuse) {Fusion, guards\\risk score};
+\node[box, left=of fuse] (expl) {Scam X-Ray,\\TrustLens};
+\node[box, left=of expl] (db) {Database\\(history)};
+\node[off, above=7mm of clf] (reg) {Model registry\\(versioned artifacts)};
+\node[off, left=of reg] (train) {Offline training on\\ScamGuard-IN-2026};
+\node[box, below=of expl] (cop) {AI copilot\\(Gemini, capped)};
+\node[box, below=of fuse] (rag) {Known-pattern\\retrieval (52 entries)};
+\draw[arr] (ui) -- (api); \draw[arr] (api) -- (pre); \draw[arr] (pre) -- (clf);
+\draw[arr] (clf) -- (rules); \draw[arr] (rules) -- (fuse); \draw[arr] (fuse) -- (expl);
+\draw[arr] (expl) -- (db); \draw[arr] (db) -- (ui);
+\draw[arr] (train) -- (reg); \draw[arr] (reg) -- (clf);
+\draw[arr] (rag) -- (expl); \draw[arr] (expl) -- (cop);
+\end{tikzpicture}}
+\caption{Architecture of the deployed system. Shaded parts run offline.}
+\label{fig:arch}
+\end{figure}

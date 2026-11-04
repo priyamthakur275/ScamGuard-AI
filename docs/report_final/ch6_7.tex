@@ -1,0 +1,307 @@
+% ======================================================================
+\chapter{Results and Discussion}
+
+\section{Presentation of Results}
+
+\subsection{Experimental setup and testing}
+For the main detector, models were selected on the development split and then trained on the training and development splits together (9,513 messages). Results are on the real test split: 1,874 messages (665 genuine, 1,209 scams) from campaigns never seen in training. A 259-message challenge set that the team wrote while designing the rules is reported separately as a development check, not as an independent test. For the cross-domain study, all settings were chosen by cross-validation on the UCI training split, and every adapted model was scored on the same untouched Indian test set; the study was repeated with seeds 42, 123 and 2026. Experiments ran on a two-core CPU with Python 3.13 and scikit-learn 1.7.2.
+
+The software was tested at three levels: 836 automated back-end and ML tests (preprocessing, features, registry, detector, rules, cross-domain service and every API route, including a test that the served cross-domain models reproduce the notebook's scores exactly) and 14 front-end tests, all passing; continuous integration on every change before deployment; and checks of the live site after each deployment.
+
+\subsection{Main detector on ScamGuard-IN-2026}
+\begin{table}[H]
+\centering
+\caption{Real test set, 1,874 messages from unseen campaigns (\%; FAR = false-alarm rate)}
+\label{tab:final}
+\begin{tabular}{|l|r|r|r|r|r|r|}
+\hline
+\textbf{System} & \textbf{Acc.} & \textbf{Prec.} & \textbf{Rec.} & \textbf{F1} & \textbf{FAR} & \textbf{AUC} \\
+\hline
+Classifier only & 97.5 & 98.6 & 97.6 & 98.1 & 2.6 & 0.997 \\
+\hline
+Deployed system (hand rules) & 97.1 & 98.2 & 97.2 & 97.7 & 3.2 & 0.995 \\
+\hline
+Learned fusion & \textbf{97.8} & \textbf{98.7} & \textbf{97.8} & \textbf{98.3} & \textbf{2.3} & 0.997 \\
+\hline
+\end{tabular}
+\end{table}
+
+The deployed system catches 1,175 of 1,209 test scams and passes 644 of 665 genuine messages. The 95\% confidence interval of its accuracy is 96.3--97.8\%, and of its false-alarm rate 2.0--4.6\%. On the twelve 2025--26 advisory messages it detects 10 of 11 scams and passes the genuine notice; this set is too small for a firm conclusion.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.62\linewidth]{figures/final_metrics.pdf}
+\caption{Accuracy, precision, recall and F1-score on the real test set (vertical axis starts at 95\%)}
+\label{fig:final}
+\end{figure}
+
+\textbf{Models and features.} Table~\ref{tab:models} compares classifiers on the same split. Logistic regression with word and character features has the lowest false-alarm rate among the strong models. Deep baselines trained under the same protocol did not do better: a character-level CNN reached an F1 of 97.3\% with 4.4\% false alarms and a word-level BiLSTM 97.4\% with 5.6\%, against 97.8\% and 3.0\% for logistic regression under that protocol; the differences were not significant (McNemar $p=0.09$ and $0.11$).
+
+\begin{table}[H]
+\centering
+\caption{Classifiers on the real test set (\%); ``Challenge'' is F1 on the 259 team-written messages}
+\label{tab:models}
+\begin{tabular}{|l|l|r|r|r|}
+\hline
+\textbf{Model} & \textbf{Features} & \textbf{F1} & \textbf{False alarms} & \textbf{Challenge F1} \\
+\hline
+Naive Bayes & word & 96.2 & 6.2 & 88.0 \\
+\hline
+Naive Bayes & word + char & 95.5 & 6.5 & 86.6 \\
+\hline
+Logistic regression & word & 98.0 & 2.7 & 89.9 \\
+\hline
+Logistic regression & char & 96.9 & 4.8 & 86.8 \\
+\hline
+\textbf{Logistic regression} & \textbf{word + char} & \textbf{98.1} & \textbf{2.6} & 90.2 \\
+\hline
+Linear SVM & word & 97.7 & 5.6 & 91.6 \\
+\hline
+Linear SVM & word + char & 98.2 & 3.9 & 92.0 \\
+\hline
+Random forest & word & 97.5 & 2.7 & 73.7 \\
+\hline
+Random forest & word + char & 97.6 & 3.3 & 73.9 \\
+\hline
+\end{tabular}
+\end{table}
+
+\textbf{Label audit.} Training the same model with every reported message labelled as a scam gives 99.4\% recall but flags 34.0\% of genuine messages; with audited labels the false-alarm rate is 2.6\% at 97.6\% recall (210 against 23 discordant messages, McNemar $p<10^{-30}$, Figure~\ref{fig:audit}).
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.5\linewidth]{figures/label_audit.pdf}
+\caption{False-alarm rate with report labels and with audited labels}
+\label{fig:audit}
+\end{figure}
+
+\textbf{Split and synthetic data.} With a random split of the real data, 793 test messages had a near-duplicate in training; the random split gave an F1 of 98.3\% and a 0.8\% false-alarm rate, the campaign-aware split 97.7\% and 1.4\%, so the random split understates false alarms. Table~\ref{tab:train} varies the training data. Synthetic messages alone do not resemble real Indian SMS; real messages alone recognise only 35.6\% of the scams in the team-written challenge set; together they keep real-data F1 at 98.1\% and raise challenge recall to 82.2\%, at the cost of a higher false-alarm rate on real data (2.6\% against 1.4\%).
+
+\begin{table}[H]
+\centering
+\caption{Effect of the training data (logistic regression, word + char, \%)}
+\label{tab:train}
+\begin{tabular}{|l|r|r|r|r|}
+\hline
+\textbf{Training data} & \textbf{Real F1} & \textbf{Real FAR} & \textbf{Challenge recall} & \textbf{Challenge F1} \\
+\hline
+Synthetic only & 87.4 & 31.1 & 86.4 & 90.3 \\
+\hline
+Real only & 97.7 & 1.4 & 35.6 & 51.2 \\
+\hline
+Real + synthetic & 98.1 & 2.6 & 82.2 & 90.2 \\
+\hline
+\end{tabular}
+\end{table}
+
+\textbf{Intent rules.} On real messages from unseen campaigns the hand-weighted rules lower F1 from 98.1\% to 97.7\% and raise false alarms from 2.6\% to 3.2\%; on the team's own challenge messages they raise F1 from 90.2\% to 95.6\%. Learned fusion weights are significantly better than the hand-set ones on real data ($p=0.002$). The rules are kept for phrase-level explanations and for scam types absent from the real training data, not as an accuracy gain.
+
+\textbf{Operating point and errors.} The deployed score has a ROC-AUC of 0.995 (Figures~\ref{fig:rocpr} and~\ref{fig:conf}). At the default threshold it misses 34 scams and flags 21 genuine messages, 15 of which are reported-but-genuine bank messages that ask the user to click a link. A threshold of 0.9 lowers false alarms to 1.1\% at 92.7\% recall. Recall is 97.7\% on banking scams (895 of 916). The model and vectorizer take 1.6~MB, training takes 2.7 seconds, and scoring one message takes about 2~ms (4~ms with the rules).
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\linewidth]{figures/roc_pr.pdf}
+\caption{ROC and precision--recall curves on the real test set}
+\label{fig:rocpr}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\linewidth]{figures/confusion.pdf}
+\caption{(a) Confusion matrix of the deployed system; (b) recall and false-alarm rate by threshold}
+\label{fig:conf}
+\end{figure}
+
+\subsection{Cross-domain generalization (RQ1 and RQ2)}
+Table~\ref{tab:cross} applies the models trained on UCI only (seed 42) to all 2,050 cleaned Indian messages without retraining. Every model loses between 0.23 and 0.36 F1. Precision stays high (0.88--0.96) but recall falls to 0.40--0.55: the models rarely raise false alarms but miss about half of the Indian spam. Logistic Regression with word features transfers best.
+
+\begin{table}[H]
+\centering
+\caption{Trained on Dataset A only (seed 42): spam F1 on the UCI test split and on all of Dataset B}
+\label{tab:cross}
+\begin{tabular}{|l|l|r|r|r|r|}
+\hline
+\textbf{Model} & \textbf{Feat.} & \textbf{F1 UCI} & \textbf{F1 India} & \textbf{Prec. India} & \textbf{Rec. India} \\
+\hline
+Naive Bayes & word & 0.906 & 0.551 & 0.883 & 0.401 \\
+\hline
+Logistic Regression & word & 0.911 & \textbf{0.678} & 0.931 & 0.533 \\
+\hline
+Linear SVM & word & 0.914 & 0.615 & 0.949 & 0.455 \\
+\hline
+Naive Bayes & char & 0.948 & 0.684 & 0.908 & 0.549 \\
+\hline
+Logistic Regression & char & 0.940 & 0.638 & 0.942 & 0.482 \\
+\hline
+Linear SVM & char & 0.943 & 0.578 & 0.956 & 0.414 \\
+\hline
+\end{tabular}
+\end{table}
+
+The smoothing of Naive Bayes is decisive under domain shift: with the library default $\alpha=1$, Naive Bayes reached F1 0.726 on UCI but only 0.014 on Indian messages, labelling almost every Indian message as ham; with $\alpha$ chosen on source data alone these became 0.906 and 0.551.
+
+\textbf{Why the domains differ.} On average 20.7\% of the words in an Indian message never occur in the UCI training split, against 7.8\% for held-out UCI messages. Indian messages are longer (median 81 against 59 characters), 87.0\% of Indian spam contains a URL against 1.6\% of UCI test messages, and 24.3\% of Indian spam contains a currency marker such as ``Rs'' or ``INR''.
+
+\subsection{Lightweight domain adaptation (RQ4)}
+Table~\ref{tab:adapt} and Figure~\ref{fig:curve} show the effect of adding labelled Indian messages. Most of the gain comes from the first 10\% of the pool: 143 messages raise mean target F1 from 0.681 to 0.964 for Logistic Regression and from 0.582 to 0.950 for Naive Bayes. Source-domain F1 stays near 0.93. The gain was positive in all three seeds for every model, feature set and fraction, and McNemar's test gave $p<0.05$ in all 36 comparisons. Adaptation mainly converts missed spam into detected spam: for Logistic Regression at seed 42, false negatives fall from 96 to 3 while false positives stay similar (10 and 9, Figure~\ref{fig:xcm}).
+
+\begin{table}[H]
+\centering
+\caption{Spam F1 on the final Indian test set (615 messages), word TF-IDF, mean $\pm$ SD over three seeds}
+\label{tab:adapt}
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Indian data added} & \textbf{Naive Bayes} & \textbf{Logistic Regression} \\
+\hline
+0\% (source-only) & 0.582 $\pm$ 0.018 & 0.681 $\pm$ 0.025 \\
+\hline
+10\% (143 messages) & 0.950 $\pm$ 0.006 & 0.964 $\pm$ 0.004 \\
+\hline
+20\% (287 messages) & 0.967 $\pm$ 0.007 & 0.968 $\pm$ 0.005 \\
+\hline
+40\% (574 messages) & \textbf{0.978} $\pm$ 0.009 & \textbf{0.975} $\pm$ 0.005 \\
+\hline
+100\% (reference only) & 0.987 $\pm$ 0.007 & 0.987 $\pm$ 0.003 \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\linewidth]{figures/fig4_adaptation_curve.png}
+\caption{Spam F1 on the final Indian test set as labelled Indian messages are added (mean $\pm$ SD over three seeds)}
+\label{fig:curve}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\linewidth]{figures/fig7_confusion_matrices.png}
+\caption{Logistic Regression (word TF-IDF, seed 42) on the Indian test set, before and after adding 40\% of the pool}
+\label{fig:xcm}
+\end{figure}
+
+\textbf{Near-duplicate check.} Indian promotional SMS are templated, so a random split can place a near-copy of a test message in the adaptation pool. Grouping Dataset B with MinHash (Jaccard $\ge 0.6$) gave 1,811 groups for 2,050 messages; under the random split 86--104 of the 615 test messages had a near-copy in the pool. Repeating adaptation with a group-aware split reduced the gains only slightly (Table~\ref{tab:group}), so the adaptation effect is not explained by memorised templates.
+
+\begin{table}[H]
+\centering
+\caption{Target F1 with a random and a group-aware split of Dataset B (word TF-IDF, mean $\pm$ SD)}
+\label{tab:group}
+\begin{tabular}{|l|l|c|c|}
+\hline
+\textbf{Model} & \textbf{Added} & \textbf{Random split} & \textbf{Group-aware split} \\
+\hline
+Logistic Regression & 0\% & 0.681 $\pm$ 0.025 & 0.652 $\pm$ 0.062 \\
+\hline
+Logistic Regression & 10\% & 0.964 $\pm$ 0.004 & 0.952 $\pm$ 0.008 \\
+\hline
+Logistic Regression & 40\% & 0.975 $\pm$ 0.005 & 0.969 $\pm$ 0.011 \\
+\hline
+Naive Bayes & 0\% & 0.582 $\pm$ 0.018 & 0.551 $\pm$ 0.017 \\
+\hline
+Naive Bayes & 10\% & 0.950 $\pm$ 0.006 & 0.937 $\pm$ 0.015 \\
+\hline
+Naive Bayes & 40\% & 0.978 $\pm$ 0.009 & 0.960 $\pm$ 0.015 \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Word versus character features (RQ3)}
+Neither representation won for both classifiers (Table~\ref{tab:feat}, Figure~\ref{fig:feat}). Character n-grams improved source-only target F1 for Naive Bayes but lowered it slightly for Logistic Regression; after adaptation the two are within 0.01 for Logistic Regression.
+
+\begin{table}[H]
+\centering
+\caption{Source-only models: word versus character TF-IDF (mean $\pm$ SD over three seeds)}
+\label{tab:feat}
+\begin{tabular}{|l|l|c|c|c|}
+\hline
+\textbf{Model} & \textbf{Features} & \textbf{Source F1} & \textbf{Target F1} & \textbf{Target recall} \\
+\hline
+Naive Bayes & word & 0.927 & 0.582 $\pm$ 0.018 & 0.430 \\
+\hline
+Naive Bayes & character & 0.941 & 0.704 $\pm$ 0.017 & 0.581 \\
+\hline
+Logistic Regression & word & 0.928 & 0.681 $\pm$ 0.025 & 0.535 \\
+\hline
+Logistic Regression & character & 0.942 & 0.658 $\pm$ 0.027 & 0.502 \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\linewidth]{figures/fig5_word_vs_char.png}
+\caption{Target F1 of the source-only models with word and character TF-IDF}
+\label{fig:feat}
+\end{figure}
+
+\subsection{Error analysis (RQ5)}
+All 118 errors of Logistic Regression (word TF-IDF, seed 42) on the Indian test set were read individually and categorised (Table~\ref{tab:errors}, Figure~\ref{fig:errors}). Before adaptation, most errors are Indian promotions whose vocabulary the UCI model never saw. After adaptation only 12 errors remain, eight of them very short chat messages with almost no content. Nine messages carry questionable labels in Dataset B.
+
+\begin{table}[H]
+\centering
+\caption{Error categories on the Indian test set (Logistic Regression, word TF-IDF, seed 42)}
+\label{tab:errors}
+\begin{tabular}{|L{8.2cm}|r|r|}
+\hline
+\textbf{Category} & \textbf{Source-only} & \textbf{Adapted (40\%)} \\
+\hline
+Indian brand or telecom promotion with unfamiliar vocabulary & 61 & 0 \\
+\hline
+Operator service notice (data alert, pack expiry, missed call) & 14 & 0 \\
+\hline
+Questionable label: safety advice or receipt labelled spam & 9 & 1 \\
+\hline
+Very short or context-free chat (ham) & 8 & 8 \\
+\hline
+Fraud with disguised spelling (``t0'', ``n0w'') & 6 & 2 \\
+\hline
+Loan or debt message & 3 & 0 \\
+\hline
+Market or work commentary with spam-like words (ham) & 2 & 1 \\
+\hline
+Code-mixed Hinglish promotion & 2 & 0 \\
+\hline
+Lost characters (``????'') & 1 & 0 \\
+\hline
+\textbf{Total} & \textbf{106} & \textbf{12} \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\linewidth]{figures/fig6b_error_categories_manual.png}
+\caption{Error categories before and after adaptation}
+\label{fig:errors}
+\end{figure}
+
+\subsection{Application}
+The deployed application implements every functional requirement in Section~3.2. The cross-domain page (Appendix A) lets a user classify the same message with the baseline and the adapted model: an Indian retail offer that the baseline Logistic Regression scores 0.149 (ham) is scored 0.977 (spam) by the adapted model. Selected screens are shown in Appendix A.
+
+\section{Limitations of the study}
+\begin{itemize}
+\item \textbf{Time coverage.} The reported messages in ScamGuard-IN-2026 are mostly from 2022--2024; 2025--26 scam types appear in training only through synthetic messages and in testing through 12 advisory messages.
+\item \textbf{Label reliability.} One annotator made the manual audit decisions, so no inter-annotator agreement is available; the Indian dataset of the cross-domain study has no documented labelling procedure, and nine of its labels look doubtful.
+\item \textbf{Two domains only.} The cross-domain study uses one source and one target dataset and cannot claim robustness across domains in general; three seeds give a limited estimate of variability.
+\item \textbf{Shortcut in Dataset B.} None of its ham messages contains a URL while 87\% of its spam does, so an adapted model can partly rely on that cue.
+\item \textbf{Obfuscation.} The main detector's cleaner removes dotted and digit-substituted spellings before feature extraction; the intent rules catch many of these, but adaptive attacks were not tested.
+\item \textbf{Scope.} Single messages only; English and Hindi only; in the cross-domain study ``spam'' includes legitimate promotions.
+\end{itemize}
+
+\section{Conclusion}
+Three results stand out. First, label quality mattered more than model choice: report labels gave 34.0\% false alarms and audited labels 2.6\%, while every reasonable classifier, including CNN and BiLSTM baselines, scored within a few points of the others. Second, honest evaluation changes the picture: a campaign-aware split exposes errors that a random split hides, and rules that look strong on the developers' own messages do not add accuracy on independent data. Third, conventional spam classifiers do not transfer across countries: trained on UK messages they miss about half of Indian spam, but as few as 143 labelled Indian messages restore an F1 above 0.95 without harming source performance, consistently across seeds and significantly by McNemar's test.
+
+% ======================================================================
+\chapter{Conclusion}
+ScamGuard detects scam and spam SMS for Indian users and explains every verdict. Built on the audited ScamGuard-IN-2026 corpus with a campaign-aware split, the deployed detector reaches 97.1\% accuracy with a 3.2\% false-alarm rate on real messages from unseen campaigns, answers in milliseconds and shows the exact phrases behind each decision. The cross-domain study proposed by our guide shows that the same kind of classifier, when trained on another country's messages, loses about a third of its F1 on Indian SMS, and that a small, carefully labelled local sample is enough to recover it. The practical lesson for anyone deploying such a filter is to measure it on local data and to spend effort on a few hundred verified local labels before reaching for a more complex model.
+
+Both results are delivered in a working, deployed application with a quick check, full analysis, Hindi support, safety tools, a cross-domain page and a Streamlit demonstration, and every number in this report can be regenerated from the project repository.
+
+\textbf{Future work.}
+\begin{itemize}
+\item Complete the team-contributed 2026 test set and repeat both evaluations on it.
+\item Add a second annotator for the label audit and report agreement.
+\item Extend the cross-domain study to more target datasets and seeds, and to adaptation with fewer than 10\% of the pool.
+\item Normalise obfuscated spellings before feature extraction and evaluate against adaptive and paraphrased attacks.
+\item Extend to Kannada, Tamil, Telugu and other Indian languages, and compare with small transformer models under the same protocols.
+\end{itemize}

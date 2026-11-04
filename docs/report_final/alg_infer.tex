@@ -1,0 +1,13 @@
+\begin{algorithm}[H]
+\caption{Scoring one message in the live service}
+\begin{algorithmic}[1]
+\Require message $x$; frozen vectorizer and model; intent rules
+\State $t\gets$ \textsc{Tokenize}(\textsc{Clean}($x$))
+\State $p\gets\sigma(\mathbf{w}^\top\phi(t)+b)$
+\State find matched intents $I$ and protective signals $P$
+\If{a sentence asks for an OTP after a ``never share'' warning} \State add decoy intent \EndIf
+\State $s\gets\sigma(\operatorname{clip}(\operatorname{logit}p,\pm4)+5(E^+-E^-))$
+\If{genuine alert or notice with no blocking cue} \State $s\gets\min(s,0.15)$ \EndIf
+\State \Return verdict $\mathbf{1}[s\ge0.5]$, $p$, $s$, highlighted phrases, explanation
+\end{algorithmic}
+\end{algorithm}
