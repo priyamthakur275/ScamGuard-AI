@@ -1,7 +1,21 @@
+\chapter*{Summary}
+\addcontentsline{toc}{chapter}{Summary}
+Major Project Phase 2 builds ScamGuard, a system that reads one SMS or other message, decides whether it is a scam or genuine, explains the decision and suggests the next step. The completed work includes the ScamGuard-IN-2026 dataset of 11,399 messages with an audit of its labels, campaign-aware splitting with MinHash, the TF-IDF and logistic-regression detector joined with 31 intent patterns, the FastAPI back end with its PostgreSQL database, the Next.js web application in English and Hindi, and the cross-domain generalization and adaptation study proposed by our guide. On 1,874 real messages from campaigns the model never saw, the deployed system scores 97.1\% accuracy with 3.2\% false alarms. In the cross-domain study, adding 10\% of a labelled Indian pool (143 messages) raised the mean Indian F1 of Logistic Regression from 0.681 to 0.964. These are results on public datasets that we audited ourselves; they do not claim the same accuracy on all future scam messages.
+
+Key deliverables achieved include:
+
+\textbf{Dataset and Label Audit:} ScamGuard-IN-2026 was assembled from public reports, real Indian SMS, advisory texts and synthetic training messages. An audit of 2,922 decisions showed that 19.5\% of the retained reports were genuine, and the corrected labels cut false alarms from 34.0\% to 2.6\% for the classifier alone.
+
+\textbf{Detection Engine:} The classifier uses 35,148 word and character TF-IDF features, and the intent evidence and ten protective signals are fused with a capped adjustment so that each verdict can be explained in plain words.
+
+\textbf{Cross-Domain Study:} Two models trained on the UCI SMS Spam Collection were tested unchanged on an Indian SMS dataset. Three seeds and McNemar's test (all 36 comparisons significant at $p<0.05$) show that a small amount of local data repairs most of the drop.
+
+\textbf{Application and Deployment:} The Next.js front end runs on Vercel, the FastAPI back end on Render and the database on Neon, with 836 back-end and 14 front-end automated tests, a cross-domain page and a Streamlit demo.
 \clearpage
 \renewcommand{\bibname}{References}
-\begin{thebibliography}{99}
 \addcontentsline{toc}{chapter}{References}
+\addcontentsline{toc}{chapter}{Appendix A: Bibliography}
+\begin{thebibliography}{99}\small
 \bibitem{agarwal2025fishing} S. Agarwal, A. Papasavva, G. Suarez-Tangil, and M. Vasek, ``Fishing for smishing: Understanding SMS phishing infrastructure and strategies by mining public user reports,'' in \textit{Proc. ACM Internet Measurement Conference (IMC '25)}, Madison, WI, USA, 2025, doi: 10.1145/3730567.3764431.
 \bibitem{agarwal2026overview} S. Agarwal, G. Suarez-Tangil, and M. Vasek, ``An overview of 7726 user reports: Uncovering SMS scams and scammer strategies,'' in \textit{Proc. Network and Distributed System Security Symposium (NDSS)}, San Diego, CA, USA, 2026.
 \bibitem{pritom2026sms} M. M. A. Pritom, S. M. Sanjari, M. Mia, A. M. Shibli, S. M. M. Hossain, M. Ismail, and S. Xu, ``Short message service (SMS) phishing attacks and defenses: A systematic review,'' arXiv:2604.11429, 2026.
@@ -29,104 +43,24 @@
 \bibitem{dietterich1998approximate} T. G. Dietterich, ``Approximate statistical tests for comparing supervised classification learning algorithms,'' \textit{Neural Computation}, vol. 10, no. 7, pp. 1895--1923, 1998, doi: 10.1162/089976698300017197.
 \end{thebibliography}
 \clearpage
-\chapter*{Plagiarism}
-\addcontentsline{toc}{chapter}{Plagiarism}
-The similarity report and the AI-content report for this document, produced with the tool the department prescribes, are attached on the next page.
-\clearpage
-\appendix
-\renewcommand{\thefigure}{A.\arabic{figure}}
-\renewcommand{\thetable}{E.\arabic{table}}
-\setcounter{figure}{0}\setcounter{table}{0}
-\renewcommand{\thechapter}{\Alph{chapter}}
-\renewcommand{\thesection}{\Roman{section}}
-\section*{Appendix A: Snapshots}
-\addcontentsline{toc}{section}{Appendix A: Snapshots}
-\begin{figure}[H]\centering\fbox{\includegraphics[width=0.82\linewidth]{shots/01_landing.jpg}}\caption{Home page with the quick check}\end{figure}
-\begin{figure}[H]\centering\fbox{\includegraphics[width=0.82\linewidth]{shots/02_quick_scam.jpg}}\caption{Quick check of a fake KYC message: verdict, matched tactics, known pattern and Scam X-Ray}\end{figure}
-\begin{figure}[H]\centering\fbox{\includegraphics[width=0.82\linewidth]{shots/03_quick_genuine.jpg}}\caption[Quick check of a genuine operator notice]{Quick check of a genuine operator notice about the 1909 helpline: ``Looks genuine'' with the TrustLens reason}\end{figure}
-\begin{figure}[H]\centering\fbox{\includegraphics[width=0.82\linewidth]{shots/05_analyze_result.jpg}}\caption{Full analysis of a scam message for a signed-in user}\end{figure}
-\begin{figure}[H]\centering\fbox{\includegraphics[width=0.82\linewidth]{shots/06_analyze_xray.jpg}}\caption{Scam X-Ray: each risky phrase placed in the hook, pressure, request and cash-out stages}\end{figure}
-\begin{figure}[H]\centering\fbox{\includegraphics[width=0.82\linewidth]{shots/07_analyze_trustlens.jpg}}\caption{TrustLens: scam journey, recommended actions and how a genuine message differs}\end{figure}
-\begin{figure}[H]\centering\fbox{\includegraphics[width=0.82\linewidth]{shots/08_dashboard.jpg}}\caption{Dashboard with priority findings and recent scans}\end{figure}
-\begin{figure}[H]\centering\fbox{\includegraphics[width=0.82\linewidth]{shots/09_history.jpg}}\caption{Scan history with search, filters and export}\end{figure}
-\begin{figure}[H]\centering\fbox{\includegraphics[width=0.82\linewidth]{shots/10_analytics.jpg}}\caption{Analytics: verdict share, distribution and score trend}\end{figure}
-\begin{figure}[H]\centering\fbox{\includegraphics[width=0.82\linewidth]{shots/11_tools.jpg}}\caption{Safety tools: QR code check, before-you-pay, file check and chat timeline}\end{figure}
-\begin{figure}[H]\centering\fbox{\includegraphics[width=0.82\linewidth]{shots/12_cross_domain.jpg}}\caption{Cross-domain study page: the adapted model flags an Indian promotion that the baseline misses, with the measured results}\end{figure}
-\clearpage
-\section*{Appendix B: Details of list of publications related to this project}
-\addcontentsline{toc}{section}{Appendix B: Details of list of publications related to this project}
-\large{Author Names: } Kayarvizhy N, Priyam Thakur, Bhavya Goyal, Samir Chaudhary, Sana Subodh \\
-\large{Paper Titles: } (1) ScamGuard: AI-Based Online Scam and Fraud Detection System; (2) Cross-Domain Generalization and Lightweight Domain Adaptation for SMS Spam Detection \\
-\large {Name of the Conference or Journal:} To be decided (manuscripts prepared in IEEE conference format, awaiting the guide's approval) \\
-\large {Place of the conference:} -- \\
-\large {Date of Conference:} --
-\clearpage
-\section*{Appendix C: Details of Patent}
-\addcontentsline{toc}{section}{Appendix C: Details of Patent}
-No patent has been filed for this project.
-\clearpage
-\section*{Appendix D: Details of Funding}
-\addcontentsline{toc}{section}{Appendix D: Details of Funding}
-The project received no external funding. It was built with free cloud tiers and open-source software.
-\clearpage
-\section*{Appendix E: POs and PSOs Mapped}
-\addcontentsline{toc}{section}{Appendix E: POs and PSOs Mapped}
-Tables~\ref{tab:co} and~\ref{tab:copo} list the course outcomes of Major Project Phase-2 (23CS7PWPP2) and how they map to POs and PSOs. The two tables after them explain the level we claim for each PO and PSO.
+\chapter*{SDG Analysis}
+\addcontentsline{toc}{chapter}{Appendix B: POs and PSOs Mapped}
+The ScamGuard project aligns with the following United Nations Sustainable Development Goals (SDGs):
 
-\begin{table}[H]
-\centering
-\caption{Course outcomes and where they are addressed}
-\label{tab:co}
-\begin{tabular}{|c|L{6.3cm}|L{5.6cm}|}
-\hline
-\textbf{CO} & \textbf{Course outcome} & \textbf{Addressed in this work} \\
-\hline
-CO1 & Apply software engineering principles in planning, design and requirements within legal, societal and environmental constraints & Section 2.3 and Chapters 3--4: problem statement, requirements, architecture and modules, with licensed data and masked personal details \\
-\hline
-CO2 & Apply mathematics, science and engineering to implement the project and draw conclusions with integrity & Section 5.4 for the mathematics; Chapter 6 for results backed by confidence intervals and significance tests \\
-\hline
-CO3 & Monitor and manage schedules, resources and work assignments & Sections 1.8 and 3.6: the work plan and its constraints \\
-\hline
-CO4 & Test and defend the performance of the implemented project & Chapter 6: how the system was tested, measured and validated \\
-\hline
-CO5 & Work individually and as a team & Data, model, back end and front end were split among the team \\
-\hline
-CO6 & Communicate, present and prepare technical documents & This report, the two research papers and the presentation \\
-\hline
-\end{tabular}
-\end{table}
+\textbf{SDG 16: Peace, Justice and Strong Institutions (target 16.4, illicit financial flows).} Many payment frauds begin with one text message. If a user spots the trap before paying or sharing an OTP, the money never reaches the fraudster. The application also sends users to the official channels: the 1930 helpline and cybercrime.gov.in.
 
-\begin{table}[H]
-\centering
-\caption{CO--PO--PSO mapping of Major Project Phase-2}
-\label{tab:copo}
-\footnotesize
-\setlength{\tabcolsep}{1.9pt}
-\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|}
-\hline
- & \textbf{PO1} & \textbf{PO2} & \textbf{PO3} & \textbf{PO4} & \textbf{PO5} & \textbf{PO6} & \textbf{PO7} & \textbf{PO8} & \textbf{PO9} & \textbf{PO10} & \textbf{PO11} & \textbf{PO12} & \textbf{PSO1} & \textbf{PSO2} & \textbf{PSO3} \\
-\hline
-CO1 & & 2 & 2 & & & 2 & 2 & & & & & 2 & 2 & & \\
-\hline
-CO2 & 3 & & & 3 & 3 & & & 3 & & & & & & 3 & 3 \\
-\hline
-CO3 & & & & & & & & & & & 3 & & & & \\
-\hline
-CO4 & & & & & & & 1 & & & & & & & & 1 \\
-\hline
-CO5 & & & & & & & & & 1 & & & 1 & & & \\
-\hline
-CO6 & & & & & & & & & & 2 & & 2 & & & \\
-\hline
-\end{tabular}
-\end{table}
-\clearpage
+\textbf{SDG 8: Decent Work and Economic Growth (target 8.10, access to financial services).} People adopt digital payments only when they feel safe using them. Telling real bank and UPI alerts from imitations helps keep that confidence.
 
+\textbf{SDG 9: Industry, Innovation and Infrastructure (target 9.c, access to ICT).} The model is small, runs on free cloud servers and replies in milliseconds, so the service costs its users nothing. The cross-domain results add that a model can be moved to a new region with a few hundred labelled local messages.
+
+\textbf{SDG 10: Reduced Inequalities.} Hindi support and a simpler elder mode are meant for the people fraudsters target most and English-only tools serve least.
+
+\vspace{0.5cm}
 {\small
 \renewcommand{\arraystretch}{1.2}
 \setlength{\tabcolsep}{6pt}
 \begin{longtable}{|L{3.6cm}|c|L{7.2cm}|}
-\caption{Programme Outcomes Mapping with Project}\\
+\caption*{Table 2: Programme Outcomes Mapping with ScamGuard and Domain Adaptation}\\
 \hline
 \textbf{PROGRAMME OUTCOMES} & \textbf{Level (1/2/3)} & \textbf{Justification if addressed} \\
 \hline
@@ -157,35 +91,15 @@ PO10 & 3 & Results reach readers through this report, two research papers, a pre
 \hline
 PO11 & 2 & Work was planned in two phases, and hosting stays inside free-tier limits. \\
 \hline
-PO12 & 2 & The dataset build is scripted, so new scam types and the 2026 test set can be added and everything re-run. \\
-\hline
-\end{longtable}}
-
-
-{\small
-\renewcommand{\arraystretch}{1.2}
-\setlength{\tabcolsep}{6pt}
-\begin{longtable}{|L{3.6cm}|c|L{7.2cm}|}
-\caption{Programme Specific Outcomes Mapping with Project}\\
-\hline
-\textbf{PROGRAMME SPECIFIC OUTCOMES} & \textbf{Level (1/2/3)} & \textbf{Justification if addressed} \\
-\hline
-\endfirsthead
-\hline
-\textbf{PROGRAMME SPECIFIC OUTCOMES} & \textbf{Level (1/2/3)} & \textbf{Justification if addressed} \\
-\hline
-\endhead
-PSO1 & 2 & Built on web APIs and cloud hosting, with rate limits and secure token-based access. \\
-\hline
-PSO2 & 3 & Follows good engineering practice: versioned models, automated tests, CI and builds anyone can reproduce. \\
-\hline
-PSO3 & 3 & Brings machine learning, NLP and information systems together in a product that is live and usable. \\
-\hline
 \end{longtable}}
 
 \clearpage
-
-\section*{Appendix F: Similarity report, AI Generated report}
-\addcontentsline{toc}{section}{Appendix F: Similarity report, AI Generated report}
-To be attached after the department's similarity and AI-content check.
+\chapter*{Plagiarism Report}
+\addcontentsline{toc}{chapter}{Appendix C: Similarity report, AI Generated report}
+\begin{center}
+\includegraphics[width=0.92\linewidth,height=0.86\textheight,keepaspectratio]{dbimg/sim-1_c.png}
+\end{center}
 \clearpage
+\begin{center}
+\includegraphics[width=0.92\linewidth,height=0.92\textheight,keepaspectratio]{dbimg/ai-01_c.png}
+\end{center}

@@ -1,0 +1,51 @@
+\chapter{Introduction}
+\section{Overview}
+Most fraudulent text messages in India do not announce themselves. They read like the alerts people get every week: the bank wants a KYC update before midnight, the electricity board will cut the supply at 9.30 pm, a courier is holding a parcel until a ten-rupee fee is paid, or a traffic challan can be settled through an attached app. The fraudster borrows these formats precisely because people already trust them. That is what makes the problem hard for software, too. A genuine OTP message and a fake one share almost every word: OTP, account, KYC, link, today.
+
+Automatic SMS filtering is an old research topic. The trouble is how it is usually tested. Most studies take one collection, very often the UCI SMS Spam Collection~\cite{almeida2011contributions}, shuffle it, split it at random and report accuracy above 95\%~\cite{almeida2013towards,roy2020deep}. Such a figure only says how well the model handles messages similar to the ones it learned from. A filter used in India sees other brands, rupee amounts, shortened links and Hindi text, and nobody had checked how much of that 95\% survives.
+
+ScamGuard is our answer to both problems. A user pastes one message into a web page and gets back a verdict, a risk score and an explanation: which phrases are risky, which stage of a scam each phrase belongs to, how a real message from the same organisation would differ, and what to do next. Under the page sit a text classifier, a set of readable rules, an Indian dataset whose labels we checked ourselves, and a separate study of what happens to such classifiers when the data comes from a different country.
+
+\section{Motivation}
+Four things pushed us towards this project.
+
+The first is scale. A 2025 study of over 64,000 public smishing reports traced most of the attributable sender numbers to Indian mobile operators~\cite{agarwal2025fishing}. India is not a side case; it is where much of the problem lives.
+
+The second is the price of a false alarm. Real bank alerts and operator notices use the vocabulary of scams. Public smishing collections hold only messages that someone reported, and plenty of those reports turn out to be genuine. A checker that keeps flagging real bank messages trains its users to stop listening.
+
+The third is explanation. Telling someone ``spam'' does not help them decide anything. They need to see the line that is the trap.
+
+The fourth came from our guide, Dr Kayarvizhy N: domain shift. A model built on one country's messages may not carry over to another's. Theory says the error on a new domain is bounded by the error on the old one plus a term for how different the two are~\cite{bendavid2010theory}, and adding a small labelled sample from the new domain is the usual low-cost fix~\cite{pan2010survey,daume2007frustratingly}. For SMS spam, and for Indian messages in particular, neither the size of the drop nor the amount of local data needed had been measured.
+
+\section{Objective}
+The project sets out to:
+\begin{enumerate}
+\item Build a labelled collection of Indian scam and genuine SMS that covers current scam types, with labels that we verified instead of copying them from user reports.
+\item Test lightweight text classifiers on it with a split that keeps near-identical messages from appearing in both training and test data.
+\item Pair the best classifier with readable intent rules that explain each verdict phrase by phrase, and check honestly whether those rules also raise accuracy.
+\item Measure how well standard spam classifiers (Naive Bayes and Logistic Regression over word and character TF-IDF) trained on the UCI SMS Spam Collection work on Indian SMS, and study how much adding 10\%, 20\% and 40\% labelled Indian data helps.
+\item Put the detector and the cross-domain models into a working, deployed web application, together with safety tools, history and analytics.
+\item Keep every reported number reproducible from the project repository.
+\end{enumerate}
+
+\section{Scope}
+ScamGuard looks at one message at a time, in English, Hindi written in Devanagari, or Hindi typed in Latin letters. The main detector answers \emph{scam} or \emph{legitimate}. We call a message a scam if it uses deception to get money, a secret such as an OTP or PIN, personal details, an app install or a call to a private number; an honest advertisement counts as legitimate. The cross-domain study keeps the labels of its two public datasets, \emph{spam} and \emph{ham}, where spam also covers unwanted promotions. Besides plain text, the application takes URLs, e-mails, screenshots, PDFs and QR codes, turning them into text or passing them to separate checks.
+
+Some things are deliberately left out. ScamGuard does not read messages on the phone automatically, the classifier sees neither the sender nor earlier messages in the thread, and Indian languages other than Hindi are not handled. The cross-domain study compares two datasets only, so it makes no general claim about every possible domain. The risk score orders messages by risk but is not a calibrated probability, and the verdict is guidance, not proof that a crime took place.
+
+\section{Existing System}
+What exists today falls into three groups.
+\begin{itemize}
+\item \textbf{Measures taken by operators and the regulator.} Operators screen bulk traffic and register commercial senders, and anyone can report a message to the 1909 DND service or the cyber-crime portal. These steps work on senders and volumes. They do nothing for a person staring at a message that has already arrived.
+\item \textbf{Keyword and rule filters.} Many phone apps warn on words like ``lottery'' or ``KYC''. The logic is easy to follow, but the same words appear in real messages, and a scam that avoids them goes through.
+\item \textbf{Machine-learning filters from research.} Papers on Naive Bayes, SVM, CNN and LSTM report high accuracy, yet nearly always on promotional spam, with random splits inside one dataset, with no genuine Indian messages and with no test on another region's data~\cite{almeida2013towards,roy2020deep,goel2024ml}. The newer corpora built from user reports contain reported messages only~\cite{timko2024smishing,agarwal2025fishing}.
+\end{itemize}
+
+\section{Proposed System}
+Our system has four pieces.
+\begin{enumerate}
+\item \textbf{The ScamGuard-IN-2026 dataset.} It mixes real reported Indian scams, real genuine Indian messages, texts from 2025--26 government advisories and synthetic messages for the newest scam types. Every group of reported messages was checked, and the split is made by scam campaign.
+\item \textbf{The detector.} Logistic regression on word and character TF-IDF, joined with readable intent rules and guards for genuine messages, so each verdict comes with its reasons.
+\item \textbf{The cross-domain study.} Naive Bayes and Logistic Regression are trained on the UCI collection and tested on Indian SMS, first as they are and then after adding 10\%, 20\% and 40\% of a labelled Indian pool. Everything runs with three seeds and is backed by paired significance tests, a near-duplicate check and an error analysis done by hand.
+\item \textbf{The application.} A deployed website offering a quick check, a full analysis with Scam X-Ray and TrustLens, an AI copilot, safety tools, history, analytics and a cross-domain page where the baseline and adapted models can be compared; the study also has its own Streamlit app.
+\end{enumerate}

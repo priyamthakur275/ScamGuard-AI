@@ -1,7 +1,39 @@
-% ======================================================================
-\chapter{Methodology}
+\chapter{Implementation}
+\section{Implementation Overview}
+ScamGuard was built in two parts that share one preprocessing code base: an offline part that builds the dataset and trains the models, and an online part that serves them. Figure~\ref{fig:flow} shows the whole flow from data collection to deployment, and the sections below describe each stage. Section~\ref{sec:tools} lists the tools and techniques used.
 
-\section{Tools and Techniques}
+\begin{figure}[H]
+\centering
+\resizebox{\linewidth}{!}{\input{tk/flow.tex}}
+\caption{Flow of the methodology from data collection to deployment}
+\label{fig:flow}
+\end{figure}
+
+The cross-domain study follows its own pipeline, shown in Figure~\ref{fig:xflow}.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=5mm,
+  box/.style={draw, rounded corners=2pt, align=center, font=\small, minimum width=7cm, minimum height=8mm, fill=white},
+  arr/.style={-{Stealth[length=2.2mm]}, thick}]
+\node[box] (a) {Load Dataset A (UCI, source) and Dataset B (India, target)};
+\node[box, below=of a] (b) {Audit: counts, missing values, duplicates, encoding, labels, provenance};
+\node[box, below=of b] (c) {Clean both the same way; remove duplicates and A--B overlap};
+\node[box, below=of c] (d) {Split A 80/20; split B 70/30 into adaptation pool and final test};
+\node[box, below=of d] (e) {Word and character TF-IDF; choose $\alpha$, $C$ on A-train only};
+\node[box, below=of e] (f) {Train NB and LR on A-train; test on A-test and on B (cross-domain)};
+\node[box, below=of f] (g) {Add 10\%, 20\%, 40\% of the pool; refit; test on the same B-test};
+\node[box, below=of g] (h) {Repeat for seeds 42, 123, 2026; mean $\pm$ SD; McNemar test};
+\node[box, below=of h] (i) {Near-duplicate check; manual error analysis};
+\node[box, below=of i] (j) {Save baseline and adapted models; serve in the web app and Streamlit};
+\foreach \x/\y in {a/b,b/c,c/d,d/e,e/f,f/g,g/h,h/i,i/j} \draw[arr] (\x) -- (\y);
+\end{tikzpicture}
+\caption{Flow of the cross-domain study}
+\label{fig:xflow}
+\end{figure}
+
+\label{sec:tools}
+\subsection{Tools and Techniques}
 \begin{itemize}
 \item \textbf{TF-IDF}~\cite{salton1988term} gives a term a high weight when it is frequent in the message but uncommon in the collection. In the main detector we join word 1--2-grams with character 2--5-grams. The cross-domain study keeps them apart: word 1--2-grams on one side, character 3--5-grams on the other.
 \item \textbf{Logistic regression} is a linear model, so its coefficients can be read directly: each one says how strongly a word pulls a message towards scam or towards genuine.
@@ -14,9 +46,8 @@
 \item \textbf{Software:} scikit-learn~\cite{pedregosa2011scikit} for the models, ftfy to fix broken text encodings, and FastAPI, Next.js and Streamlit for the applications.
 \end{itemize}
 
-\section{Data Set with Explanation}
+\section{Datasets and Label Audit}\label{sec:data}
 
-\subsection{ScamGuard-IN-2026 (main detector)}
 Indian scams and genuine Indian service messages use largely the same words, and public smishing data offers only reported messages whose labels nobody checked. We therefore assembled our own corpus, ScamGuard-IN-2026, with real genuine Indian messages, verified labels and the scam types seen in 2025--26. Its sources are listed in Table~\ref{tab:sources}.
 
 \begin{table}[H]
@@ -100,35 +131,12 @@ B: India Spam SMS & 2,267 & 2,050 & 1,314 & 736 & 35.9 \\
 \label{fig:lendist}
 \end{figure}
 
-\section{Flowchart of Methodology from Start to End}
-The two pipelines are drawn separately: Figure~\ref{fig:flow} covers the main detector and Figure~\ref{fig:xflow} the cross-domain study.
+\subsection{Data fields}
+Each row of \textbf{ScamGuard-IN-2026} has seven fields: \texttt{text}; \texttt{label}, which is scam or legitimate; \texttt{source}; \texttt{subtype}; \texttt{is\_synthetic}; \texttt{campaign}, naming the near-duplicate group; and \texttt{split}, which is train, development, test or 2026 test.
 
-\input{flow_old.tex}
+After cleaning, the \textbf{cross-domain datasets} keep three fields: \texttt{message}, \texttt{label} (spam = 1, ham = 0) and \texttt{domain} (UCI or India). Alongside them the study saves every result table as a CSV file, the error sheet with its hand-filled \texttt{manual\_category} column, a \texttt{results.json} summary and four joblib models, namely Naive Bayes and Logistic Regression, each as a baseline and as an adapted version.
 
-\begin{figure}[H]
-\centering
-\begin{tikzpicture}[node distance=5mm,
-  box/.style={draw, rounded corners=2pt, align=center, font=\small, minimum width=7cm, minimum height=8mm, fill=white},
-  arr/.style={-{Stealth[length=2.2mm]}, thick}]
-\node[box] (a) {Load Dataset A (UCI, source) and Dataset B (India, target)};
-\node[box, below=of a] (b) {Audit: counts, missing values, duplicates, encoding, labels, provenance};
-\node[box, below=of b] (c) {Clean both the same way; remove duplicates and A--B overlap};
-\node[box, below=of c] (d) {Split A 80/20; split B 70/30 into adaptation pool and final test};
-\node[box, below=of d] (e) {Word and character TF-IDF; choose $\alpha$, $C$ on A-train only};
-\node[box, below=of e] (f) {Train NB and LR on A-train; test on A-test and on B (cross-domain)};
-\node[box, below=of f] (g) {Add 10\%, 20\%, 40\% of the pool; refit; test on the same B-test};
-\node[box, below=of g] (h) {Repeat for seeds 42, 123, 2026; mean $\pm$ SD; McNemar test};
-\node[box, below=of h] (i) {Near-duplicate check; manual error analysis};
-\node[box, below=of i] (j) {Save baseline and adapted models; serve in the web app and Streamlit};
-\foreach \x/\y in {a/b,b/c,c/d,d/e,e/f,f/g,g/h,h/i,i/j} \draw[arr] (\x) -- (\y);
-\end{tikzpicture}
-\caption{Flow of the cross-domain study}
-\label{fig:xflow}
-\end{figure}
-
-\section{Explanation of Methodology in detail with Equations and Formulae}
-
-\subsection{Problem definition}
+\section{Preprocessing and Feature Extraction}
 Given a message $x$, the detector produces a score $s(x)\in[0,1]$ and decides
 \begin{equation}
 \hat{y}=\begin{cases}1 \;(\text{scam/spam}) & \text{if } s(x)\ge 0.5\\ 0 \;(\text{legitimate/ham}) & \text{otherwise.}\end{cases}
@@ -146,6 +154,7 @@ after which each message vector is scaled to unit length. For the main detector 
 
 \textit{A small example.} Take three messages: ``update kyc now'', ``kyc update otp'' and ``order delivered today'', so $N=3$. In the first one, \textit{update} and \textit{kyc} each occur in two messages ($\mathrm{df}=2$) and \textit{now} in one, giving IDF values of $\ln(4/3)+1=1.288$ and $\ln 2+1=1.693$. Normalised, the vector is $(0.518, 0.518, 0.681)$, so the word that is rarest in the collection gets the most weight.
 
+\section{Classifiers and Intent Fusion}\label{sec:fusion}
 \subsection{Logistic regression}
 Logistic regression estimates
 \begin{equation}
@@ -171,13 +180,21 @@ s(x)=\sigma\!\Big(\operatorname{clip}\big(\operatorname{logit}p(x),-4,4\big)+5\,
 \end{equation}
 If a message is shaped like a genuine transaction alert or service notice and has no blocking cue, the score is capped at 0.15. A separate ``decoy'' rule handles the trick of writing ``never share your OTP'' and then asking for it anyway.
 
-\subsection{Near-duplicate grouping}
+\subsection{Inference procedure}
+\input{alg_infer.tex}
+
+\section{Campaign Grouping and Dataset Construction}\label{sec:campaign}
 After links and digits are replaced, a message is reduced to $S$, the set of its word 3-shingles. Two messages share a campaign if
 \begin{equation}
 J(S_1,S_2)=\frac{|S_1\cap S_2|}{|S_1\cup S_2|}\ \ge\ 0.6,
 \end{equation}
 where $J$ is estimated from 96 MinHash permutations with locality-sensitive hashing.
 
+Algorithm~\ref{alg:build} outlines how ScamGuard-IN-2026 is assembled and split.
+
+\input{alg_build.tex}
+
+\section{Cross-Domain Study}\label{sec:xdomain}
 \subsection{Domain adaptation}
 Write $A_{train}$ for the source training split, $P$ for the target adaptation pool and $S_f\subset P$ for a stratified sample of size $|S_f|=\lfloor f\,|P|\rfloor$. The adapted model learns from
 \begin{equation}
@@ -185,14 +202,65 @@ D_f=A_{train}\cup S_f,\qquad f\in\{0, 0.1, 0.2, 0.4\},
 \end{equation}
 and the vectorizer is fitted again on $D_f$, which lets Indian words into the vocabulary. The pool has $|P|=1{,}435$ messages, so the three samples hold 143, 287 and 574. All values of $f$ are scored on one fixed target test set, $B_{test}$, of 615 messages.
 
-\subsection{Evaluation metrics}
-Scam (or spam) is the positive class throughout:
-\begin{align}
-\text{Accuracy}&=\frac{TP+TN}{TP+TN+FP+FN}, & \text{Precision}&=\frac{TP}{TP+FP},\\
-\text{Recall}&=\frac{TP}{TP+FN}, & F_1&=\frac{2\cdot\text{Precision}\cdot\text{Recall}}{\text{Precision}+\text{Recall}},\\
-\text{False-alarm rate}&=\frac{FP}{FP+TN}. & &
-\end{align}
-We draw confidence intervals from 1,000 bootstrap resamples, and when an experiment is repeated over seeds we give the mean $\pm$ standard deviation.
+\subsection{Experiment protocol}
+The protocol of the cross-domain study is written out in Algorithm~\ref{alg:xdomain}. Every decision is made on source data, and the final target test set is touched only to score models.
 
-\subsection{Statistical test}
-When two models are scored on the same messages, only the messages they disagree on carry information. Let $b$ count those that only the first model gets right and $c$ those that only the second gets right. If the two models were equally good, $\min(b,c)$ would follow a binomial distribution with $n=b+c$ and probability $0.5$. The exact McNemar test~\cite{mcnemar1947note,dietterich1998approximate} turns this into a two-sided $p$-value.
+\begin{algorithm}[H]
+\caption{Cross-domain evaluation and lightweight domain adaptation}
+\label{alg:xdomain}
+\begin{algorithmic}[1]
+\Require cleaned source set $A$ (UCI), cleaned target set $B$ (Indian), seeds $\{42, 123, 2026\}$, fractions $\{0, 0.1, 0.2, 0.4\}$
+\State choose $\alpha$ (Naive Bayes) and $C$ (Logistic Regression) by 5-fold cross-validation on $A_{train}$
+\For{each seed}
+  \State split $A$ 80/20 into $A_{train}, A_{test}$ and $B$ 70/30 into pool $P$ and test $B_{test}$ (stratified)
+  \For{each fraction $f$}
+    \State $S_f \gets$ stratified sample of $f\cdot|P|$ messages from $P$
+    \State fit TF-IDF and the classifier on $A_{train}\cup S_f$
+    \State score $A_{test}$ and $B_{test}$; store predictions
+  \EndFor
+\EndFor
+\State report mean $\pm$ SD over seeds; McNemar test of each adapted model against $f=0$
+\end{algorithmic}
+\end{algorithm}
+
+\section{Back End, Database and Front End}
+The FastAPI back end exposes REST routes for sign-in, scans, history, cases, analytics, the copilot, the safety tools and the cross-domain study. The Next.js front end calls them through its own origin and offers the quick check, full analysis, dashboard, safety tools and cross-domain page in English and Hindi. The main tables of the PostgreSQL database are listed in Table~\ref{tab:db}.
+
+
+
+\begin{table}[H]
+\centering
+\caption{Main database tables}
+\label{tab:db}
+\begin{tabular}{|L{3.6cm}|L{9.9cm}|}
+\hline
+\textbf{Table} & \textbf{Contents} \\
+\hline
+\texttt{users} & Account, hashed password, role, preferences \\
+\hline
+\texttt{refresh\_tokens} & Issued refresh tokens for rotation and revocation \\
+\hline
+\texttt{messages} & Each analysed input with its type (text, URL, e-mail, image, PDF, QR) \\
+\hline
+\texttt{predictions} & Verdict, classifier probability, risk score, category, explanation, model version \\
+\hline
+\texttt{cases}, \texttt{case\_scan\_links}, \texttt{case\_timeline\_entries} & Investigation cases, the scans linked to them and their notes \\
+\hline
+\texttt{community\_reports} & One report per user for a number, link domain, UPI ID or e-mail \\
+\hline
+\texttt{alerts}, \texttt{audit\_log}, \texttt{model\_registry\_meta} & Alerts, security audit trail and registered model versions \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\fbox{\includegraphics[width=0.78\linewidth]{shots/02_quick_scam.jpg}}
+\caption{Quick check of a fake KYC message: verdict, matched tactics and Scam X-Ray}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\fbox{\includegraphics[width=0.78\linewidth]{shots/12_cross_domain.jpg}}
+\caption{Cross-domain page: the adapted model flags an Indian promotion that the baseline misses}
+\end{figure}

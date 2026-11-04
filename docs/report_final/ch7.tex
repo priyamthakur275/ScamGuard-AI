@@ -1,0 +1,21 @@
+\chapter{Conclusion and Future Enhancements}
+\section{Conclusion}
+ScamGuard spots scam and spam SMS aimed at Indian users and tells them why. Trained on our audited ScamGuard-IN-2026 corpus and tested with a campaign-aware split, the deployed detector gets 97.1\% of real messages from unseen campaigns right with 3.2\% false alarms. It replies within milliseconds and shows the exact phrases behind every verdict.
+
+The cross-domain study that our guide proposed adds a second lesson. A classifier of the same kind, trained on another country's messages, loses about a third of its F1 on Indian SMS, and a small, carefully labelled local sample is enough to win it back. Anyone putting such a filter into service should test it on local data first and invest in a few hundred verified local labels before turning to a heavier model.
+
+All of this runs in a live application: quick check, full analysis, Hindi support, safety tools, a cross-domain page and a Streamlit demo. Every number in this report can be regenerated from the project repository.
+
+Three findings matter most. The labels mattered more than the model. Report labels led to 34.0\% false alarms and audited labels to 2.6\%, whereas all sensible classifiers, the CNN and BiLSTM included, landed within a few points of one another. The way we evaluate also changed the conclusions. A campaign-aware split reveals errors that a random split conceals, and rules that shine on their authors' own messages add nothing on independent data. Finally, a standard spam classifier does not travel well between countries. Trained on UK messages, it misses roughly half of Indian spam. Yet 143 labelled Indian messages bring F1 back above 0.95 without hurting UK performance, in every seed and with significance under McNemar's test.
+
+% ======================================================================
+
+\section{Future Enhancements}
+The work can be extended in the following directions.
+\begin{itemize}
+\item Finish collecting the team's 2026 test set and run both evaluations again on it.
+\item Bring in a second annotator for the label audit and report how often the two agree.
+\item Widen the cross-domain study to more target datasets and seeds, and try adaptation with less than 10\% of the pool.
+\item Undo disguised spellings before features are built, and test against attackers who adapt or paraphrase.
+\item Cover Kannada, Tamil, Telugu and other Indian languages, and compare small transformer models under the same protocols.
+\end{itemize}

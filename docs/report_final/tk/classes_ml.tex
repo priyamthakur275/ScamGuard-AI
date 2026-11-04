@@ -1,0 +1,19 @@
+\begin{tikzpicture}[
+  cls/.style={draw, rectangle split, rectangle split parts=3, font=\scriptsize, align=left, inner sep=3pt, minimum width=4.2cm, fill=white, rectangle split part fill={gray!18,white,white}},
+  rel/.style={-{Stealth[length=2mm]}, thick}]
+\node[cls] (ps) at (6.4,0) {\textbf{\normalsize PredictionService}\nodepart{second}- \_engine, \_confidence\_calculator\\- \_threat\_scorer, \_explainer\nodepart{third}+ predict(request): PredictionResult};
+\node[cls] (eng) at (0,-3.6) {\textbf{\normalsize InferenceEngine}\nodepart{second}- \_registry: ModelRegistry\\- \_preprocessor, \_vectorizer\\- \_estimator, \_version\_info\nodepart{third}+ load()  + reload()\\+ predict(raw\_text)\\+ transform(raw\_text)};
+\node[cls] (ts) at (6.4,-3.6) {\textbf{\normalsize ThreatScorer}\nodepart{second}- \_config: ThreatScoreConfig\nodepart{third}+ intents(raw\_text)\\+ assess(probability, tokens, raw\_text)};
+\node[cls] (cc) at (11.0,-3.6) {\textbf{\normalsize ConfidenceCalculator}\nodepart{second}- config: ConfidenceConfig\nodepart{third}+ calculate(scam\_probability)};
+\node[cls] (ex) at (12.3,0) {\textbf{\normalsize PredictionExplainer}\nodepart{second}- config: ExplainerConfig\nodepart{third}+ explain(estimator, features,\\\phantom{+ explain(}tokens)};
+\node[cls] (reg) at (-0.7,-7.5) {\textbf{\normalsize ModelRegistry}\nodepart{second}versioned model and\\vectorizer files\nodepart{third}+ register()  + promote()\\+ get\_production(name)\\+ list\_versions(name)};
+\node[cls] (pp) at (4.6,-7.5) {\textbf{\normalsize TextPreprocessingPipeline}\nodepart{second}cleaner + tokenizer\nodepart{third}applies the same steps in\\training and in serving};
+\node[cls] (tf) at (9.6,-7.5) {\textbf{\normalsize TfidfFeatureExtractor}\nodepart{second}word and character n-grams\nodepart{third}+ fit()  + transform(texts)};
+\draw[rel] (ps.south west) -- ++(0,-0.5) -| (eng.north);
+\draw[rel] (ps.south) -- (ts.north);
+\draw[rel] (ps.south east) -- ++(0,-0.5) -| (cc.north);
+\draw[rel] (ps.east) -- (ex.west);
+\draw[rel] ([xshift=8mm]eng.south west) -- ++(0,-0.4) -| (reg.north);
+\draw[rel] (eng.south) -- ++(0,-0.7) -| (pp.north);
+\draw[rel] ([xshift=-5mm]eng.south east) -- ++(0,-1.0) -| (tf.north);
+\end{tikzpicture}
