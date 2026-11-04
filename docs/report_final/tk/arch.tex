@@ -1,0 +1,30 @@
+\begin{tikzpicture}[
+  box/.style={draw, rounded corners=2pt, align=center, font=\small, minimum width=3.8cm, minimum height=12mm, inner sep=4pt, fill=white},
+  off/.style={box, fill=gray!15},
+  arr/.style={-{Stealth[length=2mm]}, thick}]
+\def\dx{4.6}
+% offline row
+\node[off] (xnb)   at (0,0)        {Cross-domain notebook\\(UCI + India)};
+\node[box] (xdm)   at (\dx,0)      {Cross-domain models\\(baseline, adapted)};
+\node[off] (train) at (2*\dx,0)    {Offline training on\\ScamGuard-IN-2026};
+\node[off] (reg)   at (3*\dx,0)    {Model registry\\(versioned files)};
+% request row
+\node[box] (ui)    at (0,-2.2)     {Web app\\(Next.js, Vercel)};
+\node[box] (api)   at (\dx,-2.2)   {FastAPI back end\\(Render)};
+\node[box] (pre)   at (2*\dx,-2.2) {Cleaner +\\tokenizer};
+\node[box] (clf)   at (3*\dx,-2.2) {TF-IDF +\\logistic regression};
+% response row
+\node[box] (db)    at (0,-4.4)     {PostgreSQL\\(Neon)};
+\node[box] (expl)  at (\dx,-4.4)   {Scam X-Ray,\\TrustLens};
+\node[box] (fuse)  at (2*\dx,-4.4) {Fusion, guards,\\risk score};
+\node[box] (rules) at (3*\dx,-4.4) {Intent and\\protective rules};
+% helpers
+\node[box] (cop)   at (\dx,-6.6)   {AI copilot\\(Gemini, capped)};
+\node[box] (rag)   at (2*\dx,-6.6) {Known-pattern\\retrieval (52 entries)};
+\draw[arr] (xnb) -- (xdm); \draw[arr] (train) -- (reg); \draw[arr] (reg) -- (clf);
+\draw[arr, <->] (api) -- (xdm);
+\draw[arr] (ui) -- (api); \draw[arr] (api) -- (pre); \draw[arr] (pre) -- (clf);
+\draw[arr] (clf) -- (rules); \draw[arr] (rules) -- (fuse); \draw[arr] (fuse) -- (expl);
+\draw[arr] (expl) -- (db); \draw[arr] (db) -- (ui);
+\draw[arr] (rag) -- (expl); \draw[arr] (expl) -- (cop);
+\end{tikzpicture}

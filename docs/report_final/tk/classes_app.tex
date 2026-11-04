@@ -1,0 +1,14 @@
+\begin{tikzpicture}[
+  cls/.style={draw, rectangle split, rectangle split parts=3, font=\scriptsize, align=left, inner sep=3pt, minimum width=4.2cm, fill=white, rectangle split part fill={gray!18,white,white}},
+  rel/.style={-{Stealth[length=2mm]}, thick}]
+\node[cls] (auth) at (0,0) {\textbf{\normalsize AuthService}\nodepart{second}+ register(email, password, captcha)\\+ login(...)\\+ refresh\_access\_token(token)\\+ logout(token)\nodepart{third}\textit{issues token pairs}};
+\node[cls] (msg) at (6.2,0) {\textbf{\normalsize MessageService}\nodepart{second}- db: Session\\- messages: MessageRepository\\- predictions: PredictionRepository\nodepart{third}+ analyze(user\_id, text, input\_type)\\+ analyze\_ephemeral(text, input\_type)\\+ list\_history(user\_id)};
+\node[cls] (mrepo) at (12.2,1.3) {\textbf{\normalsize MessageRepository}\nodepart{second}- db: Session\nodepart{third}+ create(user\_id, text)};
+\node[cls] (prepo) at (12.2,-1.9) {\textbf{\normalsize PredictionRepository}\nodepart{second}- db: Session\nodepart{third}+ list\_for\_user(user\_id)\\+ get\_for\_user(id, user\_id)};
+\node[cls] (ext) at (0,-3.4) {\textbf{\normalsize ExtractionService}\nodepart{second}URL, e-mail, image, PDF and QR\\inputs turned into text\nodepart{third}\textit{blocks unsafe URLs (SSRF)}};
+\node[cls] (ps) at (6.2,-4.0) {\textbf{\normalsize PredictionService}\nodepart{second}- \_engine: InferenceEngine\\- \_confidence\_calculator\\- \_threat\_scorer: ThreatScorer\\- \_explainer: PredictionExplainer\nodepart{third}+ predict(request): PredictionResult};
+\draw[rel] (msg) -- node[above, font=\scriptsize] {uses} (mrepo.west);
+\draw[rel] (msg.south east) -- node[below, font=\scriptsize, pos=0.55] {uses} (prepo.west);
+\draw[rel] (msg.south) -- node[right, font=\scriptsize] {calls} (ps.north);
+\draw[rel] (ext.east) -- node[above, font=\scriptsize] {text} (msg.south west);
+\end{tikzpicture}

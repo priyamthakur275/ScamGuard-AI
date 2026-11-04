@@ -1,15 +1,10 @@
-% ======================================================================
-\chapter{Designs}
-
-\section{System Architecture Overview}
+\chapter{Design}
+\section{High Level Design}
 ScamGuard follows the usual three-tier layout. At the top, the \textbf{presentation tier} is a Next.js front end on Vercel, and every API call goes out through its own origin. In the middle, the \textbf{application tier} is a FastAPI back end on Render; one process runs the detector, the intent rules, the cross-domain models, sign-in and the safety tools. At the bottom, the \textbf{data tier} is a PostgreSQL database on Neon holding users, scans, cases and reports. Training happens offline. The trained models are saved as versioned files, which the back end loads a single time when it starts. Figure~\ref{fig:arch} shows how the pieces connect.
 
-\input{arch_fig.tex}
-
-\section{Module/Component Design}
 Table~\ref{tab:subsys} breaks ScamGuard into modules and gives each one's job and the way other parts talk to it.
 
-\begin{table}[H]
+\begin{table}[htbp]
 \centering
 \caption{Modules of ScamGuard and their interfaces}
 \label{tab:subsys}
@@ -38,12 +33,52 @@ Copilot & Answers follow-up questions & REST endpoint calling an outside LLM API
 \end{tabular}
 \end{table}
 
-\section{Detailed Design}
+\section{System Architecture}
+The system has an offline part and an online part, shown in Figure~\ref{fig:arch}. The shaded blocks run offline: the cross-domain notebook, the training on ScamGuard-IN-2026 and the model registry. Training writes versioned model files to the registry, and the back end loads them a single time when it starts. The online path follows each request through the web app, the FastAPI back end, the cleaner and tokenizer, the TF-IDF and logistic-regression classifier, the intent rules, the fusion step and the explanation layer, and ends by saving the scan in PostgreSQL. The AI copilot and the known-pattern retrieval (52 entries) feed the explanation layer, and the cross-domain page calls the two stored model pairs directly.
 
-\subsection{Client--server communication}
-The browser and the back end exchange JSON over HTTPS. Figure~\ref{fig:seq} traces a single analysis from request to reply.
+\begin{figure}[H]
+\centering
+\resizebox{\linewidth}{!}{\input{tk/arch.tex}}
+\caption{Architecture of the deployed system. Shaded parts run offline.}
+\label{fig:arch}
+\end{figure}
 
-\input{seq_fig.tex}
+\section{Use-Case Diagram}
+The use-case diagram in Figure~\ref{fig:usecase} shows how the three kinds of user interact with ScamGuard. A visitor can run a quick check and use the cross-domain page without an account. A registered user can do everything a visitor can and also run a full analysis, read the Scam X-Ray and TrustLens reports, use the safety tools, keep history and cases, and ask the AI copilot, which calls an outside hosted language model. An administrator also sees the registered model versions and can run a robustness test.
+
+\begin{figure}[H]
+\centering
+\resizebox{0.85\linewidth}{!}{\input{tk/usecase.tex}}
+\caption{Use-case diagram of ScamGuard}
+\label{fig:usecase}
+\end{figure}
+
+\section{Class Diagram}
+The class diagrams outline the object-oriented structure of the back end. Figure~\ref{fig:class1} shows the application layer: \texttt{MessageService} receives a scan request, stores it through two repositories and calls \texttt{PredictionService}, while \texttt{AuthService} handles sign-in and \texttt{ExtractionService} turns URLs, e-mails, images, PDFs and QR codes into text. Figure~\ref{fig:class2} shows the detection components: \texttt{PredictionService} combines the \texttt{InferenceEngine}, the \texttt{ThreatScorer}, the \texttt{ConfidenceCalculator} and the \texttt{PredictionExplainer}. The engine loads the production model through the \texttt{ModelRegistry} and uses the same preprocessing pipeline and TF-IDF extractor that training used.
+
+\begin{figure}[H]
+\centering
+\resizebox{\linewidth}{!}{\input{tk/classes_app.tex}}
+\caption{Class diagram of the application layer}
+\label{fig:class1}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\resizebox{0.95\linewidth}{!}{\input{tk/classes_ml.tex}}
+\caption{Class diagram of the detection components}
+\label{fig:class2}
+\end{figure}
+
+\section{Sequence Diagram}
+The browser and the back end exchange JSON over HTTPS. The sequence diagram in Figure~\ref{fig:seq} traces a single analysis from request to reply.
+
+\begin{figure}[H]
+\centering
+\resizebox{0.95\linewidth}{!}{\input{tk/seq.tex}}
+\caption{Sequence diagram of one message analysis}
+\label{fig:seq}
+\end{figure}
 
 \begin{itemize}
 \item \textbf{Endpoints.} The three classification routes are listed in Table~\ref{tab:endpoints}. Further routes cover sign-in, history, cases, analytics, the copilot and the safety tools.
@@ -68,67 +103,3 @@ The browser and the back end exchange JSON over HTTPS. Figure~\ref{fig:seq} trac
 \hline
 \end{tabular}
 \end{table}
-
-\subsection{Dataset construction}
-Algorithm~\ref{alg:build} outlines how ScamGuard-IN-2026 is assembled and split.
-
-\input{alg_build.tex}
-
-\subsection{Cross-domain experiment design}
-The protocol of the cross-domain study is written out in Algorithm~\ref{alg:xdomain}. Every decision is made on source data, and the final target test set is touched only to score models.
-
-\begin{algorithm}[H]
-\caption{Cross-domain evaluation and lightweight domain adaptation}
-\label{alg:xdomain}
-\begin{algorithmic}[1]
-\Require cleaned source set $A$ (UCI), cleaned target set $B$ (Indian), seeds $\{42, 123, 2026\}$, fractions $\{0, 0.1, 0.2, 0.4\}$
-\State choose $\alpha$ (Naive Bayes) and $C$ (Logistic Regression) by 5-fold cross-validation on $A_{train}$
-\For{each seed}
-  \State split $A$ 80/20 into $A_{train}, A_{test}$ and $B$ 70/30 into pool $P$ and test $B_{test}$ (stratified)
-  \For{each fraction $f$}
-    \State $S_f \gets$ stratified sample of $f\cdot|P|$ messages from $P$
-    \State fit TF-IDF and the classifier on $A_{train}\cup S_f$
-    \State score $A_{test}$ and $B_{test}$; store predictions
-  \EndFor
-\EndFor
-\State report mean $\pm$ SD over seeds; McNemar test of each adapted model against $f=0$
-\end{algorithmic}
-\end{algorithm}
-
-\subsection{Inference procedure}
-\input{alg_infer.tex}
-
-\section{Data Design}
-
-\subsection{Database}
-The main tables of the PostgreSQL database are listed in Table~\ref{tab:db}.
-
-\begin{table}[H]
-\centering
-\caption{Main database tables}
-\label{tab:db}
-\begin{tabular}{|L{3.6cm}|L{9.9cm}|}
-\hline
-\textbf{Table} & \textbf{Contents} \\
-\hline
-\texttt{users} & Account, hashed password, role, preferences \\
-\hline
-\texttt{refresh\_tokens} & Issued refresh tokens for rotation and revocation \\
-\hline
-\texttt{messages} & Each analysed input with its type (text, URL, e-mail, image, PDF, QR) \\
-\hline
-\texttt{predictions} & Verdict, classifier probability, risk score, category, explanation, model version \\
-\hline
-\texttt{cases}, \texttt{case\_scan\_links}, \texttt{case\_timeline\_entries} & Investigation cases, the scans linked to them and their notes \\
-\hline
-\texttt{community\_reports} & One report per user for a number, link domain, UPI ID or e-mail \\
-\hline
-\texttt{alerts}, \texttt{audit\_log}, \texttt{model\_registry\_meta} & Alerts, security audit trail and registered model versions \\
-\hline
-\end{tabular}
-\end{table}
-
-\subsection{Datasets}
-Each row of \textbf{ScamGuard-IN-2026} has seven fields: \texttt{text}; \texttt{label}, which is scam or legitimate; \texttt{source}; \texttt{subtype}; \texttt{is\_synthetic}; \texttt{campaign}, naming the near-duplicate group; and \texttt{split}, which is train, development, test or 2026 test.
-
-After cleaning, the \textbf{cross-domain datasets} keep three fields: \texttt{message}, \texttt{label} (spam = 1, ham = 0) and \texttt{domain} (UCI or India). Alongside them the study saves every result table as a CSV file, the error sheet with its hand-filled \texttt{manual\_category} column, a \texttt{results.json} summary and four joblib models, namely Naive Bayes and Logistic Regression, each as a baseline and as an adapted version.

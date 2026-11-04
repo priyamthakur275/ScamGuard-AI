@@ -1,31 +1,6 @@
-% ======================================================================
-\chapter{Requirement Analysis and Specification}
-
-\section{Stakeholders}
-\begin{table}[H]
-\centering
-\caption{Stakeholders and their needs}
-\label{tab:stake}
-\begin{tabular}{|L{3.6cm}|L{9.9cm}|}
-\hline
-\textbf{Stakeholder} & \textbf{Need} \\
-\hline
-Mobile phone users & A fast answer on whether a message is a scam, the reason, and the next step \\
-\hline
-Elderly and first-time digital users & Plain screens, Hindi, and clear advice such as ``call 1930'' \\
-\hline
-Families and guardians & Checking a message a relative forwarded, and passing on a warning \\
-\hline
-Researchers and faculty & Data, protocol and results they can reproduce, including the cross-domain study \\
-\hline
-Administrators (project team) & Watching model versions, metrics and the health of the live service \\
-\hline
-Banks, telecom operators and reporting agencies & Fewer customers fooled by impostors, and more of them sent to official channels \\
-\hline
-\end{tabular}
-\end{table}
-
-\section{Functional Requirements}
+\chapter{Software and Hardware Requirement Specification}
+\section{Functional Requirements}\label{sec:funcreq}
+Functional requirements describe what the system must be able to do.
 \begin{enumerate}
 \item \textbf{Quick check.} Without creating an account, a visitor pastes a message on the home page and gets a verdict, a risk score, the trap phrases highlighted and a short explanation.
 \item \textbf{Accounts.} People can register and sign in (with a captcha) or try a demo account, and they can edit, export or delete their own data.
@@ -38,7 +13,8 @@ Banks, telecom operators and reporting agencies & Fewer customers fooled by impo
 \item \textbf{Analytics and administration.} Users see their totals and trends. Administrators also see the registered model versions and can run a robustness test.
 \end{enumerate}
 
-\section{Non-Functional requirements}
+\section{Non-functional Requirements}
+These requirements describe the qualities the system must have.
 \begin{itemize}
 \item \textbf{Performance.} On a two-core server the classifier needs about 2~ms per message, about 4~ms with the intent layer. A complete web request takes roughly 1--2 seconds.
 \item \textbf{Reliability.} Models are read from versioned files once, when the server starts. The back end keeps itself from sleeping on the free tier, and the front end retries short-lived proxy errors.
@@ -48,7 +24,9 @@ Banks, telecom operators and reporting agencies & Fewer customers fooled by impo
 \item \textbf{Maintainability and reproducibility.} Training and serving call the same preprocessing code. Continuous integration runs 836 back-end and ML tests and 14 front-end tests, and a single notebook plus a single script regenerate every number we report.
 \end{itemize}
 
-\section{System Requirements}
+\section{Hardware Requirements}
+ScamGuard needs no GPU. Table~\ref{tab:hw} lists what each part of the system needs.
+
 \begin{table}[H]
 \centering
 \caption{Hardware requirements}
@@ -67,6 +45,11 @@ Client & Any web browser on a phone or a computer \\
 \hline
 \end{tabular}
 \end{table}
+
+
+
+\section{Software Requirements}
+Table~\ref{tab:sw} lists the software used for each layer of the system.
 
 \begin{table}[H]
 \centering
@@ -93,51 +76,15 @@ Deployment & Vercel (front end), Render (back end), GitHub Actions (continuous i
 \end{tabular}
 \end{table}
 
-\section{Data Requirements}
-\begin{itemize}
-\item \textbf{For the main detector:} Indian scam and genuine SMS with checked labels, a campaign ID on every message, and a split that never divides a campaign. ScamGuard-IN-2026 (11,399 messages) meets this.
-\item \textbf{For the cross-domain study:} a labelled source set (the UCI SMS Spam Collection, 5,574 messages) and a target set collected separately (India Spam SMS Classification, 2,267 messages). Both need a known licence and an audit for missing values, repeats, conflicting labels, broken encoding and overlap with each other.
-\item \textbf{Format:} plain text plus a two-valued label, scam/legitimate or spam/ham, stored as 1/0.
-\item \textbf{Personal data:} phone numbers, account numbers, OTPs and names are masked before anything is stored, and no private message is collected without consent.
-\end{itemize}
+\section{Cost Estimation}
+ScamGuard was built as a student project on free tiers and open-source software, so the cost of building and running it at the present scale is zero.
 
-\section{Constraints and Limitations}
-\begin{itemize}
-\item The free hosting tier allows 512~MB of memory, so large transformer models cannot be served in production.
-\item Each message is judged alone; the sender and the rest of the conversation are not available.
-\item The system covers English and Hindi and nothing else.
-\item Verified Indian scam messages from 2025--26 are hard to find, and the 2026 test set has only 12.
-\item The cross-domain study rests on two datasets, and nobody documented how the Indian one was labelled.
-\end{itemize}
+\textbf{Development software:} Python, scikit-learn, FastAPI, Next.js, Streamlit, Jupyter and VS Code are open source and cost nothing.
 
-\section{Assumptions}
-\begin{itemize}
-\item The user pastes one complete message.
-\item The audited labels are right; where we could not tell, we dropped the message instead of guessing.
-\item Each public dataset is a fair enough sample of its domain for a controlled comparison.
-\item The final target test set is kept out of training, feature fitting and every choice of settings.
-\end{itemize}
+\textbf{Data:} All three public datasets (the IMC 2025 smishing reports, the UCI SMS Spam Collection and the India Spam SMS collection) were used under their open licences and cost nothing.
 
-\section{Risks and Challenges}
-\begin{table}[H]
-\centering
-\caption{Risks and how they are handled}
-\label{tab:risks}
-\begin{tabular}{|L{5cm}|L{8.5cm}|}
-\hline
-\textbf{Risk} & \textbf{Mitigation} \\
-\hline
-Reported data carries wrong labels & Audit by rule and by hand, then a second pass on cases a cross-validated model disputes \\
-\hline
-Near-duplicates make scores look better than they are & Split by campaign; group-aware split check in the cross-domain study \\
-\hline
-New scam types are missing from training data & Synthetic training messages, intent rules, and a small labelled local sample (adaptation) \\
-\hline
-Disguised spellings (K.Y.C, bl0cked) & Caught by the intent rules; normalising them before features are built is left for future work \\
-\hline
-The free-tier server falls asleep & Keep-alive pings, front end hosted on Vercel, automatic retries \\
-\hline
-The outside AI service is slow or down & Time limits and fallback answers; the detector itself never depends on it \\
-\hline
-\end{tabular}
-\end{table}
+\textbf{Hosting:} The front end runs on the free Hobby plan of Vercel, the back end on the free plan of Render and the database on the free plan of Neon.
+
+\textbf{AI copilot:} The copilot calls a hosted language model within its free quota. A daily cap on the whole service and a limit for each visitor stop it from running past that quota, and fixed fallback answers cover outages.
+
+\textbf{Total estimated cost:} zero for development and hosting. These free tiers have memory and traffic limits (the back end has 512~MB of memory), so a service with sustained heavy traffic would need paid hosting; we have not measured that cost.

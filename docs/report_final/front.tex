@@ -1,56 +1,97 @@
-% ---------- FRONT MATTER: ROMAN NUMBERS ----------
-\pagenumbering{roman}
-\setcounter{page}{1}
-
+\pagenumbering{gobble}
 \begin{titlepage}
-  \thispagestyle{empty}
   \centering
-  {\Huge \textbf{ScamGuard: AI-Based Online Scam}}\\[0.25cm]{\Huge \textbf{and Fraud Detection System}}\\[0.8cm]
-  \includegraphics[width=0.18\linewidth]{VTU-Logojpg.jpg}\\[0.7cm]
-  {\Large \textbf{PROJECT REPORT}}\\[0.15cm]
-  {\large Major Project Phase-2 (23CS7PWPP2), Semester VII}\\[0.3cm]
-  {\large \textit{Submitted by}}\\[0.5cm]
-  {\large Bhavya Goyal (1BM23CS063)}\\
-  {\large Priyam Thakur (1BM23CS252)}\\
-  {\large Samir Chaudhary (1BM23CS294)}\\
-  {\large Sana Subodh (1BM23CS296)}\\[0.7cm]
-  {\itshape in partial fulfillment for the award of the degree of}\\[0.15cm]
+  {\Huge \textbf{ScamGuard: AI-Based Online\\[0.2cm] Scam and Fraud Detection System}}\\[1.0cm]
+  \includegraphics[width=0.16\linewidth]{VTU-Logojpg.jpg}\\[0.6cm]
+  {\Large \textbf{PROJECT REPORT}}\\[0.3cm]
+  {\large Submitted by}\\[0.2cm]
+  {\large Group Number: 56}\\[0.5cm]
+  {\large BHAVYA GOYAL (1BM23CS063)}\\[0.35cm]
+  {\large PRIYAM THAKUR (1BM23CS252)}\\[0.35cm]
+  {\large SAMIR CHAUDHARY (1BM23CS294)}\\[0.35cm]
+  {\large SANA SUBODH (1BM23CS296)}\\[0.7cm]
+  {\itshape in partial fulfillment for the award of the degree of}\\[0.2cm]
   {\Large \textbf{BACHELOR OF ENGINEERING}}\\[0.2cm]
   {\large in}\\[0.2cm]
-  {\Large \textbf{COMPUTER SCIENCE AND ENGINEERING}}\\[0.9cm]
+  {\Large \textbf{COMPUTER SCIENCE AND ENGINEERING}}\\[0.8cm]
   {\large Under the Guidance of}\\
   {\large \textbf{Dr. Kayarvizhy N}}\\
   {\large Professor, Department of CSE, BMSCE}
   \vfill
-  \includegraphics[width=0.18\linewidth]{bmscelogo.jpg}\\[0.5cm]
+  \includegraphics[width=0.16\linewidth]{bmscelogo.jpg}\\[0.4cm]
   {\Large \textbf{B.M.S. COLLEGE OF ENGINEERING}}\\
   {\large (Autonomous Institution under VTU)}\\
   {\large BENGALURU - 560019}\\
-  {\large Academic Year - 2026--2027}\\[0.2cm]
-  {\large Date of Submission: November 2026}
+  {\large Academic Year - 2026--2027}
 \end{titlepage}
 
-\chapter*{Certificate}
-\thispagestyle{empty}
-\vspace{2cm}
-This is to certify that the project report entitled \textbf{``ScamGuard: AI-Based Online Scam and Fraud Detection System''} is a bonafide work carried out by \textbf{Bhavya Goyal (USN: 1BM23CS063)}, \textbf{Priyam Thakur (USN: 1BM23CS252)}, \textbf{Samir Chaudhary (USN: 1BM23CS294)} and \textbf{Sana Subodh (USN: 1BM23CS296)} as Major Project Phase-2 (Course Code: 23CS7PWPP2) in the seventh semester, in partial fulfillment of the requirements for the award of the degree of \textbf{Bachelor of Engineering} in \textbf{Computer Science and Engineering}, under my supervision during the academic year 2026--2027.
+\chapter*{\centering Certificate}
+\vspace{0.5cm}
+This is to certify that the project report entitled \textbf{``ScamGuard: AI-Based Online Scam and Fraud Detection System''} is a bonafide work carried out by \textbf{BHAVYA GOYAL (USN: 1BM23CS063)}, \textbf{PRIYAM THAKUR (USN: 1BM23CS252)}, \textbf{SAMIR CHAUDHARY (USN: 1BM23CS294)} and \textbf{SANA SUBODH (USN: 1BM23CS296)} in partial fulfillment of the requirements for the award of the degree of Bachelor of Engineering in Computer Science and Engineering, under my supervision during the academic year 2026--2027.
 
-\vspace{2cm}
-\begin{flushleft}
-Guide Signature\hspace{30mm} HoD signature \hspace{25mm} Principal Signature\\
-(Dr. Kayarvizhy N) \hspace{22mm} Dr. Kavitha Sooda \hspace{19mm} Dr. Bheemsha Arya
-\end{flushleft}
-\vspace{2cm}
-\begin{flushleft}
-Name and signature of Examiners along with date \\
-\vspace{1cm}
-Examiner 1 \\
-\vspace{1cm}
-Examiner 2 \\
-\end{flushleft}
+\vspace{1.5cm}
+\noindent
+\begin{tabular}{@{}p{4.6cm}p{5.0cm}p{4.6cm}@{}}
+Guide Signature & HoD signature & Principal Signature\\[0.3cm]
+Dr. Kayarvizhy N & DR SREELATHA R\newline PROFESSOR AND HOD & Dr. Bheemsha Arya
+\end{tabular}
 
-\chapter*{Abstract}
-\thispagestyle{empty}
+\vspace{1.5cm}
+\noindent Name and signature of Examiners along with date
+
+\vspace{1cm}
+\noindent Examiner 1
+
+\vspace{1cm}
+\noindent Examiner 2
+\clearpage
+
+\chapter*{\centering DECLARATION}
+We hereby declare that the Major Project Phase-2 work entitled ``ScamGuard: AI-Based Online Scam and Fraud Detection System'' is a bonafide work carried out by us under the guidance of Dr. Kayarvizhy N, Professor, Department of Computer Science and Engineering, B.M.S. College of Engineering, Bengaluru, in partial fulfillment of the requirements for the degree of Bachelor of Engineering in Computer Science and Engineering of Visvesvaraya Technological University, Belagavi. To the best of our knowledge and belief, this project has not been submitted in part or in full to any other university for the award of any degree.
+
+\vspace{0.3cm}\noindent Candidate details:
+\vspace{0.2cm}
+\begin{center}
+\begin{tabular}{|c|l|c|c|}
+\hline
+\textbf{SL. NO.} & \textbf{Student Name} & \textbf{USN} & \textbf{Student's Signature} \\
+\hline
+1 & BHAVYA GOYAL & 1BM23CS063 & \hspace{3cm} \\
+\hline
+2 & PRIYAM THAKUR & 1BM23CS252 & \\
+\hline
+3 & SAMIR CHAUDHARY & 1BM23CS294 & \\
+\hline
+4 & SANA SUBODH & 1BM23CS296 & \\
+\hline
+\end{tabular}
+\end{center}
+\noindent Place: Bengaluru\\
+Date:
+
+\vspace{0.3cm}
+Certified that these candidates are students of the Computer Science and Engineering Department of B.M.S. College of Engineering. They have carried out the project work titled ``ScamGuard: AI-Based Online Scam and Fraud Detection System'' as Major Project Phase-2 work in partial fulfillment of the requirements for the award of the B.E. degree by VTU. The work is original and is duly certified as such.
+
+\vspace{1cm}
+\noindent Guide Name: Dr. Kayarvizhy N\\
+Date:\\
+Signature
+\clearpage
+
+\chapter*{\centering Acknowledgment}
+We express our sincere gratitude to our guide, Dr. Kayarvizhy N, Professor in the Department of Computer Science and Engineering, for her continuous guidance and encouragement. She kept asking us to back every claim with evidence, first pushed us to build data that matches what Indian phone users really receive, and later proposed the cross-domain generalization and adaptation study that became the advancement of this project.
+
+We also extend our sincere thanks to Dr. Sreelatha R, Professor and Head of the Department of Computer Science and Engineering, for providing us with the necessary facilities, resources and a supportive academic environment that enabled us to carry out this project successfully. We are equally grateful to Dr. Bheemsha Arya, Principal of B.M.S. College of Engineering, and to all the faculty members of the Department of Computer Science and Engineering for their encouragement and support. The faculty who sat through our phase reviews asked hard questions about our evaluation, and this report is better for them.
+
+The IMC 2025 smishing collection, the UCI SMS Spam Collection and the India Spam SMS collection were shared openly by their authors, and this work would not exist without them.
+
+We would like to acknowledge our friends and classmates for their continuous encouragement and valuable suggestions. Many of the suspicious messages they and our families forwarded to us became test cases.
+
+Finally, we express our deepest gratitude to our families for their unconditional support, constant encouragement and understanding throughout the duration of this project.
+\clearpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+\chapter*{\centering Abstract}
 In India a text message is still the cheapest way to reach someone's phone, and fraudsters use it heavily. Their messages copy bank KYC reminders, electricity disconnection warnings, parcel updates and job offers, and more and more of them are written in Hindi or in a Hindi--English mix. ScamGuard is an AI-based system that reads one such message, decides whether it is a scam or genuine, points to the phrases behind that decision and suggests the user's next step.
 
 The detector learns from ScamGuard-IN-2026, a set of 11,399 Indian messages that we assembled from public smishing reports, real Indian SMS, 2025--26 advisory texts and synthetic messages that are used only for training. We did not trust the report labels blindly: after checking them, 19.5\% of the reports we kept turned out to be genuine bank alerts, OTP messages or advertisements. Near-copies of the same campaign were grouped with MinHash so that a campaign never sits on both sides of the split. Logistic regression over word and character TF-IDF, joined with 31 readable intent patterns, scores 97.1\% accuracy and 3.2\% false alarms on 1,874 real messages from campaigns it never saw. Trained on the raw report labels instead, the same model raises false alarms to 34.0\%.
@@ -58,60 +99,7 @@ The detector learns from ScamGuard-IN-2026, a set of 11,399 Indian messages that
 Our guide proposed a further question as the advancement of the project: does a spam filter built on one region's messages still work on another's, and how much local data repairs it? We trained Multinomial Naive Bayes and Logistic Regression on the UK-based UCI SMS Spam Collection and ran them unchanged on an Indian SMS dataset. Logistic Regression dropped from a spam F1 of 0.911 to 0.678 and let through roughly half of the Indian spam. With only 10\% of a labelled Indian pool (143 messages) added to training, the mean Indian F1 over three seeds rose from 0.681 to 0.964 while UK performance stayed the same. The improvement appeared in every seed, passed McNemar's test and remained when near-duplicate messages were kept apart. ScamGuard runs as a live web application (Next.js, FastAPI, PostgreSQL) with its own cross-domain page and a Streamlit demo, and the repository regenerates every figure in this report.
 
 \vspace{0.4cm}\noindent\textbf{Keywords:} scam detection, SMS spam, smishing, domain shift, domain adaptation, TF-IDF, logistic regression, Naive Bayes, label noise, data leakage
-
-\chapter*{DECLARATION}
-\thispagestyle{empty}
-We hereby declare that the Major Project Phase-2 work entitled ``ScamGuard: AI-Based Online Scam and Fraud Detection System'' is a bonafide work and has been carried out by us under the guidance of Dr. Kayarvizhy N, Professor, Department of Computer Science and Engineering, B.M.S. College of Engineering, Bengaluru, in partial fulfillment of the requirements of the degree of Bachelor of Engineering in Computer Science and Engineering of Visvesvaraya Technological University, Belagavi.
-We further declare that, to the best of our knowledge and belief, this project has not been submitted either in part or in full to any other university for the award of any degree.
-\vspace{0.3cm}
-\begin{flushleft}
-Candidate details:
-\end{flushleft}
-\vspace{0.1cm}
-\begin{center}
-\begin{tabular}{|c|l|c|c|}
-\hline
-\textbf{SL. NO.} & \textbf{Student Name} & \textbf{USN} & \textbf{Student's Signature} \\
-\hline
-1 & Bhavya Goyal & 1BM23CS063 & \\
-\hline
-2 & Priyam Thakur & 1BM23CS252 & \\
-\hline
-3 & Samir Chaudhary & 1BM23CS294 & \\
-\hline
-4 & Sana Subodh & 1BM23CS296 & \\
-\hline
-\end{tabular}
-\end{center}
-\begin{flushleft}
-Place: Bengaluru \\
-Date: \\
-\end{flushleft}
-Certified that these candidates are students of Computer Science and Engineering Department of B.M.S. College of Engineering. They have carried out the project work titled ``ScamGuard: AI-Based Online Scam and Fraud Detection System'' as Major Project Phase-2 work. It is in partial fulfillment for completing the requirement for the award of B.E. degree by VTU. The work is original and we duly certify the same.
-\vspace{1cm}
-\begin{flushleft}
-Guide Name: Dr. Kayarvizhy N\\
-Date: \\
-Signature \\
-\end{flushleft}
-
-\chapter*{Acknowledgment}
-\thispagestyle{empty}
-Our guide, Dr. Kayarvizhy N, Professor in the Department of Computer Science and Engineering, kept asking us to back every claim with evidence. She first pushed us to build data that matches what Indian phone users really receive, and later proposed the cross-domain generalization and adaptation study that became the advancement of this project. We are thankful for her patience and direction.
-
-We thank Dr. Kavitha Sooda, Head of the Department of Computer Science and Engineering, and Dr. Bheemsha Arya, Principal of B.M.S. College of Engineering, for the facilities and support the college provided. The faculty who sat through our phase reviews asked hard questions about our evaluation, and the report is better for them.
-
-The IMC 2025 smishing collection, the UCI SMS Spam Collection and the India Spam SMS collection were shared openly by their authors, and this work would not exist without them. Our families and friends also helped: many of the suspicious messages they forwarded to us became test cases.
-\newpage
-\tableofcontents
-\thispagestyle{empty}
-\newpage
-\listoffigures
-\thispagestyle{empty}
-\newpage
-\listoftables
-\thispagestyle{empty}
-
 \clearpage
-\pagenumbering{arabic}
-\setcounter{page}{1}
+\renewcommand{\contentsname}{\centering Contents}
+\tableofcontents
+\clearpage
