@@ -2,67 +2,67 @@
 \chapter{Introduction}
 
 \section{Background of the Study}
-A scam SMS rarely looks like a scam. It looks like a message from a bank asking for a quick KYC update, from an electricity board warning of disconnection tonight, from a courier holding a parcel for a small fee, or from the traffic police with a challan to pay through an attached app. Fraudsters copy the format of genuine service messages because people have learned to trust those formats. A detector has to tell the two apart even though they share most of their vocabulary: both mention OTPs, accounts, KYC, links and deadlines.
+Most fraudulent text messages in India do not announce themselves. They read like the alerts people get every week: the bank wants a KYC update before midnight, the electricity board will cut the supply at 9.30 pm, a courier is holding a parcel until a ten-rupee fee is paid, or a traffic challan can be settled through an attached app. The fraudster borrows these formats precisely because people already trust them. That is what makes the problem hard for software, too. A genuine OTP message and a fake one share almost every word: OTP, account, KYC, link, today.
 
-Machine-learning filters for SMS have a long history, but most published results train and test on random splits of a single collection, most often the UCI SMS Spam Collection~\cite{almeida2011contributions}, and report accuracies above 95\%~\cite{almeida2013towards,roy2020deep}. Those numbers describe messages that resemble the training data. A filter deployed in India meets different brands, currencies, link styles and languages, so its real accuracy can be much lower.
+Automatic SMS filtering is an old research topic. The trouble is how it is usually tested. Most studies take one collection, very often the UCI SMS Spam Collection~\cite{almeida2011contributions}, shuffle it, split it at random and report accuracy above 95\%~\cite{almeida2013towards,roy2020deep}. Such a figure only says how well the model handles messages similar to the ones it learned from. A filter used in India sees other brands, rupee amounts, shortened links and Hindi text, and nobody had checked how much of that 95\% survives.
 
-ScamGuard is a web application that classifies a single message pasted by the user. It returns a verdict, a risk score and the reasons: the phrases that make the message risky, the stage of the scam each phrase belongs to, what a genuine message from the same organisation would do instead, and what the user should do next. Behind it are a text classifier, a layer of interpretable rules, an audited Indian dataset, and a cross-domain study of how such classifiers behave when the data changes.
+ScamGuard is our answer to both problems. A user pastes one message into a web page and gets back a verdict, a risk score and an explanation: which phrases are risky, which stage of a scam each phrase belongs to, how a real message from the same organisation would differ, and what to do next. Under the page sit a text classifier, a set of readable rules, an Indian dataset whose labels we checked ourselves, and a separate study of what happens to such classifiers when the data comes from a different country.
 
 \section{Research Motivation}
-Four observations motivated the project.
+Four things pushed us towards this project.
 
-First, the scale and the Indian focus of the problem. A 2025 measurement study of more than 64,000 public smishing reports found that most attributable sender numbers belonged to Indian mobile operators~\cite{agarwal2025fishing}.
+The first is scale. A 2025 study of over 64,000 public smishing reports traced most of the attributable sender numbers to Indian mobile operators~\cite{agarwal2025fishing}. India is not a side case; it is where much of the problem lives.
 
-Second, the cost of false alarms. Genuine Indian bank alerts, OTP messages and operator notices use the same words as scams. Public smishing data contains only reported messages, and many reports are themselves genuine. A tool that flags real bank messages teaches users to ignore warnings.
+The second is the price of a false alarm. Real bank alerts and operator notices use the vocabulary of scams. Public smishing collections hold only messages that someone reported, and plenty of those reports turn out to be genuine. A checker that keeps flagging real bank messages trains its users to stop listening.
 
-Third, the lack of explanation. A bare ``spam'' label gives the user nothing to act on. Users need to see which part of the message is the trap.
+The third is explanation. Telling someone ``spam'' does not help them decide anything. They need to see the line that is the trap.
 
-Fourth, domain shift. A model trained on one country's messages may fail on another's. Learning theory bounds the error on a new domain by the source error plus the difference between domains~\cite{bendavid2010theory}, and a small labelled sample from the new domain is a common, cheap remedy~\cite{pan2010survey,daume2007frustratingly}. Whether this holds for SMS spam, and how much local data is needed, had not been measured for Indian messages.
+The fourth came from our guide, Dr Kayarvizhy N: domain shift. A model built on one country's messages may not carry over to another's. Theory says the error on a new domain is bounded by the error on the old one plus a term for how different the two are~\cite{bendavid2010theory}, and adding a small labelled sample from the new domain is the usual low-cost fix~\cite{pan2010survey,daume2007frustratingly}. For SMS spam, and for Indian messages in particular, neither the size of the drop nor the amount of local data needed had been measured.
 
 \section{Objective}
-The objectives of the project are:
+The project sets out to:
 \begin{enumerate}
-\item To build a labelled dataset of Indian scam and genuine SMS that reflects current scam types and whose labels have been checked, rather than taken from user reports at face value.
-\item To evaluate lightweight text classifiers on that dataset under a protocol that prevents near-duplicate messages from leaking between training and testing.
-\item To combine the best classifier with interpretable intent rules that explain each verdict at phrase level, and to measure honestly whether the rules also improve accuracy.
-\item To measure the cross-domain generalization of conventional SMS spam classifiers (Naive Bayes and Logistic Regression with word and character TF-IDF) trained on the UCI SMS Spam Collection and tested on Indian SMS, and to study lightweight supervised domain adaptation with 10\%, 20\% and 40\% of labelled target data.
-\item To deliver the detector and the cross-domain models in a usable, deployed web application with supporting safety tools, history and analytics.
-\item To make every reported result reproducible from the project repository.
+\item Build a labelled collection of Indian scam and genuine SMS that covers current scam types, with labels that we verified instead of copying them from user reports.
+\item Test lightweight text classifiers on it with a split that keeps near-identical messages from appearing in both training and test data.
+\item Pair the best classifier with readable intent rules that explain each verdict phrase by phrase, and check honestly whether those rules also raise accuracy.
+\item Measure how well standard spam classifiers (Naive Bayes and Logistic Regression over word and character TF-IDF) trained on the UCI SMS Spam Collection work on Indian SMS, and study how much adding 10\%, 20\% and 40\% labelled Indian data helps.
+\item Put the detector and the cross-domain models into a working, deployed web application, together with safety tools, history and analytics.
+\item Keep every reported number reproducible from the project repository.
 \end{enumerate}
 
 \section{Scope}
-The system analyses one message at a time, as pasted by the user, in English, Hindi (Devanagari script) or romanised Hindi. The main detector classifies a message as \emph{scam} or \emph{legitimate}; a scam tries to obtain money, a secret such as an OTP or PIN, personal data, an app installation or a call to a private number by deception, and genuine advertisements are legitimate. The cross-domain study uses the broader \emph{spam} versus \emph{ham} labels of its two public datasets, where spam includes unwanted promotions. The application also accepts URLs, e-mails, screenshots, PDFs and QR codes, which it converts to text or checks with separate tools.
+ScamGuard looks at one message at a time, in English, Hindi written in Devanagari, or Hindi typed in Latin letters. The main detector answers \emph{scam} or \emph{legitimate}. We call a message a scam if it uses deception to get money, a secret such as an OTP or PIN, personal details, an app install or a call to a private number; an honest advertisement counts as legitimate. The cross-domain study keeps the labels of its two public datasets, \emph{spam} and \emph{ham}, where spam also covers unwanted promotions. Besides plain text, the application takes URLs, e-mails, screenshots, PDFs and QR codes, turning them into text or passing them to separate checks.
 
-The project does not intercept messages on the phone, does not use sender metadata or conversation history in the classifier, and does not cover Indian languages other than Hindi. The cross-domain study uses two datasets and does not claim robustness across domains in general. The risk score is a ranking signal, not a calibrated probability, and the verdict is advice, not proof of fraud.
+Some things are deliberately left out. ScamGuard does not read messages on the phone automatically, the classifier sees neither the sender nor earlier messages in the thread, and Indian languages other than Hindi are not handled. The cross-domain study compares two datasets only, so it makes no general claim about every possible domain. The risk score orders messages by risk but is not a calibrated probability, and the verdict is guidance, not proof that a crime took place.
 
 \section{SDG Justification}
-The project addresses the following United Nations Sustainable Development Goals.
+The work connects to four of the United Nations Sustainable Development Goals.
 \begin{itemize}
-\item \textbf{SDG 16 (Peace, Justice and Strong Institutions), target 16.4 on reducing illicit financial flows.} Scam messages are the entry point of many financial frauds. Helping users recognise them before they pay or share an OTP reduces the money that reaches fraudsters, and the application points users to the official reporting channels (helpline 1930 and cybercrime.gov.in).
-\item \textbf{SDG 8 (Decent Work and Economic Growth), target 8.10 on access to financial services.} Digital payments widen financial access only if people can trust them. A tool that separates genuine bank and UPI messages from imitations supports that trust.
-\item \textbf{SDG 9 (Industry, Innovation and Infrastructure), target 9.c on access to ICT.} The detector is small enough to run on free cloud infrastructure and answers in milliseconds, so it can be offered at no cost. The cross-domain study shows that a model can be adapted to a new region with only a few hundred labelled local messages.
-\item \textbf{SDG 10 (Reduced Inequalities).} Support for Hindi messages and a simplified elder mode aim at users who are most often targeted and least served by English-only tools.
+\item \textbf{SDG 16, Peace, Justice and Strong Institutions (target 16.4, illicit financial flows).} Many payment frauds begin with one text message. If a user spots the trap before paying or sharing an OTP, the money never reaches the fraudster. The application also sends users to the official channels: the 1930 helpline and cybercrime.gov.in.
+\item \textbf{SDG 8, Decent Work and Economic Growth (target 8.10, access to financial services).} People adopt digital payments only when they feel safe using them. Telling real bank and UPI alerts from imitations helps keep that confidence.
+\item \textbf{SDG 9, Industry, Innovation and Infrastructure (target 9.c, access to ICT).} The model is small, runs on free cloud servers and replies in milliseconds, so the service costs its users nothing. The cross-domain results add that a model can be moved to a new region with a few hundred labelled local messages.
+\item \textbf{SDG 10, Reduced Inequalities.} Hindi support and a simpler elder mode are meant for the people fraudsters target most and English-only tools serve least.
 \end{itemize}
 
 \section{Existing System}
-Existing approaches fall into three groups.
+What exists today falls into three groups.
 \begin{itemize}
-\item \textbf{Operator and regulator measures.} Telecom operators filter bulk traffic and register commercial senders, and users can report messages to the 1909 DND service or the cyber-crime portal. These act on senders and volumes; they do not help a user judge a message that has already arrived.
-\item \textbf{Rule-based and keyword filters.} Phone apps flag words such as ``lottery'' or ``KYC''. They are easy to explain but flag genuine messages that use the same words and miss scams that avoid them.
-\item \textbf{Machine-learning filters in research.} Naive Bayes, SVM, CNN and LSTM classifiers report high accuracy, but mostly on promotional spam, with random train--test splits within one dataset, without a genuine Indian class and without testing on messages from another region~\cite{almeida2013towards,roy2020deep,goel2024ml}. Newer report-based corpora contain only reported messages~\cite{timko2024smishing,agarwal2025fishing}.
+\item \textbf{Measures taken by operators and the regulator.} Operators screen bulk traffic and register commercial senders, and anyone can report a message to the 1909 DND service or the cyber-crime portal. These steps work on senders and volumes. They do nothing for a person staring at a message that has already arrived.
+\item \textbf{Keyword and rule filters.} Many phone apps warn on words like ``lottery'' or ``KYC''. The logic is easy to follow, but the same words appear in real messages, and a scam that avoids them goes through.
+\item \textbf{Machine-learning filters from research.} Papers on Naive Bayes, SVM, CNN and LSTM report high accuracy, yet nearly always on promotional spam, with random splits inside one dataset, with no genuine Indian messages and with no test on another region's data~\cite{almeida2013towards,roy2020deep,goel2024ml}. The newer corpora built from user reports contain reported messages only~\cite{timko2024smishing,agarwal2025fishing}.
 \end{itemize}
 
 \section{Proposed System}
-The proposed system has four parts.
+Our system has four pieces.
 \begin{enumerate}
-\item \textbf{A dataset, ScamGuard-IN-2026.} Real Indian reported scams, real Indian genuine messages, 2025--26 advisory texts and synthetic messages for the newest scam types, with every reported-message group checked and the data split by scam campaign.
-\item \textbf{A detector.} Logistic regression over word and character TF-IDF features combined with interpretable intent rules and genuine-message guards that explain each verdict.
-\item \textbf{A cross-domain study.} Naive Bayes and Logistic Regression trained on the UCI SMS Spam Collection and evaluated on Indian SMS before and after adding 10\%, 20\% and 40\% of a labelled Indian adaptation pool, repeated with three seeds, with paired significance tests, a near-duplicate check and a manual error analysis.
-\item \textbf{A complete application.} A deployed web application with a quick check, a full analysis with Scam X-Ray and TrustLens explanations, an AI copilot, safety tools, history, analytics, a cross-domain page that compares the baseline and adapted models, and a separate Streamlit application for the study.
+\item \textbf{The ScamGuard-IN-2026 dataset.} It mixes real reported Indian scams, real genuine Indian messages, texts from 2025--26 government advisories and synthetic messages for the newest scam types. Every group of reported messages was checked, and the split is made by scam campaign.
+\item \textbf{The detector.} Logistic regression on word and character TF-IDF, joined with readable intent rules and guards for genuine messages, so each verdict comes with its reasons.
+\item \textbf{The cross-domain study.} Naive Bayes and Logistic Regression are trained on the UCI collection and tested on Indian SMS, first as they are and then after adding 10\%, 20\% and 40\% of a labelled Indian pool. Everything runs with three seeds and is backed by paired significance tests, a near-duplicate check and an error analysis done by hand.
+\item \textbf{The application.} A deployed website offering a quick check, a full analysis with Scam X-Ray and TrustLens, an AI copilot, safety tools, history, analytics and a cross-domain page where the baseline and adapted models can be compared; the study also has its own Streamlit app.
 \end{enumerate}
 
 \section{Work Plan}
-Table~\ref{tab:workplan} shows the work plan across the two project phases.
+The work was spread over the two project phases as shown in Table~\ref{tab:workplan}.
 
 \begin{table}[H]
 \centering
@@ -72,23 +72,23 @@ Table~\ref{tab:workplan} shows the work plan across the two project phases.
 \hline
 \textbf{Phase} & \textbf{Activity} & \textbf{Outcome} \\
 \hline
-1 & Problem study and literature survey & Research gaps: no verified Indian genuine class, leakage-prone and single-domain evaluation \\
+1 & Study of the problem and the literature & Gaps found: no checked Indian genuine class, leaky single-dataset testing \\
 \hline
-1 & Requirement analysis and design & System architecture, data model and user flows \\
+1 & Requirements and design & Architecture, data model and user flows \\
 \hline
-1 & Application architecture & FastAPI back end, Next.js front end, model registry, database \\
+1 & Building the application skeleton & FastAPI server, Next.js client, model registry and database \\
 \hline
-2 & Explanation layer & Intent rules, Scam X-Ray, TrustLens, retrieval of known patterns \\
+2 & Explanation layer & Intent rules, Scam X-Ray, TrustLens and look-up of known patterns \\
 \hline
-2 & Dataset construction & ScamGuard-IN-2026 with label audit and campaign split \\
+2 & Building the dataset & ScamGuard-IN-2026 with audited labels and a campaign split \\
 \hline
-2 & Model selection and experiments & Final model; leakage, label-audit, training-data and fusion experiments \\
+2 & Choosing the model and running experiments & Final model; experiments on leakage, label audit, training data and fusion \\
 \hline
-2 & Cross-domain study (guide's advancement) & UCI to Indian SMS evaluation, 10/20/40\% adaptation over three seeds, error analysis, Streamlit app and web page \\
+2 & Cross-domain study (advancement set by the guide) & UCI-to-India test, 10/20/40\% adaptation over three seeds, error analysis, Streamlit app and web page \\
 \hline
-2 & Deployment and testing & Vercel, Render and Neon deployment; 836 back-end and 14 front-end automated tests \\
+2 & Deployment and testing & Hosted on Vercel, Render and Neon; 836 back-end and 14 front-end automated tests \\
 \hline
-2 & Documentation & Report, research paper, presentation \\
+2 & Documentation & Report, research papers and presentation \\
 \hline
 \end{tabular}
 \end{table}
@@ -97,70 +97,70 @@ Table~\ref{tab:workplan} shows the work plan across the two project phases.
 \chapter{Literature Survey}
 
 \section{Overview}
-We reviewed nineteen works on SMS spam corpora, smishing detection, report-based measurement studies, domain shift and adaptation, and machine-learning methodology for label noise and data leakage. Each reference was checked against its publisher page, DOI record or arXiv entry. Results quoted are those stated by the authors.
+We studied nineteen publications. They cover public SMS spam collections, smishing detectors, large studies built from user reports, the theory and practice of domain adaptation, and methods for catching label noise and train--test leakage. For every entry we opened the publisher page, DOI record or arXiv listing to confirm the details, and the figures we quote are the authors' own.
 
 \section{Detailed Survey}
 
-\textbf{SMS Spam Collection.} Almeida, G\'omez Hidalgo and Yamakami released the SMS Spam Collection in 2011~\cite{almeida2011contributions}: 5,574 English messages, 747 of them spam, mostly from the UK. In a follow-up they compared many classifiers and preferred a linear SVM, which reached 97.64\% accuracy while blocking 0.18\% of legitimate messages~\cite{almeida2013towards}. Its positive class consists of prize draws and ringtone offers rather than current Indian scams.
+\textbf{The SMS Spam Collection.} In 2011 Almeida, G\'omez Hidalgo and Yamakami published a set of 5,574 English text messages, 747 of them spam, collected mainly in the UK~\cite{almeida2011contributions}. Two years later they tried a large number of classifiers on it; a linear SVM came out on top with 97.64\% accuracy and only 0.18\% of good messages blocked~\cite{almeida2013towards}. The spam in this set is mostly prize draws and ringtone offers, which look little like an Indian KYC or electricity scam today.
 
-\textbf{Deep learning on the same corpus.} Roy, Singh and Banerjee trained CNN and LSTM models and reported up to 99.44\% accuracy~\cite{roy2020deep}. Ahmadi \textit{et al.} compared six classifiers with TF-IDF and bag-of-words features and reported accuracies between 0.91 and 0.95~\cite{ahmadi2025llm}. Labonne and Moran showed that a fine-tuned Flan-T5 model beats classical baselines for e-mail spam with little training data~\cite{labonne2023spamt5}. All of these evaluate within one dataset.
+\textbf{Deep models on the same data.} Roy, Singh and Banerjee reached as much as 99.44\% accuracy with CNN and LSTM networks~\cite{roy2020deep}. Ahmadi \textit{et al.} tested six classifiers on TF-IDF and bag-of-words features and got between 0.91 and 0.95~\cite{ahmadi2025llm}. Labonne and Moran found that a fine-tuned Flan-T5 model outperforms classical methods on e-mail spam even with a small training set~\cite{labonne2023spamt5}. Every one of these studies trains and tests inside a single dataset.
 
-\textbf{Smishing detection.} Sonowal and Kuppusamy proposed SmiDCA, which selects content features for anti-smishing classifiers~\cite{sonowal2018smidca}. Mishra and Soni combined content analysis with the behaviour of embedded URLs and reported 96.29\% accuracy~\cite{mishra2020smishing}. Goel \textit{et al.} trained Naive Bayes on 362 smishing messages with slang normalisation and reached 96.2\% accuracy with a 3.87\% false-positive rate~\cite{goel2024ml}.
+\textbf{Smishing detectors.} SmiDCA, by Sonowal and Kuppusamy, picks content features for an anti-smishing classifier~\cite{sonowal2018smidca}. Mishra and Soni looked at both the text and what the embedded link does, and reported 96.29\% accuracy~\cite{mishra2020smishing}. Goel \textit{et al.} normalised slang and trained Naive Bayes on 362 smishing texts, ending at 96.2\% accuracy with 3.87\% false positives~\cite{goel2024ml}.
 
-\textbf{Report-based corpora.} Timko and Rahman released 1,062 validated Smishtank submissions~\cite{timko2024smishing}. Agarwal \textit{et al.} released 33,869 user-reported messages in 66 languages, labelled with GPT-4o, and state that reports carry no verification~\cite{agarwal2025fishing}. The same group found that 35.12\% of unique UK operator reports were spam rather than scams~\cite{agarwal2026overview}. MOZ-Smishing provides genuine and fraudulent mobile-money messages for Mozambique~\cite{ali2025moz}.
+\textbf{Corpora built from reports.} Timko and Rahman released 1,062 Smishtank submissions that they had validated~\cite{timko2024smishing}. Agarwal \textit{et al.} put out 33,869 reported messages in 66 languages, labelled by GPT-4o, and point out that nobody verified the reports~\cite{agarwal2025fishing}. In a separate paper the same authors found that 35.12\% of unique UK operator reports were ordinary spam and not scams~\cite{agarwal2026overview}. For Mozambique, MOZ-Smishing offers both real and fraudulent mobile-money messages~\cite{ali2025moz}.
 
-\textbf{Domain shift and adaptation.} Ben-David \textit{et al.} bound the error of a classifier on a target domain by its source error plus a measure of divergence between the domains~\cite{bendavid2010theory}. Pan and Yang survey transfer learning, including the setting with a small amount of labelled target data~\cite{pan2010survey}. Daum\'e III shows that simple ways of combining source and target data are strong baselines for supervised domain adaptation in NLP~\cite{daume2007frustratingly}. None of the SMS studies above tests a model on messages from a different collection.
+\textbf{Domain shift and adaptation.} Ben-David \textit{et al.} proved that a classifier's error on a new domain is at most its error on the training domain plus a measure of how far apart the two domains are~\cite{bendavid2010theory}. Pan and Yang's survey of transfer learning includes the case where a little labelled data from the new domain is available~\cite{pan2010survey}. Daum\'e III showed that very simple ways of mixing source and target data are hard to beat in supervised adaptation for language tasks~\cite{daume2007frustratingly}. Not one of the SMS papers above checks a model on a second collection.
 
-\textbf{Surveys and methodology.} Pritom \textit{et al.} reviewed 119 smishing papers and found datasets ``often limited in scale, diversity, and temporal coverage''~\cite{pritom2026sms}. Northcutt, Jiang and Chuang showed that cross-validated disagreement locates label errors~\cite{northcutt2021confident}. Lee \textit{et al.} showed that near-duplicates inflate evaluation~\cite{lee2022dedup}, and Kapoor and Narayanan list train--test duplication among the most common leakage errors~\cite{kapoor2023leakage}. MinHash~\cite{broder1997resemblance} is the standard tool for finding near-duplicates.
+\textbf{Reviews and method papers.} Pritom \textit{et al.} went through 119 smishing papers and describe the datasets as ``often limited in scale, diversity, and temporal coverage''~\cite{pritom2026sms}. Northcutt, Jiang and Chuang use cross-validated disagreement to find wrongly labelled examples~\cite{northcutt2021confident}. Lee \textit{et al.} show how near-duplicates inflate test scores~\cite{lee2022dedup}, and Kapoor and Narayanan rank duplication between train and test sets among the most frequent forms of leakage~\cite{kapoor2023leakage}. Near-duplicates are usually found with MinHash~\cite{broder1997resemblance}.
 
-Table~\ref{tab:lit} summarises the surveyed works.
+The works are summarised in Table~\ref{tab:lit}.
 
 {\small
 \renewcommand{\arraystretch}{1.15}
 \begin{longtable}{|L{0.7cm}|L{2.6cm}|L{2.9cm}|L{2.9cm}|L{3.3cm}|}
 \caption{Summary of related work}\label{tab:lit}\\
 \hline
-\textbf{No.} & \textbf{Work} & \textbf{Technique} & \textbf{Result} & \textbf{Limitation for this project} \\
+\textbf{No.} & \textbf{Work} & \textbf{Approach} & \textbf{Reported result} & \textbf{Why it is not enough here} \\
 \hline
 \endfirsthead
 \hline
-\textbf{No.} & \textbf{Work} & \textbf{Technique} & \textbf{Result} & \textbf{Limitation for this project} \\
+\textbf{No.} & \textbf{Work} & \textbf{Approach} & \textbf{Reported result} & \textbf{Why it is not enough here} \\
 \hline
 \endhead
-1 & Almeida \textit{et al.}, 2011~\cite{almeida2011contributions} & SMS spam corpus and baselines & 5,574 labelled messages & UK promotional spam, no Indian messages \\ \hline
-2 & Almeida \textit{et al.}, 2013~\cite{almeida2013towards} & 15+ classifiers, tokenisers & SVM 97.64\% accuracy & Same corpus; single domain \\ \hline
-3 & Roy \textit{et al.}, 2020~\cite{roy2020deep} & CNN, LSTM & 99.44\% accuracy & No cross-domain test \\ \hline
-4 & Sonowal, Kuppusamy, 2018~\cite{sonowal2018smidca} & Feature selection, ML classifiers & Anti-smishing model & Small English datasets \\ \hline
-5 & Mishra, Soni, 2020~\cite{mishra2020smishing} & Content + URL behaviour & 96.29\% accuracy & Misses scams without links \\ \hline
-6 & Goel \textit{et al.}, 2024~\cite{goel2024ml} & Slang normalisation, Naive Bayes & 96.2\% acc., FPR 3.87\% & Only 362 smishing messages \\ \hline
-7 & Timko, Rahman, 2024~\cite{timko2024smishing} & Validated report collection & 1,062 reports & No genuine class \\ \hline
-8 & Agarwal \textit{et al.}, 2025~\cite{agarwal2025fishing} & GPT-4o labelling of reports & 33,869 messages & Reports unverified; no genuine class \\ \hline
-9 & Agarwal \textit{et al.}, 2026~\cite{agarwal2026overview} & Analysis of operator reports & 35.12\% of reports are spam & UK data; no classifier \\ \hline
-10 & Ali \textit{et al.}, 2025~\cite{ali2025moz} & LLM in-context learning & Mobile-money benchmark & Mozambique context \\ \hline
-11 & Labonne, Moran, 2023~\cite{labonne2023spamt5} & Fine-tuned Flan-T5 & Beats classical baselines & E-mail, not SMS \\ \hline
-12 & Ahmadi \textit{et al.}, 2025~\cite{ahmadi2025llm} & TF-IDF, six classifiers & 0.91--0.95 accuracy & Single dataset \\ \hline
-13 & Pritom \textit{et al.}, 2026~\cite{pritom2026sms} & Systematic review & 119 papers, 12 datasets & Identifies the dataset gap \\ \hline
-14 & Ben-David \textit{et al.}, 2010~\cite{bendavid2010theory} & Theory of domain adaptation & Target-error bound & General theory \\ \hline
-15 & Pan, Yang, 2010~\cite{pan2010survey} & Transfer-learning survey & Taxonomy of settings & Not SMS-specific \\ \hline
-16 & Daum\'e III, 2007~\cite{daume2007frustratingly} & Feature augmentation & Strong simple baseline & NLP tasks other than SMS \\ \hline
-17 & Northcutt \textit{et al.}, 2021~\cite{northcutt2021confident} & Confident learning & Finds label errors & General method \\ \hline
-18 & Lee \textit{et al.}, 2022~\cite{lee2022dedup} & Near-duplicate removal & Overlap inflates results & Language-model corpora \\ \hline
-19 & Kapoor, Narayanan, 2023~\cite{kapoor2023leakage} & Survey of leakage errors & Duplicates are common & General method \\ \hline
+1 & Almeida \textit{et al.}, 2011~\cite{almeida2011contributions} & Public SMS spam collection with baselines & 5,574 labelled texts & UK promotions; nothing Indian \\ \hline
+2 & Almeida \textit{et al.}, 2013~\cite{almeida2013towards} & Over 15 classifiers and tokenisers compared & SVM at 97.64\% accuracy & One corpus, one domain \\ \hline
+3 & Roy \textit{et al.}, 2020~\cite{roy2020deep} & CNN and LSTM networks & 99.44\% accuracy & Never tested on other data \\ \hline
+4 & Sonowal, Kuppusamy, 2018~\cite{sonowal2018smidca} & Content feature selection with ML & Anti-smishing classifier & Small English data \\ \hline
+5 & Mishra, Soni, 2020~\cite{mishra2020smishing} & Text plus link behaviour & 96.29\% accuracy & Weak on scams with no link \\ \hline
+6 & Goel \textit{et al.}, 2024~\cite{goel2024ml} & Slang clean-up and Naive Bayes & 96.2\% accuracy, 3.87\% FPR & Just 362 smishing texts \\ \hline
+7 & Timko, Rahman, 2024~\cite{timko2024smishing} & Collection of validated reports & 1,062 reports & No genuine messages \\ \hline
+8 & Agarwal \textit{et al.}, 2025~\cite{agarwal2025fishing} & Reports labelled by GPT-4o & 33,869 texts & Unverified; no genuine messages \\ \hline
+9 & Agarwal \textit{et al.}, 2026~\cite{agarwal2026overview} & Study of operator reports & 35.12\% were plain spam & UK only; no detector \\ \hline
+10 & Ali \textit{et al.}, 2025~\cite{ali2025moz} & In-context learning with LLMs & Mobile-money benchmark & Built for Mozambique \\ \hline
+11 & Labonne, Moran, 2023~\cite{labonne2023spamt5} & Fine-tuned Flan-T5 & Ahead of classical models & E-mail rather than SMS \\ \hline
+12 & Ahmadi \textit{et al.}, 2025~\cite{ahmadi2025llm} & Six classifiers on TF-IDF & Accuracy 0.91--0.95 & One dataset \\ \hline
+13 & Pritom \textit{et al.}, 2026~\cite{pritom2026sms} & Systematic review & 119 papers, 12 datasets & Points out the data gap \\ \hline
+14 & Ben-David \textit{et al.}, 2010~\cite{bendavid2010theory} & Theory of learning across domains & Bound on target error & Theory, no SMS data \\ \hline
+15 & Pan, Yang, 2010~\cite{pan2010survey} & Survey of transfer learning & Map of settings & Not about SMS \\ \hline
+16 & Daum\'e III, 2007~\cite{daume2007frustratingly} & Feature augmentation & Simple, strong baseline & Other language tasks \\ \hline
+17 & Northcutt \textit{et al.}, 2021~\cite{northcutt2021confident} & Confident learning & Locates label errors & Generic method \\ \hline
+18 & Lee \textit{et al.}, 2022~\cite{lee2022dedup} & Removing near-duplicates & Overlap inflates scores & Studied on LM corpora \\ \hline
+19 & Kapoor, Narayanan, 2023~\cite{kapoor2023leakage} & Survey of leakage & Duplication is frequent & Generic method \\ \hline
 \end{longtable}}
 
 \section{Research gaps}
-The survey points to five gaps.
+Reading these works side by side, we found five gaps.
 \begin{enumerate}
-\item \textbf{No verified genuine Indian class.} Classical corpora are not Indian; report-based corpora contain only reported messages.
-\item \textbf{Report labels are taken at face value,} although their own authors warn that reports are unverified.
-\item \textbf{Evaluation ignores campaigns.} Random splits put copies of one scam template on both sides, which inflates results.
-\item \textbf{Rules are not evaluated independently.} Hybrid systems add rules, but measure their benefit on messages chosen by the same developers.
-\item \textbf{No cross-domain evaluation for SMS spam.} Published SMS classifiers are trained and tested within one collection; how far they fall on another country's messages, and how much labelled local data restores them, is not measured.
+\item \textbf{There is no checked class of genuine Indian messages.} The classical sets are not Indian, and the report-based ones hold reported messages only.
+\item \textbf{Report labels are trusted as they are,} even though the people who collected them say the reports were never verified.
+\item \textbf{Testing ignores campaigns.} With a random split, copies of the same scam template land in both training and test data and push the score up.
+\item \textbf{Rules are not tested on independent data.} Hybrid systems add rules but judge them on examples picked by the same developers.
+\item \textbf{SMS spam models are not tested across domains.} Published classifiers are trained and scored inside one collection, so nobody knows how far they fall on another country's messages or how much local labelled data brings them back.
 \end{enumerate}
 
-The resulting problem statement is:
+From these gaps we framed the problem as follows:
 \begin{center}
-\fbox{\parbox{0.9\linewidth}{\textit{To design, implement and evaluate an AI-based system that classifies an Indian SMS as scam or genuine with a low false-alarm rate, using audited labels and a leakage-free split; to measure how conventional spam classifiers trained on one SMS domain generalize to Indian SMS and how much labelled target data adaptation needs; and to deliver both as a deployed web application that explains each verdict.}}}
+\fbox{\parbox{0.9\linewidth}{\textit{Design, build and evaluate an AI-based system that tells Indian scam SMS from genuine ones with few false alarms, using checked labels and a split free of leakage; measure how standard spam classifiers trained on one SMS domain cope with Indian SMS and how much labelled Indian data adaptation requires; and offer both through a deployed web application that explains every verdict.}}}
 \end{center}
 
 \section{Mapping of Project Objectives with Research Gaps}
@@ -172,17 +172,17 @@ The resulting problem statement is:
 \hline
 \textbf{Objective} & \textbf{Gap addressed} \\
 \hline
-1. Build an Indian dataset with checked labels & Gaps 1 and 2: genuine Indian class; audit of report labels \\
+1. Indian dataset with verified labels & Gaps 1 and 2: a genuine Indian class and an audit of report labels \\
 \hline
-2. Evaluate under a leakage-free protocol & Gap 3: campaign-aware split \\
+2. Testing without leakage & Gap 3: split by campaign \\
 \hline
-3. Combine classifier with interpretable rules and measure their value & Gap 4: rules evaluated on independent real data \\
+3. Classifier plus readable rules, with the rules measured & Gap 4: rules judged on independent real messages \\
 \hline
-4. Cross-domain generalization and domain adaptation & Gap 5: UCI-to-Indian evaluation and 10/20/40\% adaptation \\
+4. Cross-domain testing and adaptation & Gap 5: UCI-to-India test with 10/20/40\% adaptation \\
 \hline
-5. Deliver a deployed application & Practical use of the findings \\
+5. Deployed application & Puts the findings to practical use \\
 \hline
-6. Reproducibility & Supports verification of all five gaps \\
+6. Reproducibility & Lets others verify the work on all five gaps \\
 \hline
 \end{tabular}
 \end{table}

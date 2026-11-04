@@ -1,21 +1,21 @@
 \begin{figure}[H]
 \centering
 \resizebox{0.95\linewidth}{!}{%
-\begin{tikzpicture}[font=\small, >={Stealth[length=2.2mm]}, msg/.style={->, thick}, ret/.style={->, thick, dashed}, every node/.append style={inner sep=1.5pt}, lbl/.style={above, fill=white, font=\small}]
-\foreach \x/\n/\t in {0/u/User, 3.6/c/Web client\\(Next.js), 7.6/a/FastAPI\\back end, 11.6/m/Detector, 15.2/d/Database} {
-  \node[draw, rounded corners=2pt, fill=gray!12, minimum width=2.7cm, minimum height=10mm, align=center] (\n) at (\x,0) {\t};
-  \draw[gray] (\x,-0.55) -- (\x,-10.2);
+\begin{tikzpicture}[font=\small, >={Stealth[length=2.2mm]}, msg/.style={->, thick}, ret/.style={->, thick, dashed}, lbl/.style={above=1pt, fill=white, inner sep=1.5pt, font=\small}]
+\foreach \x/\n/\t in {0/u/User, 3.8/c/Web client\\(Next.js), 7.8/a/FastAPI\\back end, 11.8/m/Detector, 15.6/d/Database} {
+  \node[draw, rounded corners=2pt, fill=gray!12, minimum width=2.8cm, minimum height=12mm, inner sep=3pt, align=center] (\n) at (\x,0) {\t};
+  \draw[gray] (\x,-0.6) -- (\x,-11.0);
 }
-\draw[msg] (0,-1.2) -- node[lbl]{1. paste message} (3.6,-1.2);
-\draw[msg] (3.6,-2.1) -- node[lbl]{2. POST /analyze} (7.6,-2.1);
-\node[draw, fill=white, align=center, font=\footnotesize, minimum width=2.9cm] at (7.6,-3.2) {3. check token, rate\\and size limits; clean};
-\draw[msg] (7.6,-4.3) -- node[lbl]{4. predict(text)} (11.6,-4.3);
-\node[draw, fill=white, align=center, font=\footnotesize, minimum width=2.5cm] at (11.6,-5.4) {5. classifier, rules,\\fusion, explanation};
-\draw[ret] (11.6,-6.5) -- node[lbl]{6. verdict, score, phrases} (7.6,-6.5);
-\draw[msg] (7.6,-7.3) -- node[lbl]{7. save scan} (15.2,-7.3);
-\draw[ret] (15.2,-8.0) -- node[lbl]{8. saved} (7.6,-8.0);
-\draw[ret] (7.6,-8.8) -- node[lbl]{9. 200 OK (JSON)} (3.6,-8.8);
-\draw[ret] (3.6,-9.6) -- node[lbl]{10. show verdict} (0,-9.6);
+\draw[msg] (0,-1.5) -- node[lbl]{1. paste message} (3.8,-1.5);
+\draw[msg] (3.8,-2.6) -- node[lbl]{2. POST /analyze} (7.8,-2.6);
+\node[draw, fill=white, align=center, font=\footnotesize, inner sep=3pt, minimum width=3.2cm] at (7.8,-3.8) {3. check token, rate\\and size limits; clean};
+\draw[msg] (7.8,-5.1) -- node[lbl]{4. predict(text)} (11.8,-5.1);
+\node[draw, fill=white, align=center, font=\footnotesize, inner sep=3pt, minimum width=3.0cm] at (11.8,-6.3) {5. classifier, rules,\\fusion, explanation};
+\draw[ret] (11.8,-7.6) -- node[lbl]{6. verdict, score, phrases} (7.8,-7.6);
+\draw[msg] (7.8,-8.4) -- node[lbl]{7. save scan} (15.6,-8.4);
+\draw[ret] (15.6,-9.1) -- node[lbl]{8. saved} (7.8,-9.1);
+\draw[ret] (7.8,-9.9) -- node[lbl]{9. 200 OK (JSON)} (3.8,-9.9);
+\draw[ret] (3.8,-10.7) -- node[lbl]{10. show verdict} (0,-10.7);
 \end{tikzpicture}}
 \caption{Sequence diagram of one message analysis}
 \label{fig:seq}

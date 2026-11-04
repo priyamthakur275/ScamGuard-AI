@@ -2,12 +2,12 @@
 \chapter{Designs}
 
 \section{System Architecture Overview}
-ScamGuard is a three-tier web application. The \textbf{presentation tier} is a Next.js front end hosted on Vercel; it proxies all API calls through its own origin. The \textbf{application tier} is a FastAPI back end hosted on Render, which runs the detector, the intent rules, the cross-domain models, authentication and the safety tools in one process. The \textbf{data tier} is a PostgreSQL database on Neon that stores users, scans, cases and reports. Models are trained offline and stored as versioned files that the back end loads once at start-up. Figure~\ref{fig:arch} shows the components and their connections.
+ScamGuard follows the usual three-tier layout. At the top, the \textbf{presentation tier} is a Next.js front end on Vercel, and every API call goes out through its own origin. In the middle, the \textbf{application tier} is a FastAPI back end on Render; one process runs the detector, the intent rules, the cross-domain models, sign-in and the safety tools. At the bottom, the \textbf{data tier} is a PostgreSQL database on Neon holding users, scans, cases and reports. Training happens offline. The trained models are saved as versioned files, which the back end loads a single time when it starts. Figure~\ref{fig:arch} shows how the pieces connect.
 
 \input{arch_fig.tex}
 
 \section{Module/Component Design}
-Table~\ref{tab:subsys} lists the modules of ScamGuard, their responsibility and their interfaces.
+Table~\ref{tab:subsys} breaks ScamGuard into modules and gives each one's job and the way other parts talk to it.
 
 \begin{table}[H]
 \centering
@@ -17,23 +17,23 @@ Table~\ref{tab:subsys} lists the modules of ScamGuard, their responsibility and 
 \hline
 \textbf{Module} & \textbf{Responsibility} & \textbf{Interface} \\
 \hline
-Dataset builder & Collect sources, audit labels, group campaigns, split & Python script; writes one CSV file \\
+Dataset builder & Gathers the sources, audits labels, groups campaigns and splits the data & Python script that writes one CSV file \\
 \hline
-Training pipeline & Train and compare models; register the selected one & Model registry (vectorizer and model files) \\
+Training pipeline & Trains and compares models, then registers the chosen one & Model registry (vectorizer and model files) \\
 \hline
-Detector & Clean, classify, apply rules, fuse, explain & Python function \texttt{predict(text)} \\
+Detector & Cleans, classifies, applies rules, fuses scores and explains & Python function \texttt{predict(text)} \\
 \hline
-Cross-domain study & Audit and clean UCI and Indian data, run the 7 experiments over 3 seeds, save results and models & Jupyter notebook; CSV tables, figures, \texttt{results.json}, joblib models \\
+Cross-domain study & Audits and cleans the UCI and Indian data, runs the seven experiments over three seeds, saves results and models & Jupyter notebook producing CSV tables, figures, \texttt{results.json} and joblib models \\
 \hline
-Cross-domain service & Serve the baseline and adapted models with explanations & \texttt{POST /public/cross-domain/classify}, \texttt{GET /public/cross-domain/results} \\
+Cross-domain service & Serves the baseline and adapted models, with explanations & \texttt{POST /public/cross-domain/classify}, \texttt{GET /public/cross-domain/results} \\
 \hline
-Back end (API) & Authentication, rate limits, storage, reports, safety tools & REST over HTTPS, JSON \\
+Back end (API) & Sign-in, rate limits, storage, reports and safety tools & REST over HTTPS, JSON \\
 \hline
-Front end & Quick check, analysis, dashboard, tools, cross-domain page, Hindi & Browser; calls the REST API \\
+Front end & Quick check, analysis, dashboard, tools, cross-domain page, Hindi interface & Browser; calls the REST API \\
 \hline
-Streamlit app & Stand-alone demonstration of the study & Loads the saved models; never retrains \\
+Streamlit app & Separate demo of the study & Loads the saved models and never retrains them \\
 \hline
-Copilot & Answers follow-up questions & REST endpoint; external LLM API with limits \\
+Copilot & Answers follow-up questions & REST endpoint calling an outside LLM API, with limits \\
 \hline
 \end{tabular}
 \end{table}
@@ -41,23 +41,41 @@ Copilot & Answers follow-up questions & REST endpoint; external LLM API with lim
 \section{Detailed Design}
 
 \subsection{Client--server communication}
-The web client and the back end communicate over HTTPS with JSON bodies. Figure~\ref{fig:seq} shows the sequence for one analysis.
+The browser and the back end exchange JSON over HTTPS. Figure~\ref{fig:seq} traces a single analysis from request to reply.
 
 \input{seq_fig.tex}
 
 \begin{itemize}
-\item \textbf{Endpoints.} \texttt{POST /api/v1/public/quick-check} serves visitors without an account (10 requests per minute); \texttt{POST /api/v1/messages/analyze} serves signed-in users (30 per minute); \texttt{POST /api/v1/public/cross-domain/classify} serves the cross-domain page (30 per minute). Other routes handle authentication, history, cases, analytics, the copilot and the safety tools.
-\item \textbf{Authentication.} Signed access tokens with refresh tokens; passwords stored as bcrypt hashes.
-\item \textbf{Robustness.} Message text is limited to 4,000 characters (2,000 for the public endpoints).
+\item \textbf{Endpoints.} The three classification routes are listed in Table~\ref{tab:endpoints}. Further routes cover sign-in, history, cases, analytics, the copilot and the safety tools.
+\item \textbf{Authentication.} Short-lived signed access tokens paired with refresh tokens; passwords kept as bcrypt hashes.
+\item \textbf{Input limits.} A message may be up to 4,000 characters long, or 2,000 on the public endpoints.
 \end{itemize}
 
+\begin{table}[H]
+\centering
+\caption{Classification endpoints and their rate limits}
+\label{tab:endpoints}
+\small
+\begin{tabular}{|l|l|c|}
+\hline
+\textbf{Route (POST)} & \textbf{Used by} & \textbf{Requests/min} \\
+\hline
+\texttt{/api/v1/public/quick-check} & Visitors (no account) & 10 \\
+\hline
+\texttt{/api/v1/messages/analyze} & Signed-in users & 30 \\
+\hline
+\texttt{/api/v1/public/cross-domain/classify} & Cross-domain page & 30 \\
+\hline
+\end{tabular}
+\end{table}
+
 \subsection{Dataset construction}
-Algorithm~\ref{alg:build} summarises how ScamGuard-IN-2026 is built and split.
+Algorithm~\ref{alg:build} outlines how ScamGuard-IN-2026 is assembled and split.
 
 \input{alg_build.tex}
 
 \subsection{Cross-domain experiment design}
-Algorithm~\ref{alg:xdomain} gives the protocol of the cross-domain study. All choices are made on source data; the final target test set is used only for scoring.
+The protocol of the cross-domain study is written out in Algorithm~\ref{alg:xdomain}. Every decision is made on source data, and the final target test set is touched only to score models.
 
 \begin{algorithm}[H]
 \caption{Cross-domain evaluation and lightweight domain adaptation}
@@ -83,7 +101,7 @@ Algorithm~\ref{alg:xdomain} gives the protocol of the cross-domain study. All ch
 \section{Data Design}
 
 \subsection{Database}
-Table~\ref{tab:db} lists the main tables of the PostgreSQL database.
+The main tables of the PostgreSQL database are listed in Table~\ref{tab:db}.
 
 \begin{table}[H]
 \centering
@@ -111,6 +129,6 @@ Table~\ref{tab:db} lists the main tables of the PostgreSQL database.
 \end{table}
 
 \subsection{Datasets}
-\textbf{ScamGuard-IN-2026} has seven attributes per row: \texttt{text}, \texttt{label} (scam or legitimate), \texttt{source}, \texttt{subtype}, \texttt{is\_synthetic}, \texttt{campaign} (near-duplicate group) and \texttt{split} (train, development, test or 2026 test).
+Each row of \textbf{ScamGuard-IN-2026} has seven fields: \texttt{text}; \texttt{label}, which is scam or legitimate; \texttt{source}; \texttt{subtype}; \texttt{is\_synthetic}; \texttt{campaign}, naming the near-duplicate group; and \texttt{split}, which is train, development, test or 2026 test.
 
-The \textbf{cross-domain datasets} are stored after cleaning with the attributes \texttt{message}, \texttt{label} (spam = 1, ham = 0) and \texttt{domain} (UCI or India). The study also writes every result table as CSV, the error-annotation sheet with a \texttt{manual\_category} column, a \texttt{results.json} summary and four joblib models: Naive Bayes and Logistic Regression, each in a baseline and an adapted version.
+After cleaning, the \textbf{cross-domain datasets} keep three fields: \texttt{message}, \texttt{label} (spam = 1, ham = 0) and \texttt{domain} (UCI or India). Alongside them the study saves every result table as a CSV file, the error sheet with its hand-filled \texttt{manual\_category} column, a \texttt{results.json} summary and four joblib models, namely Naive Bayes and Logistic Regression, each as a baseline and as an adapted version.
