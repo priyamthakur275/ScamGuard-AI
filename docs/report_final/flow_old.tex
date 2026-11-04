@@ -1,0 +1,20 @@
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=5mm,
+  box/.style={draw, rounded corners=2pt, align=center, font=\small, minimum width=6.5cm, minimum height=8mm, fill=white},
+  arr/.style={-{Stealth[length=2.2mm]}, thick}]
+\node[box] (a) {Collect sources: IMC 2025 India subset, India SMS,\\2025--26 advisories, team SMS, synthetic templates};
+\node[box, below=of a] (b) {Normalise anonymised entities and mask personal data};
+\node[box, below=of b] (c) {Group near-duplicates into campaigns (MinHash LSH)};
+\node[box, below=of c] (d) {Audit labels: rule-confirmed, manual review,\\second pass on model disagreements};
+\node[box, below=of d] (e) {Split by campaign: train / development / test};
+\node[box, below=of e] (f) {Preprocess: clean, tokenise (Latin + Devanagari)};
+\node[box, below=of f] (g) {TF-IDF word + character features; train classifiers};
+\node[box, below=of g] (h) {Select model on development split; evaluate on test};
+\node[box, below=of h] (i) {Register the trained model; serve with intent rules and explanations};
+\node[box, below=of i] (j) {Deploy web application; daily live-site check};
+\foreach \x/\y in {a/b,b/c,c/d,d/e,e/f,f/g,g/h,h/i,i/j} \draw[arr] (\x) -- (\y);
+\end{tikzpicture}
+\caption{Flow of the methodology}
+\label{fig:flow}
+\end{figure}

@@ -1,0 +1,16 @@
+\begin{algorithm}[H]
+\caption{Building and splitting ScamGuard-IN-2026}
+\label{alg:build}
+\begin{algorithmic}[1]
+\Require sources R1--R3, synthetic templates S, audit files
+\State normalise anonymised entities in R1; mask personal data
+\State group real messages into campaigns by MinHash ($J\ge0.6$)
+\For{each reported campaign}
+  \If{strong fraud cue and no genuine cue} \State label scam \Else \State apply the manual decision (scam, genuine or drop) \EndIf
+\EndFor
+\State re-read rows that a cross-validated model strongly contradicts
+\State assign each campaign to train, development or test by a salted hash
+\State add synthetic messages to training only; remove exact test duplicates from training
+\State \Return labelled dataset with split column
+\end{algorithmic}
+\end{algorithm}
