@@ -10,42 +10,42 @@
 \hline
 \textbf{Stakeholder} & \textbf{Need} \\
 \hline
-Mobile phone users & Know quickly whether a message is a scam, why, and what to do next \\
+Mobile phone users & A fast answer on whether a message is a scam, the reason, and the next step \\
 \hline
-Elderly and first-time digital users & A simple interface, Hindi support and clear next steps such as calling 1930 \\
+Elderly and first-time digital users & Plain screens, Hindi, and clear advice such as ``call 1930'' \\
 \hline
-Families and guardians & Check a message forwarded by a relative and share a warning \\
+Families and guardians & Checking a message a relative forwarded, and passing on a warning \\
 \hline
-Researchers and faculty & Reproducible data, protocol and results; a study of cross-domain behaviour \\
+Researchers and faculty & Data, protocol and results they can reproduce, including the cross-domain study \\
 \hline
-Administrators (project team) & Monitor model versions, metrics and the health of the deployed service \\
+Administrators (project team) & Watching model versions, metrics and the health of the live service \\
 \hline
-Banks, telecom operators and reporting agencies & Fewer users falling for impersonation; users directed to official channels \\
+Banks, telecom operators and reporting agencies & Fewer customers fooled by impostors, and more of them sent to official channels \\
 \hline
 \end{tabular}
 \end{table}
 
 \section{Functional Requirements}
 \begin{enumerate}
-\item \textbf{Quick check.} A visitor can paste a message on the home page and receive a verdict, risk score, highlighted trap phrases and a short explanation without an account.
-\item \textbf{Account management.} Users can register and sign in (with a captcha) or open a demo account, and update, export or delete their data.
-\item \textbf{Full analysis.} A signed-in user can analyse text, a URL, an e-mail, a screenshot, a PDF or a QR code, and see the verdict, classifier probability, final risk score, Scam X-Ray stages, TrustLens report and recommended actions.
-\item \textbf{Explanation.} Each result shows the matched phrases with their scam stage (hook, pressure, request, cash-out), evidence for and against, and how a genuine message would differ.
-\item \textbf{Cross-domain study page.} A visitor can classify a message with the baseline (UCI-only) or adapted (UCI + 40\% Indian) model, choose Naive Bayes or Logistic Regression, and see the label, spam probability, model version and the features behind the prediction, together with the study's measured results.
-\item \textbf{AI copilot.} Users can ask follow-up questions in English or Hindi, answered by a hosted language model with per-visitor and daily limits and built-in fallback answers.
-\item \textbf{Safety tools.} QR code check, a ``before you pay'' check for UPI requests, a payment-screenshot check, a file check for disguised Android apps and a chat timeline.
-\item \textbf{History, cases and reports.} Users can search past scans, group them into cases, give feedback, download a PDF report and report a scam to the community view.
-\item \textbf{Analytics and administration.} Users see totals and trends; administrators see registered model versions and run a robustness test.
+\item \textbf{Quick check.} Without creating an account, a visitor pastes a message on the home page and gets a verdict, a risk score, the trap phrases highlighted and a short explanation.
+\item \textbf{Accounts.} People can register and sign in (with a captcha) or try a demo account, and they can edit, export or delete their own data.
+\item \textbf{Full analysis.} Once signed in, a user can submit text, a URL, an e-mail, a screenshot, a PDF or a QR code. The result shows the verdict, the classifier's probability, the final risk score, the Scam X-Ray stages, the TrustLens report and suggested actions.
+\item \textbf{Explanation.} Every result lists the phrases that matched, the scam stage each belongs to (hook, pressure, request, cash-out), the evidence on both sides and the way a genuine message would look.
+\item \textbf{Cross-domain page.} A visitor picks the baseline model (UCI only) or the adapted one (UCI plus 40\% of the Indian pool), chooses Naive Bayes or Logistic Regression and classifies a message. The page returns the label, the spam probability, the model version and the features that drove the decision, next to the study's measured results.
+\item \textbf{AI copilot.} Follow-up questions in English or Hindi go to a hosted language model. Each visitor has a limit, there is a daily cap, and fixed fallback answers cover outages.
+\item \textbf{Safety tools.} A QR code check, a ``before you pay'' check for UPI requests, a check for payment screenshots, a file check that catches disguised Android apps, and a chat timeline.
+\item \textbf{History, cases and reports.} Past scans can be searched and grouped into cases; users can leave feedback, download a PDF report and post a scam to the community view.
+\item \textbf{Analytics and administration.} Users see their totals and trends. Administrators also see the registered model versions and can run a robustness test.
 \end{enumerate}
 
 \section{Non-Functional requirements}
 \begin{itemize}
-\item \textbf{Performance.} Classification of one message takes about 2~ms, and about 4~ms with the intent layer, on a two-core server; a full web request completes in about 1--2 seconds.
-\item \textbf{Reliability.} Models are loaded once at start-up from versioned files; the back end keeps itself awake on the free tier, and the front end retries transient proxy errors.
-\item \textbf{Security.} Passwords are hashed with bcrypt, access uses signed JWT tokens with refresh rotation, endpoints are rate-limited, request bodies are size-limited, outbound URL fetching is SSRF-safe, and security headers are set.
-\item \textbf{Privacy.} The quick check and the cross-domain page store nothing; contributed messages are masked before storage.
-\item \textbf{Usability.} English and Hindi interface, elder mode, keyboard-accessible controls and layouts that work at phone width.
-\item \textbf{Maintainability and reproducibility.} Training and serving share the same preprocessing code; 836 back-end and ML tests and 14 front-end tests run in continuous integration; one notebook and one script regenerate every reported number.
+\item \textbf{Performance.} On a two-core server the classifier needs about 2~ms per message, about 4~ms with the intent layer. A complete web request takes roughly 1--2 seconds.
+\item \textbf{Reliability.} Models are read from versioned files once, when the server starts. The back end keeps itself from sleeping on the free tier, and the front end retries short-lived proxy errors.
+\item \textbf{Security.} Passwords are stored as bcrypt hashes; access relies on signed JWT tokens whose refresh tokens rotate; every endpoint has a rate limit and a size limit on the request body; fetching outside URLs is protected against SSRF; and security headers are set.
+\item \textbf{Privacy.} Nothing typed into the quick check or the cross-domain page is saved, and contributed messages are masked before they are stored.
+\item \textbf{Usability.} The interface works in English and Hindi, has an elder mode, can be driven from the keyboard and fits phone screens.
+\item \textbf{Maintainability and reproducibility.} Training and serving call the same preprocessing code. Continuous integration runs 836 back-end and ML tests and 14 front-end tests, and a single notebook plus a single script regenerate every number we report.
 \end{itemize}
 
 \section{System Requirements}
@@ -57,13 +57,13 @@ Banks, telecom operators and reporting agencies & Fewer users falling for impers
 \hline
 \textbf{Component} & \textbf{Requirement} \\
 \hline
-Development machine & Any laptop with 8~GB RAM and a recent 64-bit CPU; no GPU is needed \\
+Development machine & An ordinary laptop with 8~GB RAM and a recent 64-bit CPU; a GPU is not required \\
 \hline
-Training & Under 3 seconds for the production model and about one minute for the full cross-domain notebook on a laptop CPU \\
+Training & On a laptop CPU, under 3 seconds for the production model and around a minute for the whole cross-domain notebook \\
 \hline
-Server & One small cloud instance; 512~MB RAM is sufficient \\
+Server & A single small cloud instance; 512~MB RAM is enough \\
 \hline
-Client & Any browser on a phone or computer \\
+Client & Any web browser on a phone or a computer \\
 \hline
 \end{tabular}
 \end{table}
@@ -95,27 +95,27 @@ Deployment & Vercel (front end), Render (back end), GitHub Actions (continuous i
 
 \section{Data Requirements}
 \begin{itemize}
-\item \textbf{Main detector:} labelled Indian scam and genuine SMS with verified labels, a campaign identifier for each message and a split that keeps campaigns apart (ScamGuard-IN-2026, 11,399 messages).
-\item \textbf{Cross-domain study:} a labelled source dataset (UCI SMS Spam Collection, 5,574 messages) and an independently collected labelled target dataset (India Spam SMS Classification, 2,267 messages), both with documented licences, audited for missing values, duplicates, label conflicts, encoding and overlap.
-\item \textbf{Format:} plain text with a binary label (scam/legitimate or spam/ham, mapped to 1/0).
-\item \textbf{Personal data:} phone numbers, account numbers, OTPs and names masked before storage; no private messages collected without consent.
+\item \textbf{For the main detector:} Indian scam and genuine SMS with checked labels, a campaign ID on every message, and a split that never divides a campaign. ScamGuard-IN-2026 (11,399 messages) meets this.
+\item \textbf{For the cross-domain study:} a labelled source set (the UCI SMS Spam Collection, 5,574 messages) and a target set collected separately (India Spam SMS Classification, 2,267 messages). Both need a known licence and an audit for missing values, repeats, conflicting labels, broken encoding and overlap with each other.
+\item \textbf{Format:} plain text plus a two-valued label, scam/legitimate or spam/ham, stored as 1/0.
+\item \textbf{Personal data:} phone numbers, account numbers, OTPs and names are masked before anything is stored, and no private message is collected without consent.
 \end{itemize}
 
 \section{Constraints and Limitations}
 \begin{itemize}
-\item Free-tier hosting limits memory to 512~MB, which rules out large transformer models in production.
-\item Messages are analysed one at a time without sender metadata or conversation history.
-\item Only English and Hindi are covered.
-\item Real 2025--26 Indian scam messages with verified labels are scarce; the 2026 test set has 12 messages.
-\item The cross-domain study uses only two datasets, and the Indian dataset has no documented labelling procedure.
+\item The free hosting tier allows 512~MB of memory, so large transformer models cannot be served in production.
+\item Each message is judged alone; the sender and the rest of the conversation are not available.
+\item The system covers English and Hindi and nothing else.
+\item Verified Indian scam messages from 2025--26 are hard to find, and the 2026 test set has only 12.
+\item The cross-domain study rests on two datasets, and nobody documented how the Indian one was labelled.
 \end{itemize}
 
 \section{Assumptions}
 \begin{itemize}
-\item The user pastes the full text of one message.
-\item Audited labels are correct; unclear messages were dropped rather than guessed.
-\item The public datasets are representative enough of their domains for a controlled comparison.
-\item The final target test set is never used for training, feature fitting or choosing settings.
+\item The user pastes one complete message.
+\item The audited labels are right; where we could not tell, we dropped the message instead of guessing.
+\item Each public dataset is a fair enough sample of its domain for a controlled comparison.
+\item The final target test set is kept out of training, feature fitting and every choice of settings.
 \end{itemize}
 
 \section{Risks and Challenges}
@@ -127,17 +127,17 @@ Deployment & Vercel (front end), Render (back end), GitHub Actions (continuous i
 \hline
 \textbf{Risk} & \textbf{Mitigation} \\
 \hline
-Wrong labels in reported data & Label audit by rule and by hand; second pass with cross-validated disagreement \\
+Reported data carries wrong labels & Audit by rule and by hand, then a second pass on cases a cross-validated model disputes \\
 \hline
-Inflated results from near-duplicates & Campaign-aware split; group-aware split check in the cross-domain study \\
+Near-duplicates make scores look better than they are & Split by campaign; group-aware split check in the cross-domain study \\
 \hline
-New scam types not in training data & Synthetic training messages; intent rules; small labelled target sample (adaptation) \\
+New scam types are missing from training data & Synthetic training messages, intent rules, and a small labelled local sample (adaptation) \\
 \hline
-Obfuscated spellings (K.Y.C, bl0cked) & Intent rules catch them; normalising such spellings before feature extraction is future work \\
+Disguised spellings (K.Y.C, bl0cked) & Caught by the intent rules; normalising them before features are built is left for future work \\
 \hline
-Free-tier server sleeping & Keep-alive pings, front end on Vercel, automatic retries \\
+The free-tier server falls asleep & Keep-alive pings, front end hosted on Vercel, automatic retries \\
 \hline
-External AI service slow or unavailable & Time limits and built-in fallback answers; the detector does not depend on it \\
+The outside AI service is slow or down & Time limits and fallback answers; the detector itself never depends on it \\
 \hline
 \end{tabular}
 \end{table}
