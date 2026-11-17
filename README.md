@@ -1,14 +1,47 @@
-# ScamGuard — AI-Powered Online Scam & Fraud Detection System
+<div align="center">
 
-ScamGuard is a full-stack, production-grade cybersecurity intelligence platform designed to detect phishing attacks, lottery fraud, UPI/banking scams, and social engineering in real time using Machine Learning and Explainable AI (XAI).
+# 🛡️ ScamGuard AI
+
+### Real-time detection of phishing, UPI/banking fraud, lottery scams and social engineering across SMS, links, emails, screenshots, PDFs, QR codes and voice calls, with explainable verdicts.
+
+[![Live Demo](https://img.shields.io/badge/Live_Demo-scamguard--ai--zeta.vercel.app-14b8a6?style=for-the-badge&logo=vercel&logoColor=white)](https://scamguard-ai-zeta.vercel.app)
+[![Tests](https://img.shields.io/badge/Tests-820_backend_·_14_frontend-22c55e?style=for-the-badge&logo=pytest&logoColor=white)](#-testing-and-verification)
+[![Accuracy](https://img.shields.io/badge/Accuracy-97.1%25_on_1,874_real_SMS-f59e0b?style=for-the-badge)](backend/ml_training/research/results.md)
+
+![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?logo=scikitlearn&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js_14-000000?logo=nextdotjs&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)
+![Gemini](https://img.shields.io/badge/Google_Gemini-8E75B2?logo=googlegemini&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
+
+**[Try the live demo](https://scamguard-ai-zeta.vercel.app)** (use **"Try the demo account"**, or paste a message into the quick check on the home page; no account needed)
+
+</div>
 
 ---
 
-## 🌐 Live demo
+## 📸 Screenshots
 
-**https://scamguard-ai-zeta.vercel.app** — use **"Try the demo account"** on the sign-in page, or paste a message into the quick check on the home page (no account needed).
+| Verdict with TrustLens and Scam X-Ray | Analytics |
+|---|---|
+| <img src="docs/verification/verdict-desktop.png" alt="ScamGuard verdict page" width="480"> | <img src="docs/verification/analytics-dark.png" alt="ScamGuard analytics dashboard" width="480"> |
 
-Hosted for free: the Next.js frontend on **Vercel**, the FastAPI backend (with the model running in-process) on **Render**, and PostgreSQL on **Neon**. The backend keeps itself awake 24/7 (`app_service/services/keep_alive.py`).
+---
+
+## 📊 Results at a glance
+
+Deployed system (classifier + intent rules) on **1,874 real held-out Indian SMS from unseen scam campaigns** ([full tables](backend/ml_training/research/results.md)):
+
+| Accuracy | Precision | Recall | F1 (95% CI) | False-alarm rate | ROC-AUC |
+|:---:|:---:|:---:|:---:|:---:|:---:|
+| **97.1%** | **98.2%** | **97.2%** | **97.7%** (97.1–98.3) | **3.2%** | **0.995** |
+
+- **No leakage:** train/test are split by scam campaign, so no near-duplicate of a test message is seen in training. With a random split, 793 test rows would have had a near-duplicate in training.
+- **Reproducible:** `python -m ml_training.research.run_experiments` regenerates every number; `results.md` holds the tables.
+- **Tested:** 820 backend tests (pytest) and 14 frontend tests (Vitest), verified on Python 3.10 to 3.14.
 
 ---
 
@@ -63,25 +96,16 @@ graph TD
 > falls through to serving the real trained model in-process on the current
 > deployment.
 
----
+### 🛠️ Tech stack
 
-## ⚙️ Environment variables
-
-All backend configuration is via `backend/.env` (copy from `backend/.env.example`). Every variable actually used by the app:
-
-| Variable | Purpose | Required? |
-|---|---|---|
-| `SECRET_KEY` | JWT signing secret. **Refuses to start if left at the known placeholder value while `DEBUG=false`** -- generate a real one for anything beyond local dev. | Yes |
-| `DEBUG` | Defaults to `false`. Set `true` only for local development. | No |
-| `DATABASE_URL` | Postgres (production) or SQLite (local fallback) connection string. | Yes |
-| `ML_SERVICE_URL` | URL of a separate `ml_service` container, if running one (self-hosted `docker-compose` setup only -- **not used by the current Render deployment**, which runs ML in-process). | No |
-| `CORS_ORIGINS` | Comma-separated allowed frontend origins. | Yes |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` / `REFRESH_TOKEN_EXPIRE_DAYS` | JWT lifetimes. | No |
-| `RATE_LIMIT_DEFAULT` / `RATE_LIMIT_AUTH` | SlowAPI rate limits. | No |
-| `VOICE_TRANSCRIPTION_PROVIDER` / `VOICE_TRANSCRIPTION_API_KEY` | Optional server-side audio transcription provider. Unset by default -- browser-based live transcription (Web Speech API) works regardless; only server-side audio-*file* transcription needs this. | No |
-| `COPILOT_LLM_PROVIDER` / `COPILOT_LLM_API_KEY` | Optional external LLM for Copilot. Unset by default -- Copilot answers via the deterministic, evidence-grounded engine instead. | No |
-
-The frontend needs no `.env` for local dev beyond what Next.js generates (`frontend/.env.local`) for its own tooling; the API base URL is proxied same-origin via `next.config.js` rewrites, not an environment variable.
+| Layer | Technology |
+|---|---|
+| Frontend | Next.js 14, React, TypeScript, Tailwind CSS; PWA with Android share target; Chrome/Edge/Brave extension |
+| Backend | Python, FastAPI, SQLAlchemy, Alembic, SlowAPI rate limiting, JWT with refresh rotation |
+| ML | scikit-learn logistic regression on word + character TF-IDF, intent-based risk engine, Joblib model registry |
+| AI | Google Gemini (or Groq / Anthropic / OpenAI) for Ask ScamGuard; corrective retrieval over 42 scam patterns and 10 genuine formats |
+| Inputs | OCR for screenshots, PDF parsing, QR decoding, Whisper or Web Speech API for voice |
+| Data & hosting | PostgreSQL on Neon (SQLite locally), FastAPI on Render, Next.js on Vercel, Docker Compose for self-hosting |
 
 ---
 
@@ -137,7 +161,76 @@ python -m pytest ml_common/tests ml_training/tests -v
 
 ---
 
-## 📁 Repository Structure
+## 🔒 Security
+
+- Passwords hashed using bcrypt.
+- JWT access tokens with short expiry (15m) + secure refresh token rotation (7d).
+- Strict Content Security Policy (CSP) & CORS configuration.
+- Rate-limiting enabled via SlowAPI on sensitive auth & prediction routes.
+- Privacy-first in-memory vectorization: message content is never sold or used for model retraining without consent.
+- **URL analysis is SSRF-hardened**: every hostname the server actually connects to (including redirect targets, checked via an httpx request-level hook) is resolved and rejected if it's a loopback, private, link-local, multicast, or reserved address -- so a submitted URL can't be used to make the server fetch its own internal network or cloud metadata endpoint (`169.254.169.254`). TLS certificate verification is enforced (previously disabled).
+- **File uploads (image/PDF/QR/email) are capped at 8 MB** server-side, independent of any reverse proxy in front of the service, to prevent memory exhaustion during OCR/PDF parsing.
+- **No fabricated ML fallback**: if neither the remote ML microservice nor the in-process model can produce a real prediction, the API returns a `503 MODEL_UNAVAILABLE` error. There is no keyword-heuristic tier that manufactures a plausible-looking probability, confidence score, or model name when the real model is unavailable.
+
+<details>
+<summary><b>Known limitations</b></summary>
+
+- Scans happen when a user submits something; there is no automatic SMS or call interception (that would need a native Android app).
+- Domain age depends on the public RDAP service; if it is unreachable the trust score says "registration date not available".
+- The Indian scam supplement is curated by the team, not field-collected; accuracy is reported on separately written hold-out sets.
+- No real third-party CAPTCHA, no independent SPF/DKIM/DMARC DNS verification, and CAPTCHA/login-attempt state is in-process (single instance).
+
+</details>
+
+<details>
+<summary><b>CAPTCHA and abuse protection</b></summary>
+
+Registration and step-up login protection now use a real, self-hosted, stateless CAPTCHA (`app_service/core/captcha.py`, 11 tests): a short arithmetic challenge with an HMAC-SHA256-signed, time-limited token -- no server-side storage needed, tamper-evident, timing-safe verification. This is honestly scoped as a lightweight bot-friction mechanism, not a claim of parity with a third-party CAPTCHA service (reCAPTCHA/hCaptcha/Turnstile), which would need external account credentials this environment doesn't have; swapping one in later only requires changing the verification call site.
+
+- **Registration**: always requires a solved CAPTCHA.
+- **Login**: only requires one after 3 failed attempts for that email within 15 minutes (`app_service/core/login_attempts.py`) -- not on every normal login. That tracker is in-process (documented limitation: resets on restart, not shared across multiple app_service replicas; a multi-instance deployment would need to move it to Redis or the database).
+
+</details>
+
+<details>
+<summary><b>URL intelligence</b></summary>
+
+URL analysis now computes real, deterministic signals from the URL string itself (`ml_common/security/url_intelligence.py`, 20+ tests): punycode/IDN detection, IP-literal hosts, known URL shorteners, a short list of TLDs commonly abused in phishing campaigns, userinfo-obfuscation (`user@host` tricks), and lookalike/brand-impersonation detection via edit distance against a small explicit brand list. This is a best-effort heuristic layer, not a full public-suffix-list implementation or a live reputation/WHOIS/TLS lookup -- it does not claim domain age, certificate details, or a definitive verdict, only what's structurally observable in the URL text. TLS certificate metadata (subject/issuer/expiry) is best-effort and untested against a live host from this project's own dev environment. Results are surfaced as "Observed URL signals," kept explicitly separate from the model's own interpretation.
+
+</details>
+
+<details>
+<summary><b>Model evaluation details</b></summary>
+
+`ModelEvaluator` (`ml_training/evaluation/evaluator.py`) computes real accuracy/precision/recall/F1/ROC-AUC/false-positive-rate via scikit-learn, plus the raw confusion matrix counts. The production model (`logistic_regression` v4) is trained on ScamGuard-IN-2026 (`backend/ml_training/datasets/scamguard_in_2026/`), split by scam campaign so no near-duplicate of a test message is seen in training. `python -m ml_training.research.run_experiments` reproduces every reported number; `results.md` holds the tables.
+
+</details>
+
+---
+
+<details>
+<summary><b>⚙️ Environment variables</b></summary>
+
+All backend configuration is via `backend/.env` (copy from `backend/.env.example`). Every variable actually used by the app:
+
+| Variable | Purpose | Required? |
+|---|---|---|
+| `SECRET_KEY` | JWT signing secret. **Refuses to start if left at the known placeholder value while `DEBUG=false`** -- generate a real one for anything beyond local dev. | Yes |
+| `DEBUG` | Defaults to `false`. Set `true` only for local development. | No |
+| `DATABASE_URL` | Postgres (production) or SQLite (local fallback) connection string. | Yes |
+| `ML_SERVICE_URL` | URL of a separate `ml_service` container, if running one (self-hosted `docker-compose` setup only -- **not used by the current Render deployment**, which runs ML in-process). | No |
+| `CORS_ORIGINS` | Comma-separated allowed frontend origins. | Yes |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` / `REFRESH_TOKEN_EXPIRE_DAYS` | JWT lifetimes. | No |
+| `RATE_LIMIT_DEFAULT` / `RATE_LIMIT_AUTH` | SlowAPI rate limits. | No |
+| `VOICE_TRANSCRIPTION_PROVIDER` / `VOICE_TRANSCRIPTION_API_KEY` | Optional server-side audio transcription provider. Unset by default -- browser-based live transcription (Web Speech API) works regardless; only server-side audio-*file* transcription needs this. | No |
+| `COPILOT_LLM_PROVIDER` / `COPILOT_LLM_API_KEY` | Optional external LLM for Copilot. Unset by default -- Copilot answers via the deterministic, evidence-grounded engine instead. | No |
+
+The frontend needs no `.env` for local dev beyond what Next.js generates (`frontend/.env.local`) for its own tooling; the API base URL is proxied same-origin via `next.config.js` rewrites, not an environment variable.
+
+</details>
+
+<details>
+<summary><b>📁 Repository structure</b></summary>
 
 ```
 ScamGuard-AI/
@@ -163,40 +256,7 @@ ScamGuard-AI/
 └── docs/                       # Architecture documentation and specs
 ```
 
----
-
-## 🔒 Security Best Practices
-
-- Passwords hashed using bcrypt.
-- JWT access tokens with short expiry (15m) + secure refresh token rotation (7d).
-- Strict Content Security Policy (CSP) & CORS configuration.
-- Rate-limiting enabled via SlowAPI on sensitive auth & prediction routes.
-- Privacy-first in-memory vectorization: message content is never sold or used for model retraining without consent.
-- **URL analysis is SSRF-hardened**: every hostname the server actually connects to (including redirect targets, checked via an httpx request-level hook) is resolved and rejected if it's a loopback, private, link-local, multicast, or reserved address -- so a submitted URL can't be used to make the server fetch its own internal network or cloud metadata endpoint (`169.254.169.254`). TLS certificate verification is enforced (previously disabled).
-- **File uploads (image/PDF/QR/email) are capped at 8 MB** server-side, independent of any reverse proxy in front of the service, to prevent memory exhaustion during OCR/PDF parsing.
-- **No fabricated ML fallback**: if neither the remote ML microservice nor the in-process model can produce a real prediction, the API returns a `503 MODEL_UNAVAILABLE` error. There is no keyword-heuristic tier that manufactures a plausible-looking probability, confidence score, or model name when the real model is unavailable.
-
-### Known limitations
-
-- Scans happen when a user submits something; there is no automatic SMS or call interception (that would need a native Android app).
-- Domain age depends on the public RDAP service; if it is unreachable the trust score says "registration date not available".
-- The Indian scam supplement is curated by the team, not field-collected; accuracy is reported on separately written hold-out sets.
-- No real third-party CAPTCHA, no independent SPF/DKIM/DMARC DNS verification, and CAPTCHA/login-attempt state is in-process (single instance).
-
-### CAPTCHA / abuse protection (added)
-
-Registration and step-up login protection now use a real, self-hosted, stateless CAPTCHA (`app_service/core/captcha.py`, 11 tests): a short arithmetic challenge with an HMAC-SHA256-signed, time-limited token -- no server-side storage needed, tamper-evident, timing-safe verification. This is honestly scoped as a lightweight bot-friction mechanism, not a claim of parity with a third-party CAPTCHA service (reCAPTCHA/hCaptcha/Turnstile), which would need external account credentials this environment doesn't have; swapping one in later only requires changing the verification call site.
-
-- **Registration**: always requires a solved CAPTCHA.
-- **Login**: only requires one after 3 failed attempts for that email within 15 minutes (`app_service/core/login_attempts.py`) -- not on every normal login. That tracker is in-process (documented limitation: resets on restart, not shared across multiple app_service replicas; a multi-instance deployment would need to move it to Redis or the database).
-
-### URL intelligence (added)
-
-URL analysis now computes real, deterministic signals from the URL string itself (`ml_common/security/url_intelligence.py`, 20+ tests): punycode/IDN detection, IP-literal hosts, known URL shorteners, a short list of TLDs commonly abused in phishing campaigns, userinfo-obfuscation (`user@host` tricks), and lookalike/brand-impersonation detection via edit distance against a small explicit brand list. This is a best-effort heuristic layer, not a full public-suffix-list implementation or a live reputation/WHOIS/TLS lookup -- it does not claim domain age, certificate details, or a definitive verdict, only what's structurally observable in the URL text. TLS certificate metadata (subject/issuer/expiry) is best-effort and untested against a live host from this project's own dev environment. Results are surfaced as "Observed URL signals," kept explicitly separate from the model's own interpretation.
-
-### Model evaluation (extended)
-
-`ModelEvaluator` (`ml_training/evaluation/evaluator.py`) computes real accuracy/precision/recall/F1/ROC-AUC/false-positive-rate via scikit-learn, plus the raw confusion matrix counts. The production model (`logistic_regression` v4) is trained on ScamGuard-IN-2026 (`backend/ml_training/datasets/scamguard_in_2026/`), split by scam campaign so no near-duplicate of a test message is seen in training. `python -m ml_training.research.run_experiments` reproduces every reported number; `results.md` holds the tables.
+</details>
 
 ---
 
