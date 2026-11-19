@@ -1,0 +1,15 @@
+\chapter{Conclusion}
+ScamGuard spots scam and spam SMS aimed at Indian users and tells them why. Trained on our audited ScamGuard-IN-2026 corpus and tested with a campaign-aware split, the deployed detector gets 97.1\% of real messages from unseen campaigns right with 3.2\% false alarms, and it shows the exact phrases behind every verdict.
+
+The cross-domain study that our guide proposed adds a second lesson. A classifier of the same kind, trained on another country's messages, loses about a third of its F1 on Indian SMS, and a small, carefully labelled local sample is enough to win it back. Anyone deploying such a filter should test it on local data first and label a few hundred local messages before turning to a heavier model.
+
+All of this runs in a live application: quick check, full analysis, Hindi support, safety tools, a cross-domain page and a Streamlit demo. Every number in this report can be regenerated from the project repository.
+
+\vspace{6pt}\noindent{\large\textbf{Future Enhancements}}
+\begin{itemize}
+\item Finish collecting the 2026 test set and repeat both evaluations on it.
+\item Add a second annotator to the label audit and report their agreement.
+\item Widen the cross-domain study to more target datasets and seeds, and try adaptation with less than 10\% of the pool.
+\item Undo disguised spellings before features are built, and test against attackers who adapt or paraphrase.
+\item Cover more Indian languages and compare small transformer models under the same protocols.
+\end{itemize}

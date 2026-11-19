@@ -41,7 +41,7 @@ Deployed system (classifier + intent rules) on **1,874 real held-out Indian SMS 
 
 - **No leakage:** train/test are split by scam campaign, so no near-duplicate of a test message is seen in training. With a random split, 793 test rows would have had a near-duplicate in training.
 - **Reproducible:** `python -m ml_training.research.run_experiments` regenerates every number; `results.md` holds the tables.
-- **Tested:** 820 backend tests (pytest) and 14 frontend tests (Vitest), verified on Python 3.10 to 3.14.
+- **Tested:** 836 backend tests (pytest) and 14 frontend tests (Vitest), verified on Python 3.10 to 3.14.
 
 ---
 
@@ -68,7 +68,7 @@ Deployed system (classifier + intent rules) on **1,874 real held-out Indian SMS 
 - **Flashcards** — eight flip cards that show a new user how to use every part of ScamGuard, three steps each (`/flashcards`).
 - **English/Hindi interface**, installable **PWA with Android share target**, and a **Chrome/Edge/Brave extension** (`browser-extension/`).
 
-**Platform** — JWT auth with refresh rotation, bcrypt, self-hosted CAPTCHA, per-visitor rate limits, SSRF-safe URL fetching, CSP, admin model evaluation and robustness testing, 600+ automated tests.
+**Platform** — JWT auth with refresh rotation, bcrypt, self-hosted CAPTCHA, per-visitor rate limits, SSRF-safe URL fetching, CSP, admin model evaluation and robustness testing, 850 automated tests.
 
 ---
 
@@ -149,7 +149,7 @@ Starts PostgreSQL, the backend, the optional separate ML service and the fronten
 
 ## 🧪 Testing and Verification
 
-The project includes **820 backend tests** (pytest) and **14 frontend tests** (Vitest), verified on Python 3.10 to 3.14.
+The project includes **836 backend tests** (pytest) and **14 frontend tests** (Vitest), verified on Python 3.10 to 3.14.
 
 Run all tests:
 ```bash
@@ -177,7 +177,7 @@ python -m pytest ml_common/tests ml_training/tests -v
 
 - Scans happen when a user submits something; there is no automatic SMS or call interception (that would need a native Android app).
 - Domain age depends on the public RDAP service; if it is unreachable the trust score says "registration date not available".
-- The Indian scam supplement is curated by the team, not field-collected; accuracy is reported on separately written hold-out sets.
+- ScamGuard-IN-2026 mixes audited real messages with synthetic ones used for training only; the reported accuracy comes from 1,874 real messages in campaigns held out from training, and most reported messages date from 2022–2024.
 - No real third-party CAPTCHA, no independent SPF/DKIM/DMARC DNS verification, and CAPTCHA/login-attempt state is in-process (single instance).
 
 </details>
