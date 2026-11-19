@@ -1,0 +1,72 @@
+\documentclass[12pt,a4paper]{report}
+
+% Packages
+\usepackage{setspace}           % Line spacing
+\usepackage[a4paper, left=1.25in, right=1in, top=1in, bottom=1in]{geometry}
+\usepackage{titlesec}           % Chapter/section formatting
+\usepackage{fancyhdr}           % Header/Footer
+\usepackage{graphicx}           % Figures
+\usepackage[hidelinks]{hyperref}  % Hyperlinks
+\usepackage{tocloft}            % TOC formatting
+\usepackage{etoolbox}
+\usepackage{amsmath}
+\usepackage[no-math]{fontspec}
+\usepackage{mathptmx}           % Times-compatible mathematics
+\setmainfont{texgyretermes}[Path=/usr/share/texmf/fonts/opentype/public/tex-gyre/, Extension=.otf, UprightFont=*-regular, BoldFont=*-bold, ItalicFont=*-italic, BoldItalicFont=*-bolditalic, Ligatures={TeX,NoCommon}] % Times New Roman equivalent
+\renewcommand{\texttt}[1]{\textrm{#1}}  % keep code-like words in Times as well
+\renewcommand{\labelitemi}{$\bullet$}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{float}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,shapes.multipart,fit,calc}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{caption}
+\usepackage{enumitem}
+\usepackage[section]{placeins}  % keep figures and tables inside their own section
+\usepackage{needspace}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\captionsetup{font=small, labelfont=bf, labelsep=colon, justification=centering}
+\captionsetup[table]{position=top, skip=6pt}
+\setlist{itemsep=3pt, topsep=4pt, parsep=0pt}
+\setlength{\parskip}{6pt}
+\renewcommand{\arraystretch}{1.25}
+
+% Line spacing
+\onehalfspacing
+
+% Title formatting
+\titleformat{\chapter}[hang]{\bfseries\LARGE\raggedright\hyphenpenalty=10000}{\thechapter}{0.6em}{}
+\titleformat{\section}[hang]{\bfseries\Large}{\thesection}{1em}{}
+\titleformat{\subsection}[hang]{\bfseries\large}{\thesubsection}{1em}{}
+\titlespacing*{\chapter}{0pt}{0pt}{18pt}
+\titlespacing*{\section}{0pt}{14pt}{8pt}
+\titlespacing*{\subsection}{0pt}{10pt}{6pt}
+% never leave a heading alone at the bottom of a page
+\pretocmd{\section}{\Needspace*{7\baselineskip}}{}{}
+\pretocmd{\subsection}{\Needspace*{5\baselineskip}}{}{}
+
+% Page style: number at bottom right, no header
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\rfoot{\thepage}
+\fancypagestyle{plain}{\fancyhf{}\renewcommand{\headrulewidth}{0pt}\rfoot{\thepage}}
+\setcounter{tocdepth}{1}  % Contents shows chapters and sections, as in the template
+\setcounter{secnumdepth}{3}
+\renewcommand{\cftchapfont}{\bfseries}
+\renewcommand{\cftchappagefont}{\bfseries}
+\titleformat{\subsubsection}[hang]{\bfseries\normalsize}{\thesubsubsection}{1em}{}
+
+% ---- template-specific additions ----
+\renewcommand{\cftchapleader}{\cftdotfill{\cftdotsep}}  % dotted leaders for chapters too
+\setlength{\cftbeforechapskip}{6pt}
+\newcommand{\appendixchapter}[1]{%
+  \chapter*{\raggedright #1}\addcontentsline{toc}{chapter}{#1}%
+  \markboth{#1}{#1}}
+\numberwithin{equation}{chapter}
+\hypersetup{pdftitle={ScamGuard: AI-Based Online Scam and Fraud Detection System - Project Report},
+            pdfauthor={Bhavya Goyal, Priyam Thakur, Samir Chaudhary, Sana Subodh}}
+\setlength{\emergencystretch}{1.5em}
