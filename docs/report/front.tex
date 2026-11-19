@@ -108,7 +108,7 @@ This report presents ScamGuard, an AI-based system that classifies a message as 
 
 We construct ScamGuard-IN-2026, a corpus of 11,399 Indian messages drawn from public smishing reports, real Indian SMS, 2025--26 advisory texts and synthetic messages restricted to training. An audit shows that 19.5\% of the retained reports are in fact genuine bank alerts, OTP notices or advertisements. Near-duplicate messages are clustered into campaigns using MinHash, and each campaign is assigned entirely to either the training or the test partition to prevent leakage.
 
-On 1,874 real messages from unseen campaigns, the system achieves 97.1\% accuracy with a 3.2\% false-alarm rate. Training the same model on the unaudited report labels raises the false-alarm rate to 34.0\%.
+On 1,874 real messages from unseen campaigns, the system achieves 97.1\% accuracy with a 3.2\% false-alarm rate. Trained on the unaudited report labels instead, the classifier's false-alarm rate rises from 2.6\% to 34.0\%.
 
 A cross-domain study shows that a filter trained on the UK-based UCI SMS Spam Collection drops from a spam F1 of 0.911 to 0.678 on Indian SMS. Adding only 10\% of a labelled Indian pool (143 messages) restores the F1 to 0.964. ScamGuard is deployed as a web application with a Streamlit demonstration.
 \clearpage
