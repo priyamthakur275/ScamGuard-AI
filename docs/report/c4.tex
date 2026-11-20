@@ -35,7 +35,7 @@ Cross-domain service & Serves the baseline and adapted models, with explanations
 \hline
 Back end (API) & Sign-in, rate limits, storage, reports and safety tools & REST over HTTPS, JSON \\
 \hline
-Front end & Quick check, analysis, dashboard, tools, cross-domain page, Hindi interface & Browser; calls the REST API \\
+Front end & Quick check, analysis, dashboard, tools, cross-domain page & Browser; calls the REST API \\
 \hline
 Streamlit app & Separate demo of the study & Loads the saved models and never retrains them \\
 \hline
@@ -79,7 +79,7 @@ The class diagrams outline the object-oriented structure of the back end. Figure
 \label{fig:seq}
 \end{figure}
 
-\textbf{Interfaces.} The FastAPI back end exposes REST routes for sign-in, scans, history, cases, analytics, the copilot, the safety tools and the cross-domain study. The Next.js front end calls them through its own origin and offers the quick check, full analysis, dashboard, safety tools and cross-domain page in English and Hindi.
+\textbf{Interfaces.} The FastAPI back end exposes REST routes for sign-in, scans, history, cases, analytics, the copilot, the safety tools and the cross-domain study. The Next.js front end calls them through its own origin and offers the quick check, full analysis, dashboard, safety tools and cross-domain page.
 \begin{itemize}
 \item \textbf{Endpoints.} The three classification routes are listed in Table~\ref{tab:endpoints}. Further routes cover sign-in, history, cases, analytics, the copilot and the safety tools.
 \item \textbf{Authentication.} Short-lived signed access tokens paired with refresh tokens; passwords kept as bcrypt hashes.
