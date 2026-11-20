@@ -58,6 +58,6 @@ To start completely fresh: close the terminal, delete `backend/.venv`, `frontend
 
 - **Backend**: FastAPI on http://127.0.0.1:8000, local SQLite database (`backend/app_service/scam_detection.db`, created automatically). The production model (logistic regression v4, trained on ScamGuard-IN-2026) runs in-process.
 - **Frontend**: Next.js dev server on http://localhost:3000; it forwards `/backend-api/*` to the backend, so the browser talks to one address.
-- **Live site** (separate): https://scamguard-ai-zeta.vercel.app (Vercel + Render + Neon).
+- **Live site** (separate): https://scamguard-frontend-r6t7.onrender.com (Render + Neon).
 
 Keep `backend/.env` private: it holds your local secret key and is git-ignored.
