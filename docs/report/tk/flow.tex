@@ -6,7 +6,7 @@
 \node[box, below=of b] (c) {Group near-duplicates into campaigns (MinHash LSH)};
 \node[box, below=of c] (d) {Audit labels: rule-confirmed, manual review,\\second pass on model disagreements};
 \node[box, below=of d] (e) {Split by campaign: train / development / test};
-\node[box, below=of e] (f) {Preprocess: clean, tokenise (Latin + Devanagari)};
+\node[box, below=of e] (f) {Preprocess: clean, tokenise};
 \node[box, below=of f] (g) {TF-IDF word + character features; train classifiers};
 \node[box, below=of g] (h) {Select model on development split; evaluate on test};
 \node[box, below=of h] (i) {Register the trained model; serve with intent rules and explanations};
