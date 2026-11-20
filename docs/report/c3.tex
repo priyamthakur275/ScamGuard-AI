@@ -95,12 +95,12 @@ Front end & Next.js 14.2, React 18.3, Tailwind CSS 3.4, Recharts, Vitest \\
 \hline
 Database & PostgreSQL (Neon) in production, SQLite locally \\
 \hline
-Deployment & Vercel (front end), Render (back end), GitHub Actions (continuous integration) \\
+Deployment & Free cloud tiers (front end and back end), GitHub Actions (continuous integration) \\
 \hline
 \end{tabular}
 \end{table}
 
-\textbf{Cost estimation.} ScamGuard was built as a student project on free tiers and open-source software, so the cost of building and running it at the present scale is zero. Python, scikit-learn, FastAPI, Next.js, Streamlit, Jupyter and VS Code are open source and cost nothing. All three public datasets (the IMC 2025 smishing reports, the UCI SMS Spam Collection and the India Spam SMS collection) were used under their open licences and cost nothing. The front end runs on the free Hobby plan of Vercel, the back end on the free plan of Render and the database on the free plan of Neon. The copilot calls a hosted language model within its free quota; a daily cap and a per-visitor limit keep it inside that quota. The total estimated cost is zero for development and hosting.
+\textbf{Cost estimation.} ScamGuard was built as a student project on free tiers and open-source software, so the cost of building and running it at the present scale is zero. Python, scikit-learn, FastAPI, Next.js, Streamlit, Jupyter and VS Code are open source and cost nothing. All three public datasets (the IMC 2025 smishing reports, the UCI SMS Spam Collection and the India Spam SMS collection) were used under their open licences and cost nothing. The back end runs on the free plan of Render and the database on the free plan of Neon. The copilot calls a hosted language model within its free quota; a daily cap and a per-visitor limit keep it inside that quota. The total estimated cost is zero for development and hosting.
 
 \section{Data Requirements}
 The work needs three kinds of labelled text, each with a clear licence:
@@ -147,7 +147,7 @@ New scam types are missing from training data & Synthetic training messages, int
 \hline
 Disguised spellings (K.Y.C, bl0cked) & Caught by the intent rules; normalising them before features are built is left for future work \\
 \hline
-The free-tier server falls asleep & Keep-alive pings, front end hosted on Vercel, automatic retries \\
+The free-tier server falls asleep & Keep-alive pings, automatic retries \\
 \hline
 The outside AI service is slow or down & Time limits and fallback answers; the detector itself never depends on it \\
 \hline
