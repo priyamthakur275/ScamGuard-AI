@@ -1,4 +1,6 @@
 \pagenumbering{gobble}
+\fancypagestyle{plain}{\fancyhf{}\renewcommand{\headrulewidth}{0pt}}
+\pagestyle{empty}
 \begin{titlepage}
   \centering
   {\Huge \textbf{ScamGuard: AI-Based Online\\[0.2cm] Scam and Fraud Detection System}}\\[1.0cm]
@@ -6,10 +8,10 @@
   {\Large \textbf{PROJECT REPORT}}\\[0.3cm]
   {\large Submitted by}\\[0.2cm]
   {\large Group Number: 56}\\[0.5cm]
-  {\large BHAVYA GOYAL (1BM23CS063)}\\[0.35cm]
-  {\large PRIYAM THAKUR (1BM23CS252)}\\[0.35cm]
-  {\large SAMIR CHAUDHARY (1BM23CS294)}\\[0.35cm]
-  {\large SANA SUBODH (1BM23CS296)}\\[0.7cm]
+  {\large Bhavya Goyal (1BM23CS063)}\\[0.35cm]
+  {\large Priyam Thakur (1BM23CS252)}\\[0.35cm]
+  {\large Samir Chaudhary (1BM23CS294)}\\[0.35cm]
+  {\large Sana Subodh (1BM23CS296)}\\[0.7cm]
   {\itshape in partial fulfillment for the award of the degree of}\\[0.2cm]
   {\Large \textbf{BACHELOR OF ENGINEERING}}\\[0.2cm]
   {\large in}\\[0.2cm]
@@ -27,7 +29,7 @@
 
 \chapter*{\centering Certificate}
 \vspace{0.5cm}
-This is to certify that the project report entitled \textbf{``ScamGuard: AI-Based Online Scam and Fraud Detection System''} is a bonafide work carried out by \textbf{BHAVYA GOYAL (USN: 1BM23CS063)}, \textbf{PRIYAM THAKUR (USN: 1BM23CS252)}, \textbf{SAMIR CHAUDHARY (USN: 1BM23CS294)} and \textbf{SANA SUBODH (USN: 1BM23CS296)} in partial fulfillment of the requirements for the award of the degree of Bachelor of Engineering in Computer Science and Engineering, under my supervision during the academic year 2026--27.
+This is to certify that the project report entitled \textbf{``ScamGuard: AI-Based Online Scam and Fraud Detection System''} is a bonafide work carried out by \textbf{Bhavya Goyal (USN: 1BM23CS063)}, \textbf{Priyam Thakur (USN: 1BM23CS252)}, \textbf{Samir Chaudhary (USN: 1BM23CS294)} and \textbf{Sana Subodh (USN: 1BM23CS296)} in partial fulfillment of the requirements for the award of the degree of Bachelor of Engineering in Computer Science and Engineering, under my supervision during the academic year 2026--27.
 
 \vspace{2.2cm}
 \noindent
@@ -38,14 +40,27 @@ Professor & Professor and Head & Principal\\
 Dept. of CSE, BMSCE & Dept. of CSE, BMSCE & BMSCE
 \end{tabular}
 
-\vspace{2cm}
-\noindent Name and signature of Examiners along with date
+\vspace{1.6cm}
+\noindent\textbf{External Viva}\\
+Name and signature of Examiners along with date
 
 \vspace{1.5cm}
 \noindent Examiner 1
 
 \vspace{1.5cm}
 \noindent Examiner 2
+\clearpage
+
+\chapter*{\centering Abstract}
+SMS remains a primary vector for financial fraud in India. Fraudulent messages imitate bank KYC reminders, electricity disconnection notices, parcel updates and job offers. Public smishing collections consist only of user-reported messages and lack a verified genuine class, so models trained on them learn to treat genuine bank messages as scams.
+
+This report presents ScamGuard, an AI-based system that classifies a message as scam or genuine, identifies the phrases that influenced the decision and recommends a safe course of action. The detector combines logistic regression over word and character TF-IDF features with 31 interpretable intent patterns.
+
+We construct ScamGuard-IN-2026, a corpus of 11,399 Indian messages drawn from public smishing reports, real Indian SMS, 2025--26 advisory texts and synthetic messages restricted to training. An audit shows that 19.5\% of the retained reports are in fact genuine bank alerts, OTP notices or advertisements. Near-duplicate messages are clustered into campaigns using MinHash, and each campaign is assigned entirely to either the training or the test partition to prevent leakage.
+
+On 1,874 real messages from unseen campaigns, the system achieves 97.1\% accuracy with a 3.2\% false-alarm rate. Trained on the unaudited report labels instead, the classifier's false-alarm rate rises from 2.6\% to 34.0\%.
+
+A cross-domain study shows that a filter trained on the UK-based UCI SMS Spam Collection drops from a spam F1 of 0.911 to 0.678 on Indian SMS. Adding only 10\% of a labelled Indian pool (143 messages) restores the F1 to 0.964. ScamGuard is deployed as a web application with a Streamlit demonstration.
 \clearpage
 
 \chapter*{\centering DECLARATION}
@@ -58,13 +73,13 @@ We hereby declare that the Major Project Phase-2 work entitled ``ScamGuard: AI-B
 \hline
 \textbf{SL. NO.} & \textbf{Student Name} & \textbf{USN} & \textbf{Student's Signature} \\
 \hline
-1 & BHAVYA GOYAL & 1BM23CS063 & \hspace{3cm} \\[0.35cm]
+1 & Bhavya Goyal & 1BM23CS063 & \hspace{3cm} \\[0.35cm]
 \hline
-2 & PRIYAM THAKUR & 1BM23CS252 & \\[0.35cm]
+2 & Priyam Thakur & 1BM23CS252 & \\[0.35cm]
 \hline
-3 & SAMIR CHAUDHARY & 1BM23CS294 & \\[0.35cm]
+3 & Samir Chaudhary & 1BM23CS294 & \\[0.35cm]
 \hline
-4 & SANA SUBODH & 1BM23CS296 & \\[0.35cm]
+4 & Sana Subodh & 1BM23CS296 & \\[0.35cm]
 \hline
 \end{tabular}
 \end{center}
@@ -99,21 +114,11 @@ Finally, we express our deepest gratitude to our families for their unconditiona
 \clearpage
 
 % Preliminary pages carry no page number; arabic page 1 starts at the Introduction.
-\pagenumbering{gobble}
-\setcounter{page}{1}
-\chapter*{\centering Abstract}
-SMS remains a primary vector for financial fraud in India. Fraudulent messages imitate bank KYC reminders, electricity disconnection notices, parcel updates and job offers. Public smishing collections consist only of user-reported messages and lack a verified genuine class, so models trained on them learn to treat genuine bank messages as scams.
-
-This report presents ScamGuard, an AI-based system that classifies a message as scam or genuine, identifies the phrases that influenced the decision and recommends a safe course of action. The detector combines logistic regression over word and character TF-IDF features with 31 interpretable intent patterns.
-
-We construct ScamGuard-IN-2026, a corpus of 11,399 Indian messages drawn from public smishing reports, real Indian SMS, 2025--26 advisory texts and synthetic messages restricted to training. An audit shows that 19.5\% of the retained reports are in fact genuine bank alerts, OTP notices or advertisements. Near-duplicate messages are clustered into campaigns using MinHash, and each campaign is assigned entirely to either the training or the test partition to prevent leakage.
-
-On 1,874 real messages from unseen campaigns, the system achieves 97.1\% accuracy with a 3.2\% false-alarm rate. Trained on the unaudited report labels instead, the classifier's false-alarm rate rises from 2.6\% to 34.0\%.
-
-A cross-domain study shows that a filter trained on the UK-based UCI SMS Spam Collection drops from a spam F1 of 0.911 to 0.678 on Indian SMS. Adding only 10\% of a labelled Indian pool (143 messages) restores the F1 to 0.964. ScamGuard is deployed as a web application with a Streamlit demonstration.
 \clearpage
+\setcounter{page}{1}
 \renewcommand{\contentsname}{\centering Contents}
 \tableofcontents
 \clearpage
+\setrealplain\pagestyle{fancy}
 \pagenumbering{arabic}
 \setcounter{page}{1}

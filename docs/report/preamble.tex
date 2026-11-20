@@ -38,23 +38,30 @@
 \onehalfspacing
 
 % Title formatting
-\titleformat{\chapter}[hang]{\bfseries\LARGE\raggedright\hyphenpenalty=10000}{\thechapter}{0.6em}{}
-\titleformat{\section}[hang]{\bfseries\Large}{\thesection}{1em}{}
-\titleformat{\subsection}[hang]{\bfseries\large}{\thesubsection}{1em}{}
-\titlespacing*{\chapter}{0pt}{0pt}{18pt}
+\titleformat{\chapter}[block]{\bfseries\LARGE\centering\hyphenpenalty=10000}{Chapter \thechapter}{0.4em}{}
+\titleformat{\section}[hang]{\bfseries\large}{\thesection}{0.8em}{}
+\titleformat{\subsection}[hang]{\bfseries\normalsize}{\thesubsection}{0.8em}{}
+\titlespacing*{\chapter}{0pt}{0pt}{16pt}
 \titlespacing*{\section}{0pt}{14pt}{8pt}
 \titlespacing*{\subsection}{0pt}{10pt}{6pt}
 % never leave a heading alone at the bottom of a page
 \pretocmd{\section}{\Needspace*{7\baselineskip}}{}{}
 \pretocmd{\subsection}{\Needspace*{5\baselineskip}}{}{}
 
-% Page style: number at bottom right, no header
+% Page style as in the reference report: italic title header with a rule,
+% footer "Dept. of CSE, BMSCE" on the left and "Page n" on the right
 \pagestyle{fancy}
 \fancyhf{}
-\renewcommand{\headrulewidth}{0pt}
-\rfoot{\thepage}
-\fancypagestyle{plain}{\fancyhf{}\renewcommand{\headrulewidth}{0pt}\rfoot{\thepage}}
-\setcounter{tocdepth}{1}  % Contents shows chapters and sections, as in the template
+\setlength{\headheight}{16pt}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancyhead[L]{\itshape\small ScamGuard: AI-Based Online Scam and Fraud Detection System}
+\fancyfoot[L]{\itshape\small Dept. of CSE, BMSCE}
+\fancyfoot[R]{\itshape\small Page \thepage}
+\newcommand{\setrealplain}{\fancypagestyle{plain}{\fancyhf{}\renewcommand{\headrulewidth}{0.4pt}%
+  \fancyhead[L]{\itshape\small ScamGuard: AI-Based Online Scam and Fraud Detection System}%
+  \fancyfoot[L]{\itshape\small Dept. of CSE, BMSCE}\fancyfoot[R]{\itshape\small Page \thepage}}}
+\setrealplain
+\setcounter{tocdepth}{3}  % chapters, sections and sub-sections as in the reference report
 \setcounter{secnumdepth}{3}
 \renewcommand{\cftchapfont}{\bfseries}
 \renewcommand{\cftchappagefont}{\bfseries}
@@ -64,7 +71,7 @@
 \renewcommand{\cftchapleader}{\cftdotfill{\cftdotsep}}  % dotted leaders for chapters too
 \setlength{\cftbeforechapskip}{6pt}
 \newcommand{\appendixchapter}[1]{%
-  \chapter*{\raggedright #1}\addcontentsline{toc}{chapter}{#1}%
+  \chapter*{#1}\addcontentsline{toc}{chapter}{#1}%
   \markboth{#1}{#1}}
 \numberwithin{equation}{chapter}
 \hypersetup{pdftitle={ScamGuard: AI-Based Online Scam and Fraud Detection System - Project Report},
