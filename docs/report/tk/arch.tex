@@ -10,11 +10,11 @@
 \node[off] (reg)   at (3*\dx,0)    {Model registry\\(versioned files)};
 % request row
 \node[box] (ui)    at (0,-2.2)     {Web app\\(Next.js)};
-\node[box] (api)   at (\dx,-2.2)   {FastAPI back end\\(cloud)};
+\node[box] (api)   at (\dx,-2.2)   {FastAPI\\back end};
 \node[box] (pre)   at (2*\dx,-2.2) {Cleaner +\\tokenizer};
 \node[box] (clf)   at (3*\dx,-2.2) {TF-IDF +\\logistic regression};
 % response row
-\node[box] (db)    at (0,-4.4)     {PostgreSQL\\(Neon)};
+\node[box] (db)    at (0,-4.4)     {PostgreSQL\\database};
 \node[box] (expl)  at (\dx,-4.4)   {Scam X-Ray,\\TrustLens};
 \node[box] (fuse)  at (2*\dx,-4.4) {Fusion, guards,\\risk score};
 \node[box] (rules) at (3*\dx,-4.4) {Intent and\\protective rules};
