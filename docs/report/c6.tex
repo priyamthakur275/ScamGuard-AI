@@ -313,7 +313,7 @@ The results should be read with the following limits in mind.
 \item \textbf{Only two domains.} With one source and one target dataset, the study cannot claim that the findings hold for every pair of domains. Three seeds also give only a rough idea of the spread.
 \item \textbf{An easy cue in Dataset B.} Not one ham message in it has a URL, whereas 87\% of its spam does. An adapted model can lean on that cue, and real messages will not always be so tidy.
 \item \textbf{Disguised spellings.} The main detector's cleaner strips dotted and digit-swapped spellings before building features. The intent rules catch many such messages, but we have not tested attackers who adapt to the system.
-\item \textbf{Scope.} The system judges single messages in English and Hindi only, and in the cross-domain study ``spam'' also covers legitimate promotions.
+\item \textbf{Scope.} The system judges single messages only, and in the cross-domain study ``spam'' also covers legitimate promotions.
 \end{itemize}
 
 \section{Conclusion}
