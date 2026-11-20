@@ -4,7 +4,7 @@
 
 ### Real-time detection of phishing, UPI/banking fraud, lottery scams and social engineering across SMS, links, emails, screenshots, PDFs, QR codes and voice calls, with explainable verdicts.
 
-[![Live Demo](https://img.shields.io/badge/Live_Demo-scamguard--ai--zeta.vercel.app-14b8a6?style=for-the-badge&logo=vercel&logoColor=white)](https://scamguard-ai-zeta.vercel.app)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-scamguard--frontend--r6t7.onrender.com-14b8a6?style=for-the-badge&logo=render&logoColor=white)](https://scamguard-frontend-r6t7.onrender.com)
 [![Tests](https://img.shields.io/badge/Tests-820_backend_·_14_frontend-22c55e?style=for-the-badge&logo=pytest&logoColor=white)](#-testing-and-verification)
 [![Accuracy](https://img.shields.io/badge/Accuracy-97.1%25_on_1,874_real_SMS-f59e0b?style=for-the-badge)](backend/ml_training/research/results.md)
 
@@ -17,7 +17,7 @@
 ![Gemini](https://img.shields.io/badge/Google_Gemini-8E75B2?logo=googlegemini&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
 
-**[Try the live demo](https://scamguard-ai-zeta.vercel.app)** (use **"Try the demo account"**, or paste a message into the quick check on the home page; no account needed)
+**[Try the live demo](https://scamguard-frontend-r6t7.onrender.com)** (use **"Try the demo account"**, or paste a message into the quick check on the home page; no account needed)
 
 </div>
 
