@@ -93,14 +93,14 @@ Back end & FastAPI 0.115, Uvicorn, SQLAlchemy 2.0, Alembic, Pydantic 2, SlowAPI,
 \hline
 Front end & Next.js 14.2, React 18.3, Tailwind CSS 3.4, Recharts, Vitest \\
 \hline
-Database & PostgreSQL (Neon) in production, SQLite locally \\
+Database & PostgreSQL in production, SQLite locally \\
 \hline
 Deployment & Free cloud tiers (front end and back end), GitHub Actions (continuous integration) \\
 \hline
 \end{tabular}
 \end{table}
 
-\textbf{Cost estimation.} ScamGuard was built as a student project on free tiers and open-source software, so the cost of building and running it at the present scale is zero. Python, scikit-learn, FastAPI, Next.js, Streamlit, Jupyter and VS Code are open source and cost nothing. All three public datasets (the IMC 2025 smishing reports, the UCI SMS Spam Collection and the India Spam SMS collection) were used under their open licences and cost nothing. The back end runs on the free plan of Render and the database on the free plan of Neon. The copilot calls a hosted language model within its free quota; a daily cap and a per-visitor limit keep it inside that quota. The total estimated cost is zero for development and hosting.
+\textbf{Cost estimation.} ScamGuard was built as a student project on free tiers and open-source software, so the cost of building and running it at the present scale is zero. Python, scikit-learn, FastAPI, Next.js, Streamlit, Jupyter and VS Code are open source and cost nothing. All three public datasets (the IMC 2025 smishing reports, the UCI SMS Spam Collection and the India Spam SMS collection) were used under their open licences and cost nothing. The back end and the database run on free cloud plans. The copilot calls a hosted language model within its free quota; a daily cap and a per-visitor limit keep it inside that quota. The total estimated cost is zero for development and hosting.
 
 \section{Data Requirements}
 The work needs three kinds of labelled text, each with a clear licence:
