@@ -68,6 +68,7 @@ export interface CdResults {
   adaptation_summary: CdAdaptationRow[];
   confusion_seed42: { "Evaluation setting": string; TN: number; FP: number; FN: number; TP: number }[];
   group_aware: { Model: string; "Target data added": string; "F1, random split": string; "F1, group-aware split": string }[];
+  domain_characteristics?: { Domain: string; Messages: number; "Median length (chars)": number; "Has URL": number; "Mean share of words unseen in A-train": number }[];
 }
 
 /** One message through a saved model from the cross-domain study; nothing is stored. */

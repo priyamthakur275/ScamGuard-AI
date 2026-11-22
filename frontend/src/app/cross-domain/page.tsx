@@ -3,15 +3,8 @@
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { PublicShell } from "@/components/layout/public-shell";
-import { Button } from "@/components/ui/button";
-import {
-  crossDomainClassify,
-  getCrossDomainResults,
-  type CdClassification,
-  type CdClassifier,
-  type CdResults,
-  type CdVersion,
-} from "@/lib/api/public";
+import { ComparePanel } from "@/components/cross-domain/compare-panel";
+import { getCrossDomainResults, type CdResults } from "@/lib/api/public";
 import { cn } from "@/lib/utils";
 
 const AdaptationChart = dynamic(() => import("@/components/cross-domain/adaptation-chart"), {
@@ -19,47 +12,23 @@ const AdaptationChart = dynamic(() => import("@/components/cross-domain/adaptati
   loading: () => <div className="h-full w-full animate-pulse rounded bg-muted" aria-label="Loading chart" />,
 });
 
-const CLASSIFIERS: { id: CdClassifier; label: string }[] = [
-  { id: "logistic_regression", label: "Logistic Regression" },
-  { id: "naive_bayes", label: "Naive Bayes" },
-];
-const VERSIONS: { id: CdVersion; label: string; hint: string }[] = [
-  { id: "baseline", label: "Baseline", hint: "trained on UCI (UK) SMS only" },
-  { id: "adapted40", label: "Adapted", hint: "UCI + 40% of the labelled Indian pool" },
-];
 const pct = (v: number) => `${(v * 100).toFixed(1)}%`;
+const f3 = (v: number) => v.toFixed(3);
 
-function Choice<T extends string>({ value, options, onChange, label }: {
-  value: T; options: { id: T; label: string; hint?: string }[]; onChange: (v: T) => void; label: string;
-}) {
+function Step({ n, title, value, note, tone }: { n: number; title: string; value: string; note: string; tone?: "bad" | "good" }) {
   return (
-    <div>
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <div role="radiogroup" aria-label={label} className="mt-1 inline-flex border border-border">
-        {options.map((o) => (
-          <button
-            key={o.id}
-            role="radio"
-            aria-checked={value === o.id}
-            title={o.hint}
-            onClick={() => onChange(o.id)}
-            className={cn("px-3 py-2 text-sm", value === o.id ? "bg-primary text-primary-foreground" : "text-muted-foreground")}
-          >
-            {o.label}
-          </button>
-        ))}
+    <div className="flex-1 rounded-xl border border-border p-4">
+      <div className="flex items-center gap-2">
+        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">{n}</span>
+        <p className="text-sm font-medium">{title}</p>
       </div>
+      <p className={cn("mt-3 text-2xl font-bold tabular-nums", tone === "bad" ? "text-destructive" : tone === "good" ? "text-primary" : "")}>{value}</p>
+      <p className="mt-1 text-xs text-muted-foreground">{note}</p>
     </div>
   );
 }
 
 export default function CrossDomainPage() {
-  const [text, setText] = useState("");
-  const [classifier, setClassifier] = useState<CdClassifier>("logistic_regression");
-  const [version, setVersion] = useState<CdVersion>("adapted40");
-  const [result, setResult] = useState<CdClassification | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [study, setStudy] = useState<CdResults | null>(null);
   const [studyError, setStudyError] = useState<string | null>(null);
 
@@ -69,102 +38,72 @@ export default function CrossDomainPage() {
       .catch(() => setStudyError("Could not load the study results. The server may be waking up; refresh in a few seconds."));
   }, []);
 
-  async function classify() {
-    if (!text.trim()) return;
-    setBusy(true);
-    setError(null);
-    try {
-      setResult(await crossDomainClassify(text, classifier, version));
-    } catch {
-      setError("Could not classify the message. Try again in a few seconds.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  const maxContribution = Math.max(0.0001, ...(result?.top_features.map((f) => Math.abs(f.contribution)) ?? [0]));
+  const lrA = study?.within_vs_cross.find((r) => r.Model === "Logistic Regression" && r["Test domain"] === "Source A");
+  const lrB = study?.within_vs_cross.find((r) => r.Model === "Logistic Regression" && r["Test domain"] === "Target B");
+  const lr10 = study?.adaptation_summary.find((r) => r.model === "logistic_regression" && r.feature === "word" && r.target_fraction === 0.1);
+  const rowsA = Number(study?.dataset_statistics[0]?.["Rows after cleaning"] ?? 0);
+  const rowsB = Number(study?.dataset_statistics[1]?.["Rows after cleaning"] ?? 0);
+  const pool = rowsB - Math.round(rowsB * 0.3);
+  const added10 = Math.floor(pool * 0.1);
+  const dc = study?.domain_characteristics ?? [];
+  const uk = dc.find((d) => d.Domain.startsWith("A"));
+  const india = dc.find((d) => d.Domain === "B (India)");
+  const indiaSpam = dc.find((d) => d.Domain === "B spam");
 
   return (
     <PublicShell>
-      <p className="text-xs text-primary">Capstone research study</p>
+      <p className="text-xs text-primary">Research study · suggested by our guide</p>
       <h1 className="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">Cross-Domain SMS Spam Detection System</h1>
       <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-        A spam classifier trained on UK messages (UCI SMS Spam Collection) is tested on Indian SMS, then adapted by adding a small
-        labelled Indian sample. Try both versions on the same message. Spam = unwanted promotional or fraudulent SMS; ham = a normal
-        message. Nothing you type is stored.
+        Does a spam filter trained in one country work in another? We trained classifiers on UK messages (UCI SMS Spam Collection),
+        tested them on Indian SMS, then adapted them with a small labelled Indian sample. Spam = unwanted promotional or fraudulent SMS;
+        ham = a normal message.
       </p>
 
-      <section className="mt-6 border border-border p-5">
-        <div className="flex flex-wrap gap-6">
-          <Choice label="Classifier" value={classifier} options={CLASSIFIERS} onChange={(v) => { setClassifier(v); setResult(null); }} />
-          <Choice label="Model version" value={version} options={VERSIONS} onChange={(v) => { setVersion(v); setResult(null); }} />
-        </div>
-        <label htmlFor="cd-text" className="mt-4 block text-sm font-medium">SMS message</label>
-        <textarea
-          id="cd-text"
-          value={text}
-          maxLength={2000}
-          onChange={(e) => setText(e.target.value)}
-          rows={4}
-          placeholder="e.g. CONGRATULATIONS! FREE 2GB data is yours! Claim on the app now. Hurry i.airtel.in/e/..."
-          className="mt-1 w-full border border-border bg-background p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-        />
-        <div className="mt-3 flex items-center gap-3">
-          <Button onClick={classify} disabled={busy || !text.trim()}>{busy ? "Classifying…" : "Classify"}</Button>
-          <span className="text-xs text-muted-foreground">{VERSIONS.find((v) => v.id === version)?.hint}</span>
-        </div>
-        {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
+      {studyError && <p className="mt-4 text-sm text-destructive">{studyError}</p>}
+      {study && lrA && lrB && lr10 && (
+        <section className="mt-6" aria-label="The study in four steps">
+          <div className="flex flex-col gap-3 md:flex-row">
+            <Step n={1} title="Train on UK SMS" value={f3(lrA["F1-score"])} note={`Spam F1 on UK test data (Logistic Regression, ${rowsA.toLocaleString("en-IN")} UK messages)`} />
+            <Step n={2} title="Test on Indian SMS" value={f3(lrB["F1-score"])} tone="bad" note={`Same model on ${rowsB.toLocaleString("en-IN")} Indian messages: recall falls to ${pct(lrB.Recall)}, so about half the spam is missed`} />
+            <Step n={3} title="Add Indian examples" value={`+${added10}`} note={`Labelled Indian messages added (10% of the ${pool.toLocaleString("en-IN")}-message pool)`} />
+            <Step n={4} title="Test again" value={f3(lr10.B_f1_mean)} tone="good" note={`Spam F1 on the untouched Indian test set, mean of ${study.seeds.length} seeds`} />
+          </div>
+        </section>
+      )}
 
-        {result && (
-          <div className="mt-5 grid gap-5 lg:grid-cols-2">
-            <div>
-              <p className={cn("text-2xl font-semibold", result.label === "spam" ? "text-destructive" : "text-primary")}>
-                {result.label === "spam" ? "SPAM" : "HAM"}
-              </p>
-              <p className="mt-1 text-sm">Probability of spam: <span className="font-semibold tabular-nums">{result.spam_probability.toFixed(3)}</span></p>
-              <dl className="mt-3 space-y-1 text-xs text-muted-foreground">
-                <div><dt className="inline">Model: </dt><dd className="inline font-mono">{result.model.id}</dd></div>
-                <div><dt className="inline">Classifier: </dt><dd className="inline">{result.model.classifier}, {result.model.features}</dd></div>
-                <div><dt className="inline">Version: </dt><dd className="inline">{result.model.version}</dd></div>
-                {result.model.train_messages != null && (
-                  <div><dt className="inline">Trained on: </dt><dd className="inline">{result.model.train_messages.toLocaleString("en-IN")} messages, seed {result.model.seed}</dd></div>
-                )}
-                {result.model.target_test_f1 != null && (
-                  <div><dt className="inline">Spam F1 on the Indian final test set: </dt><dd className="inline">{result.model.target_test_f1.toFixed(3)}</dd></div>
-                )}
-              </dl>
+      <ComparePanel />
+
+      {uk && india && indiaSpam && (
+        <section className="mt-6 rounded-xl border border-border p-5">
+          <h2 className="text-xl font-semibold">Why the UK model struggles with Indian SMS</h2>
+          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-lg border border-border p-4">
+              <p className="text-xs text-muted-foreground">Words the UK model never saw</p>
+              <p className="mt-1 text-xl font-bold tabular-nums">{pct(uk["Mean share of words unseen in A-train"])} → {pct(india["Mean share of words unseen in A-train"])}</p>
+              <p className="mt-1 text-xs text-muted-foreground">UK test messages vs Indian messages</p>
             </div>
-            <div>
-              <p className="text-sm font-medium">Features behind this prediction</p>
-              <p className="text-xs text-muted-foreground">Red pushes towards spam, blue towards ham.</p>
-              {result.top_features.length === 0 ? (
-                <p className="mt-2 text-sm text-muted-foreground">None of the words in this message are in the model&apos;s vocabulary.</p>
-              ) : (
-                <ul className="mt-2 space-y-1">
-                  {result.top_features.map((f) => (
-                    <li key={f.feature} className="grid grid-cols-[8rem_1fr_3.5rem] items-center gap-2 text-xs">
-                      <span className="truncate font-mono" title={f.feature}>{f.feature}</span>
-                      <span className="h-2 bg-muted">
-                        <span
-                          className={cn("block h-2", f.contribution > 0 ? "bg-destructive" : "bg-primary")}
-                          style={{ width: `${(Math.abs(f.contribution) / maxContribution) * 100}%` }}
-                        />
-                      </span>
-                      <span className="text-right tabular-nums">{f.contribution > 0 ? "+" : ""}{f.contribution.toFixed(3)}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
+            <div className="rounded-lg border border-border p-4">
+              <p className="text-xs text-muted-foreground">Messages with a link</p>
+              <p className="mt-1 text-xl font-bold tabular-nums">{pct(uk["Has URL"])} → {pct(indiaSpam["Has URL"])}</p>
+              <p className="mt-1 text-xs text-muted-foreground">UK test messages vs Indian spam</p>
+            </div>
+            <div className="rounded-lg border border-border p-4">
+              <p className="text-xs text-muted-foreground">Median length</p>
+              <p className="mt-1 text-xl font-bold tabular-nums">{uk["Median length (chars)"]} → {india["Median length (chars)"]} chars</p>
+              <p className="mt-1 text-xs text-muted-foreground">UK test messages vs Indian messages</p>
             </div>
           </div>
-        )}
-      </section>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Indian spam names local brands and telecom offers (Airtel, Vi, Lenskart) and carries short links, which the UK data barely contains.
+          </p>
+        </section>
+      )}
 
-      <h2 className="mt-10 text-xl font-semibold">Experiment results</h2>
+      <h2 className="mt-10 text-xl font-semibold">Full experiment results</h2>
       <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
         Measured by the study notebook (research/cross_domain in the repository){study ? `; adaptation results are the mean over seeds ${study.seeds.join(", ")}` : ""}.
       </p>
-      {studyError && <p className="mt-3 text-sm text-destructive">{studyError}</p>}
       {!study && !studyError && <p className="mt-3 text-sm text-muted-foreground">Loading…</p>}
 
       {study && (
@@ -233,6 +172,15 @@ export default function CrossDomainPage() {
           </div>
         </>
       )}
+
+      <section className="mt-6 rounded-xl border border-border p-5 text-sm">
+        <h3 className="text-base font-semibold">How to reproduce it</h3>
+        <ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground">
+          <li>Open <span className="font-mono text-foreground">research/cross_domain/CrossDomain_SMS_Spam.ipynb</span> and run all cells (Jupyter or Google Colab). It downloads both datasets, cleans them and regenerates every number on this page.</li>
+          <li>The models on this page are the files that notebook saved: Naive Bayes and Logistic Regression, baseline and adapted, seed 42.</li>
+          <li>A standalone demo of the same models runs with <span className="font-mono text-foreground">streamlit run app/app.py</span>.</li>
+        </ul>
+      </section>
     </PublicShell>
   );
 }
