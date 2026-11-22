@@ -233,8 +233,8 @@ export default function SettingsPage() {
 
       {isDemo && (
         <p className="rounded-2xl border border-risk-medium/40 bg-risk-medium/10 p-4 text-sm">
-          This is the shared demo account, so the name, password and account can&apos;t be changed. Language, theme and
-          scanning choices still work.
+          This is the shared demo account, so the name, password and account can&apos;t be changed. Theme and scanning
+          choices still work.
         </p>
       )}
 
