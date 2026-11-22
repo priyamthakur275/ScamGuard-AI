@@ -8,7 +8,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth/auth-context";
 import { useTheme } from "@/lib/theme/theme-context";
-import { useLanguage } from "@/lib/i18n/language-context";
 import { changePassword, deleteAccount, exportUserData, updateProfile } from "@/lib/api/users";
 import { clearHistory } from "@/lib/api/messages";
 import { ApiError } from "@/lib/api/client";
@@ -90,7 +89,6 @@ export default function SettingsPage() {
   const { toast } = useToast();
   const { user, refreshUser, logout } = useAuth();
   const { theme, setTheme } = useTheme();
-  const { lang, setLang } = useLanguage();
   const isDemo = user?.email === DEMO_EMAIL;
 
   const [fullName, setFullName] = useState("");
@@ -259,12 +257,8 @@ export default function SettingsPage() {
         </form>
       </Section>
 
-      <Section id="look" title="Language and look" description="Applies on this device straight away.">
+      <Section id="look" title="Look" description="Applies on this device straight away.">
         <div className="flex flex-col gap-5">
-          <div>
-            <p className="mb-2 text-sm font-medium">Language</p>
-            <Segmented label="Language" value={lang} onChange={setLang} options={[["en", "English"], ["hi", "हिंदी"]] as const} />
-          </div>
           <div>
             <p className="mb-2 text-sm font-medium">Theme</p>
             <Segmented

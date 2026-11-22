@@ -5,8 +5,6 @@ import type { ReactNode } from "react";
 import { ShieldAlert } from "lucide-react";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { InstallAppButton } from "@/components/layout/install-app-button";
-import { ElderToggle } from "@/components/analysis/protect-features";
-import { LanguageToggle } from "@/components/layout/language-toggle";
 import { useLanguage } from "@/lib/i18n/language-context";
 import type { StringKey } from "@/lib/i18n/strings";
 
@@ -38,8 +36,6 @@ export function PublicShell({ children }: { children: ReactNode }) {
             </Link>
           ))}
           <InstallAppButton />
-          <ElderToggle />
-          <LanguageToggle />
           <ThemeToggle />
           <Link href="/login" className="font-medium text-muted-foreground hover:text-foreground">
             {t("nav.signin")}

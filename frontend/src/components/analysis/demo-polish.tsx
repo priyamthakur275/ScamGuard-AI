@@ -83,9 +83,9 @@ export function ScanProgress({ channel, label }: { channel: string; label?: stri
 }
 
 /* ------------------------------------------------------------------ */
-/* 3. Read the verdict aloud (browser speech, English or Hindi)        */
+/* 3. Read the verdict aloud (browser speech)                          */
 /* ------------------------------------------------------------------ */
-export function SpeakVerdict({ isScam, likelihood, category, lang }: { isScam: boolean; likelihood: number; category?: string | null; lang: "en" | "hi" }) {
+export function SpeakVerdict({ isScam, likelihood, category }: { isScam: boolean; likelihood: number; category?: string | null }) {
   const [speaking, setSpeaking] = useState(false);
   const supported = typeof window !== "undefined" && "speechSynthesis" in window;
   useEffect(() => () => { if (supported) window.speechSynthesis.cancel(); }, [supported]);
@@ -93,11 +93,7 @@ export function SpeakVerdict({ isScam, likelihood, category, lang }: { isScam: b
 
   const pct = Math.round(likelihood * 100);
   const text =
-    lang === "hi"
-      ? isScam
-        ? `सावधान! यह एक स्कैम है। स्कैम की संभावना ${pct} प्रतिशत है। कोई OTP, PIN या पैसा न भेजें, और 1930 पर रिपोर्ट करें।`
-        : `यह संदेश सुरक्षित लगता है। स्कैम की संभावना केवल ${pct} प्रतिशत है। फिर भी कभी अपना OTP किसी के साथ साझा न करें।`
-      : isScam
+    isScam
         ? `Warning. This is a scam${category ? `, ${category}` : ""}. Scam likelihood ${pct} percent. Do not share any OTP, PIN or money, and report it on 1930.`
         : `This message looks genuine. Scam likelihood is only ${pct} percent. Still, never share your OTP with anyone.`;
 
@@ -109,8 +105,8 @@ export function SpeakVerdict({ isScam, likelihood, category, lang }: { isScam: b
       return;
     }
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = lang === "hi" ? "hi-IN" : "en-IN";
-    const voice = synth.getVoices().find((v) => v.lang.toLowerCase().startsWith(lang === "hi" ? "hi" : "en-in"));
+    u.lang = "en-IN";
+    const voice = synth.getVoices().find((v) => v.lang.toLowerCase().startsWith("en-in"));
     if (voice) u.voice = voice;
     u.rate = 0.95;
     u.onend = () => setSpeaking(false);
@@ -128,7 +124,7 @@ export function SpeakVerdict({ isScam, likelihood, category, lang }: { isScam: b
       aria-label={speaking ? "Stop reading" : "Read the verdict aloud"}
     >
       {speaking ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-      {speaking ? "Stop" : lang === "hi" ? "सुनें" : "Read aloud"}
+      {speaking ? "Stop" : "Read aloud"}
     </button>
   );
 }

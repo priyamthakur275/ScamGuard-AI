@@ -47,7 +47,7 @@ interface VoiceScannerProps {
 export function VoiceScanner({ onSubmitTranscript, isScanning = false }: VoiceScannerProps) {
   const [liveSupported, setLiveSupported] = useState(false);
   const [mode, setMode] = useState<Mode>("device");
-  const [language, setLanguage] = useState<TranscribeLanguage>("en");
+  const language: TranscribeLanguage = "en";
   const [recording, setRecording] = useState(false);
   const [seconds, setSeconds] = useState(0);
   const [transcript, setTranscript] = useState("");
@@ -284,21 +284,6 @@ export function VoiceScanner({ onSubmitTranscript, isScanning = false }: VoiceSc
             </button>
           ))}
         </div>
-        {mode === "device" && (
-          <label className="flex items-center gap-2 text-xs text-muted-foreground">
-            Call language
-            <select
-              aria-label="Call language"
-              value={language}
-              disabled={recording || busy}
-              onChange={(e) => setLanguage(e.target.value as TranscribeLanguage)}
-              className="border border-border bg-background px-2 py-1.5 text-xs text-foreground"
-            >
-              <option value="en">English</option>
-              <option value="hi">Hindi / Hinglish → English</option>
-            </select>
-          </label>
-        )}
       </div>
 
       {/* Record control */}

@@ -3,8 +3,6 @@
 import Link from "next/link";
 import { InstallAppButton } from "@/components/layout/install-app-button";
 import { HeroXray } from "@/components/landing/hero-xray";
-import { ElderToggle } from "@/components/analysis/protect-features";
-import { LanguageToggle } from "@/components/layout/language-toggle";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Lock, ScanSearch, ShieldAlert, Sparkles, CheckCircle2, MessageCircleQuestion, FileOutput } from "lucide-react";
@@ -27,7 +25,7 @@ const FEATURES = [
   {
     icon: Sparkles,
     title: "Any format, one check",
-    description: "SMS and WhatsApp text, links, emails, chat screenshots, PDFs, QR codes and phone calls, in English, Hindi or Hinglish.",
+    description: "SMS and WhatsApp text, links, emails, chat screenshots, PDFs, QR codes and phone calls, in one place.",
   },
   {
     icon: Lock,
@@ -95,8 +93,6 @@ export default function HomePage() {
         </div>
         <div className="flex items-center gap-4">
           <InstallAppButton />
-          <ElderToggle />
-          <LanguageToggle />
           <Link href="/trends" className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground md:inline">Scam trends</Link>
           <ThemeToggle />
           <Link href="/login" className="whitespace-nowrap text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
@@ -130,7 +126,7 @@ export default function HomePage() {
               className="mb-9 max-w-xl text-lg leading-relaxed text-muted-foreground"
             >
               ScamGuard reads SMS, WhatsApp chats, links, emails, screenshots and calls, and points to the exact words
-              that make them a scam — in English or Hindi.
+              that make them a scam.
             </motion.p>
 
             <motion.div variants={itemVariants} className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">

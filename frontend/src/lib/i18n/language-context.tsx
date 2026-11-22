@@ -16,12 +16,12 @@ const LanguageContext = createContext<LanguageValue | null>(null);
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>("en");
 
+  // The interface is English only. Clear any language saved by an earlier version.
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(KEY);
-      if (saved === "hi" || saved === "en") setLangState(saved);
+      localStorage.removeItem(KEY);
     } catch {
-      /* no storage: stay in English */
+      /* no storage */
     }
   }, []);
 
@@ -29,13 +29,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     document.documentElement.lang = lang === "hi" ? "hi" : "en";
   }, [lang]);
 
-  const setLang = useCallback((l: Lang) => {
-    setLangState(l);
-    try {
-      localStorage.setItem(KEY, l);
-    } catch {
-      /* ignore */
-    }
+  const setLang = useCallback((_l: Lang) => {
+    setLangState("en");
   }, []);
 
   const t = useCallback(

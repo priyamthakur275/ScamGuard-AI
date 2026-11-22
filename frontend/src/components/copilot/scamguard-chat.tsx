@@ -122,7 +122,7 @@ function ChatPanel() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const recRef = useRef<Recognition | null>(null);
   const [listening, setListening] = useState(false);
-  const [voiceLang, setVoiceLang] = useState<"en-IN" | "hi-IN">("en-IN");
+  const voiceLang = "en-IN";
   const [canListen, setCanListen] = useState(false);
   useEffect(() => setCanListen(getRecognition() !== null), []);
   useEffect(() => () => recRef.current?.stop(), []);
@@ -203,7 +203,7 @@ function ChatPanel() {
       <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4" aria-live="polite">
         {messages.length === 0 && (
           <div className="space-y-3 text-sm text-muted-foreground">
-            <p>Paste a suspicious message, link or call transcript and I&apos;ll check it against the trained model, the scam-intent engine and a library of known Indian scams. You can also ask me anything, by typing or with the mic, in English or Hindi.</p>
+            <p>Paste a suspicious message, link or call transcript and I&apos;ll check it against the trained model, the scam-intent engine and a library of known Indian scams. You can also ask me anything, by typing or with the mic.</p>
             <p className="text-xs font-medium uppercase tracking-wide">Check an example</p>
             <div className="flex flex-wrap gap-2">
               {STARTERS.map((s) => (
@@ -258,10 +258,6 @@ function ChatPanel() {
                 aria-pressed={listening}
               >
                 {listening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-              </button>
-              <button type="button" onClick={() => setVoiceLang((l) => (l === "en-IN" ? "hi-IN" : "en-IN"))} disabled={listening}
-                className="text-[10px] text-muted-foreground hover:text-primary" aria-label="Voice language">
-                {voiceLang === "en-IN" ? "EN" : "हिं"}
               </button>
             </div>
           )}

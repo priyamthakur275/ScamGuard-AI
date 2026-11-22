@@ -7,7 +7,6 @@ import { quickCheck } from "@/lib/api/public";
 import { ApiError } from "@/lib/api/client";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ShareWarning, displayToken } from "@/components/analysis/share-warning";
-import { ElderQuestions, ElderVerdict } from "@/components/analysis/elder";
 import { ModelXray } from "@/components/analysis/model-xray";
 import { MoreDetails } from "@/components/analysis/more-details";
 import { cn, scamCategoryLabel } from "@/lib/utils";
@@ -35,7 +34,7 @@ interface QuickCheckProps {
 }
 
 export function QuickCheck({ initialText = "", autoRun = false, heading }: QuickCheckProps = {}) {
-  const { t, lang } = useLanguage();
+  const { t } = useLanguage();
   const [text, setText] = useState(initialText);
   const autoRan = useRef(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
@@ -97,7 +96,6 @@ export function QuickCheck({ initialText = "", autoRun = false, heading }: Quick
           {t("qc.sub")}
         </p>
 
-        <div className="mt-6"><ElderQuestions lang={lang} /></div>
         <form onSubmit={onSubmit} className="flex flex-col gap-3">
           <textarea
             aria-label="Message to check"
@@ -136,7 +134,6 @@ export function QuickCheck({ initialText = "", autoRun = false, heading }: Quick
               isScam ? "border-destructive/50 bg-destructive/5" : "border-risk-low/50 bg-risk-low/5",
             )}
           >
-            <div className="mb-4"><ElderVerdict result={result} lang={lang} /></div>
             {verdict ? (
               <ErrorBoundary area="The result view">
                 <RagVerdict verdict={verdict} />
