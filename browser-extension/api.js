@@ -1,5 +1,5 @@
 // Shared by the popup and the background worker.
-export const SITE = "https://scamguard-ai-zeta.vercel.app";
+export const SITE = "https://scamguard-frontend-r6t7.onrender.com";
 const ENDPOINT = `${SITE}/backend-api/api/v1/public/quick-check`;
 
 export async function quickCheck(text) {

@@ -1,15 +1,8 @@
-# The live ScamGuard deployment on Render (free plan, Oregon):
-#   ScamGuard-AI        backend API  -> https://scamguard-ai-ecnj.onrender.com
-# The Next.js frontend is hosted on Vercel (free Hobby plan, never sleeps) and
-# proxies /backend-api/* to this backend (frontend/next.config.js), so the
-# browser only ever talks to the frontend's origin. Keeping the frontend off
-# Render leaves the backend all 750 free instance-hours, so it stays awake 24/7.
-#
-# Both deploy from main only after GitHub CI checks pass, so a commit that
-# fails Backend CI or Frontend CI never replaces the running version.
-#
-# The database is an external Postgres on Neon (free, never expires): DATABASE_URL is set on the backend in
-# the Render dashboard and is not kept in this file.
+# Render deployment of the ScamGuard back end (FastAPI, Docker).
+# The Next.js front end proxies /backend-api/* to this service (frontend/next.config.js),
+# so the browser only talks to the front end's origin.
+# Deploys from main only after the GitHub CI checks pass.
+# DATABASE_URL is set in the Render dashboard and is not kept in this file.
 services:
   - type: web
     name: ScamGuard-AI
