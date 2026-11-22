@@ -51,7 +51,7 @@ To start completely fresh: close the terminal, delete `backend/.venv`, `frontend
 
 ## 4. Tests
 
-- VS Code: **Terminal → Run Task… → "ScamGuard: Backend tests"** (820 tests) and **"Frontend checks"**.
+- VS Code: **Terminal → Run Task… → "ScamGuard: Backend tests"** (836 tests) and **"Frontend checks"**.
 - Terminal: `backend/.venv/bin/python -m pytest -q` from `backend/` (Windows: `.venv\Scripts\python -m pytest -q`), and `npm run typecheck && npm run lint && npm test` from `frontend/`.
 
 ## 5. What runs where

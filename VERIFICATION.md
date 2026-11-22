@@ -1,5 +1,19 @@
 # ScamGuard verification
 
+## Latest check — 22 November 2026 (fresh clone, Python 3.13, Node 22)
+
+| Check | Result |
+|---|---|
+| `python run.py` from a fresh clone | Backend on :8000 and frontend on :3000 start; all pages load |
+| Backend tests (`pytest`) | **836 passed**, 2 skipped (`docs/verification/backend-tests.txt`) |
+| Frontend tests (Vitest) | **14 passed** (`docs/verification/frontend-tests.txt`) |
+| Type check / lint / production build | exit 0 / no warnings / build succeeds |
+| Cross-domain notebook (`jupyter nbconvert --execute`) | Runs end to end; all 605 numbers in `outputs/results.json` identical |
+| Streamlit app (`streamlit run app/app.py`) | Starts and serves without errors |
+| API smoke test | quick check (scam 1.00, genuine 0.0001), demo login, analyze, history, analytics, PDF report, before-you-pay, cross-domain classify (LR baseline 0.437 ham, adapted 0.993 spam) |
+
+The sections below record earlier passes.
+
 ## Final production pass — 25 September 2026
 
 This pass audited and fixed the existing application in place. No features

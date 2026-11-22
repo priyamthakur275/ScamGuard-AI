@@ -23,6 +23,18 @@
 
 ---
 
+## 📁 Project documents (Major Project Phase-2, Group 56)
+
+| Document | File |
+|---|---|
+| Project report (68 pages, final) | [docs/report/ScamGuard_Project_Report.pdf](docs/report/ScamGuard_Project_Report.pdf) · LaTeX source in [docs/report](docs/report) |
+| Presentation (28 slides) | [docs/presentation/ScamGuard_Final_Presentation.pptx](docs/presentation/ScamGuard_Final_Presentation.pptx) |
+| Poster (A3) | [docs/poster/ScamGuard_Poster_A3.pdf](docs/poster/ScamGuard_Poster_A3.pdf) |
+| Conference paper (COMP-SIF 2027, Paper ID 1206, submitted) | [docs/paper/ScamGuard_Conference_Paper.pdf](docs/paper/ScamGuard_Conference_Paper.pdf) |
+| Cross-domain study (notebook + Streamlit app) | [research/cross_domain](research/cross_domain) |
+
+---
+
 ## 📸 Screenshots
 
 | Verdict with TrustLens and Scam X-Ray | Analytics |
@@ -265,5 +277,5 @@ ScamGuard-AI/
 - **Project Lead & Author**: **Priyam Thakur** (1BM23CS252) ([@priyamthakur275](https://github.com/priyamthakur275))
 - **Team Members**: Bhavya Goyal (1BM23CS063), Samir Chaudhary (1BM23CS294), Sana Subodh (1BM23CS296)
 - **Guide**: Dr. Kayarvizhy N, Professor, Department of CSE, B.M.S. College of Engineering, Bengaluru
-- **Repository**: [https://github.com/priyamthakur275/ScamGuard-AI](https://github.com/priyamthakur275/ScamGuard-AI)
+- **Repository**: [https://github.com/priyamthakur275/scamguard-ai](https://github.com/priyamthakur275/scamguard-ai)
 - **Project**: ScamGuard AI — AI-Powered Online Scam & Fraud Detection System (Major Project, B.E. Computer Science and Engineering)
