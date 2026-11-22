@@ -29,14 +29,15 @@ def test_gemini_provider_sends_grounded_prompt_and_parses_reply():
     assert b"Verdict: scam" in seen[0].content
 
 
-def test_anthropic_provider_parses_reply():
+def test_groq_provider_parses_reply():
     seen: list[httpx.Request] = []
-    s = _Settings(); s.COPILOT_LLM_PROVIDER = "anthropic"
-    payload = {"content": [{"type": "text", "text": "Call 1930 now."}]}
+    s = _Settings(); s.COPILOT_LLM_PROVIDER = "groq"
+    payload = {"choices": [{"message": {"content": "Call 1930 now."}}]}
     with patch.object(llm, "get_settings", return_value=s), \
          patch.object(llm, "_http_client", return_value=_client_returning(payload, seen)):
         assert llm.get_llm_answer("I paid", "Verdict: scam") == "Call 1930 now."
-    assert seen[0].headers["x-api-key"] == "test-key"
+    assert seen[0].headers["authorization"] == "Bearer test-key"
+    assert "api.groq.com" in str(seen[0].url)
 
 
 def test_provider_failure_falls_back_to_deterministic_answer():

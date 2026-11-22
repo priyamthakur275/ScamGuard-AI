@@ -71,15 +71,14 @@ class MessageService:
 
     def _run_pipeline(self, text: str, input_type: str, metadata: dict | None) -> tuple[dict, str, dict]:
         """The real ML/XAI pipeline call, extracted so both analyze()
-        (persists a Message+Prediction) and analyze_ephemeral() (Phase 13
-        demo mode -- runs the exact same real pipeline but never writes to
+        (persists a Message+Prediction) and analyze_ephemeral() (demo mode -- runs the exact same real pipeline but never writes to
         the database) share one implementation instead of duplicating it.
         Returns (data, normalized_text, metadata).
         """
         if text is None or not text.strip():
             raise ValidationAppError("Message text must not be empty.")
 
-        # English/Hindi/Hinglish preprocessing (Phase 7): appends an
+        # English/Hindi/Hinglish preprocessing: appends an
         # English-language summary of detected Indian scam concepts
         # (OTP/UPI/KYC/etc.) so the existing English-only model has
         # recognizable tokens even when the message itself is in Hindi or
@@ -236,7 +235,7 @@ class MessageService:
         )
         prediction = self.predictions.create(prediction)
 
-        # Phase 14: correlate this scan's own real domain/entities/category
+        # correlate this scan's own real domain/entities/category
         # against this same user's own past scans -- never external
         # threat-intel, purely "have you seen this before" recurrence.
         if user_id is not None:
@@ -263,7 +262,7 @@ class MessageService:
         return self._to_result(prediction, text)
 
     def analyze_ephemeral(self, text: str, input_type: str = "TEXT", metadata: dict | None = None) -> AnalysisResult:
-        """Phase 13 demo mode: runs the SAME real pipeline as analyze()
+        """demo mode: runs the SAME real pipeline as analyze()
         (same ML inference, same threat scoring, same XAI -- no
         duplicated/simplified logic) but writes NOTHING to the database.
         This is the mechanism that keeps demo runs completely separate

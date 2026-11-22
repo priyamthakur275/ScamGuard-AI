@@ -1,4 +1,4 @@
-"""Threat-intelligence correlation (Phase 14).
+"""Threat-intelligence correlation.
 
 Every signal this module produces is derived by comparing the CURRENT
 scan's own already-computed, real data (entities, registrable domain,

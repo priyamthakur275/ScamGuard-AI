@@ -1,4 +1,4 @@
-"""Exportable report generation (Phase 12).
+"""Exportable report generation.
 
 Every value in a generated report is read directly from an already-
 computed AnalysisResult (or list of them, for a case) -- this module

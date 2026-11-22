@@ -57,14 +57,12 @@ export default function RobustnessTestPage() {
       <div className="border border-primary/30 bg-primary/10 p-4">
         <p className="flex items-center gap-2 text-xs font-semibold text-primary">
           <FlaskConical className="h-4 w-4" />
-          Internal engineering tool — robustness testing
+          Robustness testing
         </p>
         <p className="mt-1 text-sm text-muted-foreground">
-          Runs real base messages and controlled text transforms (case, whitespace, punctuation,
-          spelling, inserted symbols, homoglyph domains, URL obfuscation) through the exact same
-          real prediction pipeline as a live scan, and reports the actual measured differences.
-          Nothing here is tuned to make the model look better — results are shown as-computed,
-          including unfavorable ones. This is not a user-facing feature.
+          Runs messages with controlled text changes (case, whitespace, punctuation, spelling,
+          inserted symbols, look-alike domains, hidden URLs) through the live detector and shows
+          how much the verdict changes.
         </p>
       </div>
 

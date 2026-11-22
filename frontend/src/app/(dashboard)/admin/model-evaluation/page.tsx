@@ -52,9 +52,7 @@ export default function ModelEvaluationPage() {
           Model evaluation
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Real metrics from the last actual training run, read directly from the model registry.
-          This is engineering data about the model itself -- never shown to end users alongside
-          their own scan results.
+          Metrics of each registered model version.
         </p>
       </div>
 

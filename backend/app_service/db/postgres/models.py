@@ -198,7 +198,7 @@ class AuditLog(Base):
 
 
 class Case(Base):
-    """Investigation/case mode (Phase 11). A case is a user-owned
+    """Investigation/case mode. A case is a user-owned
     container linking one or more existing scans (Predictions) together
     for an ongoing investigation -- it does not duplicate scan data, it
     references it (see CaseScanLink), and entities are aggregated at read

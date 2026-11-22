@@ -131,7 +131,7 @@ def _get_tls_certificate_info(hostname: str, port: int = 443) -> dict | None:
     cert rejected) returns None rather than raising, so a certificate
     lookup can never break the primary URL analysis.
 
-    HONESTY NOTE: this cannot be exercised against a real external HTTPS
+    Note: this cannot be exercised against a real external HTTPS
     host in this project's automated test suite (the sandbox this was
     built in has no network access to arbitrary domains), so it is only
     unit-tested for its safe-failure behavior (unresolvable/blocked

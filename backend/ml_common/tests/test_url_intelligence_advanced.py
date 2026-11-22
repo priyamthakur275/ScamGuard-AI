@@ -1,4 +1,4 @@
-"""Tests for the Phase 3 extensions to url_intelligence.py: structural
+"""Tests for the extensions to url_intelligence.py: structural
 fields (port/path/query/fragment/length/encoding), suspicious path/query
 signals, the graded evidence list, and configurable brand vocabulary.
 Includes adversarial URLs specifically crafted to test evasion attempts.

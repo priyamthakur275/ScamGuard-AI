@@ -93,7 +93,7 @@ class Settings(BaseSettings):
     # scans hung and the UI reported the backend as busy.
     ML_SERVICE_URL: str = ""
 
-    # Voice transcription (Phase 6): no provider is configured by default.
+    # Voice transcription: no provider is configured by default.
     # When unset, server-side audio-file transcription is honestly
     # reported as unavailable rather than faked -- see
     # voice_transcription.py. Browser-side live transcription (Web Speech
@@ -102,7 +102,7 @@ class Settings(BaseSettings):
     VOICE_TRANSCRIPTION_PROVIDER: str | None = None
     VOICE_TRANSCRIPTION_API_KEY: str | None = None
 
-    # ScamGuard Copilot (Phase 17): same pattern -- no LLM provider
+    # ScamGuard Copilot: same pattern -- no LLM provider
     # configured by default, so Copilot answers via the deterministic,
     # evidence-grounded engine (copilot_service.py) instead of an
     # external LLM. See copilot_llm_provider.py.

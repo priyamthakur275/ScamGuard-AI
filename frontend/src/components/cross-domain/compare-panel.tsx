@@ -6,32 +6,26 @@ import { Button } from "@/components/ui/button";
 import { crossDomainClassify, type CdClassification, type CdClassifier } from "@/lib/api/public";
 import { cn } from "@/lib/utils";
 
-/** Real messages from the study. The Indian ones come from the untouched Indian final test set
- * (seed 42), so neither model was trained on them. */
-const EXAMPLES: { label: string; tag: string; text: string }[] = [
+/** The Indian examples come from the held-out Indian test set (seed 42). */
+const EXAMPLES: { label: string; text: string }[] = [
   {
     label: "Indian scam SMS",
-    tag: "Indian test set",
     text: "Hi 901969XXXX, Rs.56,6OO/- bonus is credited t0 your wallet n0 XX32 0n 28 Aug. Directly move to your bank a/c n0w oi1.in/2uabg2!8cpr814",
   },
   {
     label: "Indian telecom offer",
-    tag: "Indian test set",
     text: "Free 2GB data for data lovers like you! Now get 2GB data on Airtel Thanks app, download now i.airtel.in/2gb_rc2",
   },
   {
     label: "Indian shopping offer",
-    tag: "Indian test set",
     text: "Lenskart online MEGA SALE: Buy1Get1 FREE + upto 40% off on eye & sunglasses! Fresh stocks added. TnC shop lskt.me/megasale",
   },
   {
     label: "Normal Indian message",
-    tag: "Indian test set",
     text: "Hi team, we are having a power cut due to heavy rain that started 5 mins ago",
   },
   {
     label: "UK spam",
-    tag: "UCI style",
     text: "WINNER!! As a valued network customer you have been selected to receive a £900 prize reward! To claim call 09061701461. Claim code KL341. Valid 12 hours only.",
   },
 ];
@@ -60,7 +54,7 @@ function ResultCard({ title, subtitle, result }: { title: string; subtitle: stri
         <div className={cn("h-2 rounded", spam ? "bg-destructive" : "bg-primary")} style={{ width: `${Math.max(2, p * 100)}%` }} />
       </div>
       <p className="mt-1 text-[11px] text-muted-foreground">Spam if the probability is 0.5 or more.</p>
-      <p className="mt-4 text-xs font-medium">Words that drove this decision</p>
+      <p className="mt-4 text-xs font-medium">Top words</p>
       {top.length === 0 ? (
         <p className="mt-1 text-xs text-muted-foreground">None of these words are in this model&apos;s vocabulary.</p>
       ) : (
@@ -108,7 +102,7 @@ export function ComparePanel() {
       ]);
       setPair({ base, adapted });
     } catch {
-      setError("Could not classify the message. The server may be waking up; try again in a few seconds.");
+      setError("Could not classify the message. Try again in a few seconds.");
     } finally {
       setBusy(false);
     }
@@ -118,13 +112,9 @@ export function ComparePanel() {
 
   return (
     <section className="mt-6 rounded-xl border border-primary/40 p-5" aria-labelledby="cd-compare">
-      <h2 id="cd-compare" className="text-xl font-semibold">Live proof: the same message, before and after adaptation</h2>
-      <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-        Pick an example or paste any SMS. It goes through both saved models from the study at once: the <b>baseline</b> trained only on
-        UK messages, and the <b>adapted</b> model that also saw labelled Indian messages. Nothing you type is stored.
-      </p>
+      <h2 id="cd-compare" className="text-xl font-semibold">Baseline vs adapted model</h2>
 
-      <p className="mt-4 text-xs text-muted-foreground">1. Choose an example</p>
+      <p className="mt-4 text-xs text-muted-foreground">Examples</p>
       <div className="mt-1 flex flex-wrap gap-2">
         {EXAMPLES.map((e) => (
           <button
@@ -133,12 +123,12 @@ export function ComparePanel() {
             onClick={() => { setText(e.text); run(e.text); }}
             className="rounded-full border border-border px-3 py-1.5 text-xs hover:border-primary hover:text-primary"
           >
-            {e.label} <span className="text-muted-foreground">· {e.tag}</span>
+            {e.label}
           </button>
         ))}
       </div>
 
-      <label htmlFor="cd-text" className="mt-4 block text-xs text-muted-foreground">2. Or paste your own SMS</label>
+      <label htmlFor="cd-text" className="mt-4 block text-xs text-muted-foreground">Message</label>
       <textarea
         id="cd-text"
         value={text}
@@ -163,7 +153,7 @@ export function ComparePanel() {
           ))}
         </div>
         <Button onClick={() => run()} disabled={busy || !text.trim()}>
-          {busy ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Comparing…</> : "3. Compare both models"}
+          {busy ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Comparing…</> : "Compare"}
         </Button>
       </div>
       {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
@@ -179,23 +169,22 @@ export function ComparePanel() {
           >
             {changed ? (
               <>
-                <b>Adaptation changed the decision:</b> the UK-only model says <b>{pair.base.label.toUpperCase()}</b> (
-                {pair.base.spam_probability.toFixed(3)}), the adapted model says <b>{pair.adapted.label.toUpperCase()}</b> (
+                <b>Decision changed:</b> baseline <b>{pair.base.label.toUpperCase()}</b> (
+                {pair.base.spam_probability.toFixed(3)}) → adapted <b>{pair.adapted.label.toUpperCase()}</b> (
                 {pair.adapted.spam_probability.toFixed(3)}).
               </>
             ) : (
               <>
-                <b>Both models agree: {pair.base.label.toUpperCase()}.</b> Spam probability {pair.base.spam_probability.toFixed(3)} before and{" "}
-                {pair.adapted.spam_probability.toFixed(3)} after adaptation.
+                <b>Both models: {pair.base.label.toUpperCase()}</b> ({pair.base.spam_probability.toFixed(3)} → {pair.adapted.spam_probability.toFixed(3)})
               </>
             )}
           </div>
           <div className="mt-4 grid items-stretch gap-4 lg:grid-cols-[1fr_auto_1fr]">
-            <ResultCard title="Baseline" subtitle="Trained on UK SMS only (UCI)" result={pair.base} />
+            <ResultCard title="Baseline" subtitle="Trained on UK SMS (UCI)" result={pair.base} />
             <div className="hidden items-center justify-center lg:flex" aria-hidden>
               <ArrowRight className="h-6 w-6 text-muted-foreground" />
             </div>
-            <ResultCard title="Adapted" subtitle="UK SMS + 40% of the labelled Indian pool" result={pair.adapted} />
+            <ResultCard title="Adapted" subtitle="UK SMS + 40% labelled Indian SMS" result={pair.adapted} />
           </div>
         </>
       )}

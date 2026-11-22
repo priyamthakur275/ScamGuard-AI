@@ -74,7 +74,7 @@ class ModelVersionInfo:
     vectorizer_path: str
     # Real dataset size at training time -- 0 for entries registered
     # before this field existed (old registrations), never backfilled
-    # with a guess. See Phase 15: dataset size must be shown honestly,
+    # with a guess. See dataset size must be shown honestly,
     # including "not available for this older entry" rather than invented.
     train_rows: int = 0
     test_rows: int = 0

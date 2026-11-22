@@ -248,7 +248,7 @@ def test_url_intelligence_survives_end_to_end_to_the_api_response(client):
 
 
 class TestGracefulErrorHandling:
-    """Phase 2 requirement: every failure mode in the pipeline must degrade
+    """requirement: every failure mode in the pipeline must degrade
     gracefully with a clear, honest error -- never a raw 500, never a
     fabricated result pretending the input was analyzed.
     """
@@ -368,7 +368,7 @@ def test_email_forensics_survives_end_to_end_to_the_api_response(client):
 
 
 def test_all_modalities_return_the_same_consistent_result_shape(client):
-    """Phase 5: confirms the 'one unified flow' claim empirically -- every
+    """confirms the 'one unified flow' claim empirically -- every
     input modality goes through the same /messages/scan endpoint and
     produces a result with the same required fields, not a different
     shape per scanner.
@@ -539,7 +539,7 @@ class TestMultilingualPreprocessing:
 
 
 def test_extended_entities_survive_end_to_end_to_the_api_response(client):
-    """Contract test: confirms the Phase 10 entity types (payment amounts,
+    """Contract test: confirms the entity types (payment amounts,
     bank references, dates, organizations) computed by EntityHighlighter
     actually reach the API response's highlighted_entities field.
     """

@@ -119,7 +119,7 @@ export default function AdminDashboard() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight mb-2">System Administration</h1>
           <p className="text-muted-foreground">
-            Live cluster telemetry, verified account registry, and threat detection volume.
+            Accounts, system health and detection volume.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -159,7 +159,7 @@ export default function AdminDashboard() {
             <Activity className="w-4 h-4 text-primary" />
           </div>
           <p className="text-2xl font-bold mt-2 text-foreground">{totalScans}</p>
-          <span className="text-xs text-muted-foreground mt-1 block">Processed through ML pipeline</span>
+          <span className="text-xs text-muted-foreground mt-1 block">Analysed messages</span>
         </motion.div>
 
         <motion.div variants={itemVariants} className="bg-card border border-border rounded-xl p-5">

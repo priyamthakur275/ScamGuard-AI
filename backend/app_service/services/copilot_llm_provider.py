@@ -1,21 +1,11 @@
-"""Optional external LLM provider for ScamGuard Copilot.
+"""External LLM provider for ScamGuard Copilot (Gemini by default; Groq and
+OpenAI-compatible APIs are also supported).
 
-HONESTY NOTE, same pattern as voice_transcription.py (Phase 6): no
-provider is wired up by default. Integrating a real LLM API (OpenAI,
-Anthropic, etc.) that this environment has no credentials to test against
-would mean either faking success or shipping unverified code -- neither
-is acceptable. This module defines the clean integration point (a
-provider interface + environment-variable configuration) and a
-CopilotLlmUnavailableError that the Copilot service catches to fall back
-to the deterministic, evidence-grounded engine (copilot_service.py),
-which is the actually-working, actually-tested default path.
-
-To wire in a real provider later: implement CopilotLlmProvider below,
-register it in _PROVIDERS, and set COPILOT_LLM_PROVIDER +
-COPILOT_LLM_API_KEY. The grounding contract does not change: whatever
-provider is used, it must be given ONLY the scan's real evidence as
-context and instructed never to state anything not present in it --
-enforced by copilot_service.py building the prompt, not by this module.
+Set COPILOT_LLM_PROVIDER and COPILOT_LLM_API_KEY to enable it. When no provider
+is configured, or a call fails, CopilotLlmUnavailableError is raised and the
+Copilot service falls back to its built-in evidence-grounded answers
+(copilot_service.py). The provider only ever receives the scan's own evidence
+as context; copilot_service.py builds that prompt.
 """
 from abc import ABC, abstractmethod
 
@@ -143,32 +133,6 @@ class GeminiProvider(CopilotLlmProvider):
                             yield part["text"]
 
 
-class AnthropicProvider(CopilotLlmProvider):
-    """Anthropic API. COPILOT_LLM_PROVIDER=anthropic; set COPILOT_LLM_MODEL."""
-
-    default_model = ""
-
-    def complete(self, system: str, user: str, max_tokens: int = 400) -> str:
-        settings = get_settings()
-        with _http_client() as client:
-            resp = client.post(
-                "https://api.anthropic.com/v1/messages",
-                headers={
-                    "x-api-key": settings.COPILOT_LLM_API_KEY,
-                    "anthropic-version": "2023-06-01",
-                    "content-type": "application/json",
-                },
-                json={
-                    "model": settings.COPILOT_LLM_MODEL or self.default_model,
-                    "max_tokens": max_tokens,
-                    "system": system,
-                    "messages": [{"role": "user", "content": user}],
-                },
-            )
-            resp.raise_for_status()
-            return "".join(b.get("text", "") for b in resp.json()["content"] if b.get("type") == "text").strip()
-
-
 class OpenAIProvider(CopilotLlmProvider):
     """OpenAI-compatible chat completions. COPILOT_LLM_PROVIDER=openai."""
 
@@ -230,7 +194,6 @@ class GroqProvider(OpenAIProvider):
 _PROVIDERS: dict[str, type[CopilotLlmProvider]] = {
     "gemini": GeminiProvider,
     "groq": GroqProvider,
-    "anthropic": AnthropicProvider,
     "openai": OpenAIProvider,
 }
 

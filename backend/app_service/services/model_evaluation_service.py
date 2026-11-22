@@ -1,4 +1,4 @@
-"""Admin Model Evaluation (Phase 15).
+"""Admin Model Evaluation.
 
 Reads exactly what's in the model registry (registry_index.json) -- the
 same registry the inference service itself reads from to serve real

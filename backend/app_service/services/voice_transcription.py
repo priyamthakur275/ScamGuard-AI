@@ -1,7 +1,7 @@
 """Server-side audio-file transcription, via an optional, pluggable
 external provider.
 
-HONESTY NOTE: no provider is wired up by default (VOICE_TRANSCRIPTION_PROVIDER
+Note: no provider is wired up by default (VOICE_TRANSCRIPTION_PROVIDER
 is None). Building and shipping an integration against a real speech-to-text
 API (OpenAI Whisper API, Google Speech-to-Text, AssemblyAI, ...) would mean
 either faking success without credentials to actually test it against, or

@@ -1,4 +1,4 @@
-"""Shared, read-mostly demo account for reviews and first-time visitors.
+"""Shared, read-mostly demo account for first-time visitors.
 
 The account is created on startup (and again on demand if it was removed)
 and filled with a handful of sample scans run through the *real* analysis
@@ -18,6 +18,8 @@ from app_service.services.extraction import ExtractionService
 from app_service.services.message_service import MessageService
 
 logger = logging.getLogger("app_service.demo_account")
+
+DEMO_NAME = "Demo User"
 
 # Sample inputs only -- the verdicts come from the live pipeline.
 _SAMPLE_SCANS: tuple[tuple[str, str], ...] = (
@@ -50,14 +52,15 @@ def ensure_demo_account(db: Session) -> User:
             # POST /auth/demo-login, never by password.
             password_hash=hash_password(secrets.token_urlsafe(32)),
             role=UserRole.USER,
-            full_name="Demo Reviewer",
+            full_name=DEMO_NAME,
             is_active=True,
         )
         db.add(user)
         db.commit()
         db.refresh(user)
-    if not user.is_active:
+    if not user.is_active or user.full_name != DEMO_NAME:
         user.is_active = True
+        user.full_name = DEMO_NAME
         db.commit()
 
     has_scans = db.scalar(select(func.count()).select_from(Message).where(Message.user_id == user.id))

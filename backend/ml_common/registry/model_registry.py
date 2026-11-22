@@ -153,7 +153,7 @@ class ModelRegistry:
     def list_all(self) -> list[ModelVersionInfo]:
         """Every registered version across all model names -- the real,
         complete set of what's actually in the registry. Used by the
-        admin Model Evaluation view (Phase 15), which must never show
+        admin Model Evaluation view, which must never show
         anything the registry doesn't actually contain.
         """
         index = self._read_index()

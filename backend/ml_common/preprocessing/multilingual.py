@@ -1,6 +1,6 @@
 """English / Hindi / Hinglish preprocessing for Indian scam terminology.
 
-HONESTY NOTE: the underlying ML model (naive_bayes, TF-IDF) is trained on
+Note: the underlying ML model (naive_bayes, TF-IDF) is trained on
 English text only -- this module does NOT retrain it, does not claim any
 multilingual accuracy, and does not invent a "language detection model".
 `detect_language()` is a lightweight, deterministic heuristic (Devanagari

@@ -1,4 +1,4 @@
-"""Demo Mode example catalog (Phase 13).
+"""Demo Mode example catalog.
 
 CRITICAL: this file contains only example INPUT text. It does not, and
 must never, contain a precomputed verdict, probability, or any other

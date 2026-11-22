@@ -1,4 +1,4 @@
-"""Adversarial/robustness testing orchestration (Phase 16).
+"""Adversarial/robustness testing orchestration.
 
 INTERNAL ENGINEERING/EVALUATION TOOLING -- not part of the live user scan
 flow, never persisted to user history (uses analyze_ephemeral, same

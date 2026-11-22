@@ -4,7 +4,7 @@ Revision ID: 0005_add_case_tables
 Revises: 0004_add_query_indexes
 Create Date: 2026-09-22
 
-Phase 11: professional Investigation/Case Mode. Cases are user-owned
+professional Investigation/Case Mode. Cases are user-owned
 containers that reference existing scans (predictions) rather than
 duplicating their data -- case_scan_links is a pure link table.
 case_timeline_entries records real actions taken (created, status

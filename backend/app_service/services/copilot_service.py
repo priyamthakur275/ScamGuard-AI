@@ -1,4 +1,4 @@
-"""ScamGuard Copilot: deterministic, evidence-grounded engine (Phase 17).
+"""ScamGuard Copilot: deterministic, evidence-grounded engine.
 
 This is the ALWAYS-AVAILABLE default path (see copilot_llm_provider.py
 for the optional, currently-unconfigured LLM path). Every answer here is

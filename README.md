@@ -1,12 +1,15 @@
 <div align="center">
 
-# 🛡️ ScamGuard AI
+# ScamGuard
 
-### Real-time detection of phishing, UPI/banking fraud, lottery scams and social engineering across SMS, links, emails, screenshots, PDFs, QR codes and voice calls, with explainable verdicts.
+### AI-Based Online Scam and Fraud Detection System
 
-[![Live Demo](https://img.shields.io/badge/Live_Demo-scamguard--frontend--r6t7.onrender.com-14b8a6?style=for-the-badge&logo=render&logoColor=white)](https://scamguard-frontend-r6t7.onrender.com)
-[![Tests](https://img.shields.io/badge/Tests-820_backend_·_14_frontend-22c55e?style=for-the-badge&logo=pytest&logoColor=white)](#-testing-and-verification)
-[![Accuracy](https://img.shields.io/badge/Accuracy-97.1%25_on_1,874_real_SMS-f59e0b?style=for-the-badge)](backend/ml_training/research/results.md)
+Detects scams in SMS, WhatsApp text, links, emails, screenshots, PDFs, QR codes and calls, and explains every verdict.
+
+[![Live site](https://img.shields.io/badge/Live_site-open-14b8a6?style=for-the-badge)](https://scamguard-frontend-r6t7.onrender.com)
+[![Accuracy](https://img.shields.io/badge/Accuracy-97.1%25-f59e0b?style=for-the-badge)](backend/ml_training/research/results.md)
+[![False alarms](https://img.shields.io/badge/False_alarms-3.2%25-22c55e?style=for-the-badge)](backend/ml_training/research/results.md)
+[![Tests](https://img.shields.io/badge/Tests-836_back--end_·_14_front--end-3b82f6?style=for-the-badge)](#tests)
 
 ![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
@@ -14,268 +17,142 @@
 ![Next.js](https://img.shields.io/badge/Next.js_14-000000?logo=nextdotjs&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)
-![Gemini](https://img.shields.io/badge/Google_Gemini-8E75B2?logo=googlegemini&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
 
-**[Try the live demo](https://scamguard-frontend-r6t7.onrender.com)** (use **"Try the demo account"**, or paste a message into the quick check on the home page; no account needed)
+**[Open the live site](https://scamguard-frontend-r6t7.onrender.com)** · paste a message into the quick check, or press **Try the demo account** on the sign-in page.
 
 </div>
 
----
+<p align="center">
+  <img src="docs/screenshots/home.jpg" alt="ScamGuard home page" width="49%">
+  <img src="docs/screenshots/quick_check.jpg" alt="Quick check result with Scam X-Ray" width="49%">
+</p>
 
-## 📁 Project documents (Major Project Phase-2, Group 56)
+## Project documents
+
+Major Project Phase-2, Department of CSE, B.M.S. College of Engineering, Group 56.
 
 | Document | File |
 |---|---|
-| Project report (68 pages, final) | [docs/report/ScamGuard_Project_Report.pdf](docs/report/ScamGuard_Project_Report.pdf) · LaTeX source in [docs/report](docs/report) |
-| Presentation (28 slides) | [docs/presentation/ScamGuard_Final_Presentation.pptx](docs/presentation/ScamGuard_Final_Presentation.pptx) |
+| Project report | [docs/report/ScamGuard_Project_Report.pdf](docs/report/ScamGuard_Project_Report.pdf) (LaTeX source in [docs/report](docs/report)) |
+| Presentation | [docs/presentation/ScamGuard_Final_Presentation.pptx](docs/presentation/ScamGuard_Final_Presentation.pptx) |
 | Poster (A3) | [docs/poster/ScamGuard_Poster_A3.pdf](docs/poster/ScamGuard_Poster_A3.pdf) |
-| Conference paper (COMP-SIF 2027, Paper ID 1206, submitted) | [docs/paper/ScamGuard_Conference_Paper.pdf](docs/paper/ScamGuard_Conference_Paper.pdf) |
-| Cross-domain study (notebook + Streamlit app) | [research/cross_domain](research/cross_domain) |
+| Conference paper (COMP-SIF 2027, Paper ID 1206) | [docs/paper/ScamGuard_Conference_Paper.pdf](docs/paper/ScamGuard_Conference_Paper.pdf) |
+| Cross-domain study (notebook and Streamlit app) | [research/cross_domain](research/cross_domain) |
 
----
+## Results
 
-## 📸 Screenshots
-
-| Verdict with TrustLens and Scam X-Ray | Analytics |
-|---|---|
-| <img src="docs/verification/verdict-desktop.png" alt="ScamGuard verdict page" width="480"> | <img src="docs/verification/analytics-dark.png" alt="ScamGuard analytics dashboard" width="480"> |
-
----
-
-## 📊 Results at a glance
-
-Deployed system (classifier + intent rules) on **1,874 real held-out Indian SMS from unseen scam campaigns** ([full tables](backend/ml_training/research/results.md)):
+Deployed system (classifier + intent rules) on **1,874 real Indian messages from scam campaigns held out of training**:
 
 | Accuracy | Precision | Recall | F1 (95% CI) | False-alarm rate | ROC-AUC |
 |:---:|:---:|:---:|:---:|:---:|:---:|
 | **97.1%** | **98.2%** | **97.2%** | **97.7%** (97.1–98.3) | **3.2%** | **0.995** |
 
-- **No leakage:** train/test are split by scam campaign, so no near-duplicate of a test message is seen in training. With a random split, 793 test rows would have had a near-duplicate in training.
-- **Reproducible:** `python -m ml_training.research.run_experiments` regenerates every number; `results.md` holds the tables.
-- **Tested:** 836 backend tests (pytest) and 14 frontend tests (Vitest), verified on Python 3.10 to 3.14.
+- **Dataset:** ScamGuard-IN-2026, 11,399 Indian messages with audited labels ([datasheet](backend/ml_training/datasets/scamguard_in_2026/DATASHEET.md)).
+- **No leakage:** the split is by scam campaign, so no near-duplicate of a test message appears in training.
+- **Reproducible:** `python -m ml_training.research.run_experiments` (from `backend/`) regenerates every number; tables are in [results.md](backend/ml_training/research/results.md).
 
----
+### Cross-domain study
 
-## 🎯 What ScamGuard does
+| Logistic Regression | Spam F1 |
+|---|:---:|
+| Trained on UK SMS (UCI), tested on UK SMS | 0.911 |
+| Same model tested on Indian SMS | 0.678 |
+| After adding 143 labelled Indian messages (10%) | 0.964 |
 
-**Check anything** — SMS/WhatsApp text, links, emails, screenshots (WhatsApp chat-aware OCR, dark mode supported), PDFs, QR codes and voice calls (live captions or private on-device Whisper transcription).
+The website's **Cross-domain study** page runs the baseline and adapted models side by side on any message.
 
-**Explain the verdict**
-- **TrustLens** — for every result: the classifier probability and the final risk score side by side, a Scam Journey Mapper (only stages with matched phrases are marked), evidence for and against, evidence-based safety actions, a similar known pattern with its source (only when the retrieval evaluator accepts it) and an honest "why this may be wrong" section. It also shows **how a genuine message differs**, tactic by tactic, with a real example format. It adds no score of its own; see `docs/TRUSTLENS.md`.
-- **Scam X-Ray** — highlights the exact trap phrases in the message and maps them onto the four stages of a scam: hook, pressure, the ask, cash-out.
-- **Scam likelihood** — a logistic-regression model on word + character TF-IDF (v4, trained on ScamGuard-IN-2026, an audited corpus of real Indian SMS plus labelled synthetic messages) fused with an intent-based risk engine; the model's own probability is always shown alongside. On 1,874 real held-out Indian SMS from unseen scam campaigns the final verdict scores 97.1% accuracy with a 3.2% false-alarm rate (see `backend/ml_training/datasets/scamguard_in_2026/DATASHEET.md` and `backend/ml_training/research/results.md`).
-- **Website trust score** — domain age from RDAP, HTTPS, link signals and a live inspection of the page (password/OTP/card forms, forms posting elsewhere, brand impersonation).
-- **Ask ScamGuard** — answers "is this a scam?", "I already paid, what now?", "how do I report it?", backed by Gemini (or Groq/Anthropic/OpenAI) via env vars, with per-visitor and daily caps that fall back to built-in answers.
+<p align="center"><img src="docs/screenshots/cross_domain_compare.jpg" alt="Baseline vs adapted model on the cross-domain page" width="80%"></p>
 
-**Act on it**
-- One-tap reporting to **Chakshu** (Sanchar Saathi) or **1930 / cybercrime.gov.in**, with a ready-to-paste complaint.
-- **Community reports** for numbers, link domains, UPI IDs and emails (one vote per user; 2+ reports raise the score).
-- **Golden Hour** — for people who already paid: a one-hour countdown, a direct call to 1930 and a complaint filled in from the scan.
-- Share a warning on WhatsApp; export PDF/CSV/JSON reports.
+## Features
 
-**Learn and reach people**
-- **ScamGuard Copilot** — a streaming chat that checks pasted messages, links and call transcripts with corrective retrieval over 42 Indian scam patterns and 10 genuine message formats, citing official sources.
-- **Safety tools** — QR code payment check, "before you pay" UPI check, attachment/APK check and a **chat timeline** that scores every message of a pasted WhatsApp chat and marks the turning point where it moves from talk to a request.
-- **Flashcards** — eight flip cards that show a new user how to use every part of ScamGuard, three steps each (`/flashcards`).
-- Installable **PWA with Android share target**, and a **Chrome/Edge/Brave extension** (`browser-extension/`).
+**Check**
+- **Quick check** on the home page, no account needed and nothing stored.
+- **Investigate** for text, links, emails, screenshots (OCR), PDFs, QR codes and voice calls.
 
-**Platform** — JWT auth with refresh rotation, bcrypt, self-hosted CAPTCHA, per-visitor rate limits, SSRF-safe URL fetching, CSP, admin model evaluation and robustness testing, 850 automated tests.
+**Explain**
+- **Scam X-Ray** highlights the trap phrases and maps them to the four stages of a scam: hook, pressure, the ask, cash-out.
+- **TrustLens** shows the model probability and the final risk score side by side, with the evidence for and against.
+- **Website trust score**: domain age, HTTPS, redirects and whether the page asks for passwords, OTPs or card details.
+- **ScamGuard Copilot** answers "is this a scam?" and "I already paid, what now?", grounded in the scan and 42 known Indian scam patterns.
 
----
+**Act**
+- **Golden Hour** help for people who already paid: a one-hour countdown, a call to 1930 and a ready complaint.
+- One-tap reporting to **Chakshu** (Sanchar Saathi), **1930** and **cybercrime.gov.in**.
+- **Safety tools**: QR payment check, UPI "before you pay" check, payment screenshot check, file check and chat timeline.
 
-## 🏗️ System Architecture
+**Track and learn**
+- **Dashboard, History and Analytics** for signed-in users, with PDF and CSV reports.
+- **Scam trends**, **Flashcards**, an installable app (PWA) and a **browser extension** for Chrome, Edge and Brave.
+
+## Architecture
 
 ```mermaid
-graph TD
-    Client[Web Browser] -->|HTTPS| Frontend[Next.js 14 Frontend - Vercel / Port 3000]
-    Frontend -->|Same-Origin /backend-api Rewrite| AppService[FastAPI App Service - Port 8000]
-    AppService -->|SQLAlchemy / Alembic| DB[(PostgreSQL / SQLite)]
-    AppService -->|In-process, same container| MLEngine[ML Inference Engine]
-    MLEngine -->|Joblib Serialization| ModelRegistry[(Trained ML Artifacts - LR / TF-IDF)]
+graph LR
+    U[Browser / PWA / Extension] --> F[Next.js 14 front end]
+    F -->|/backend-api| B[FastAPI back end]
+    B --> D[(PostgreSQL / SQLite)]
+    B --> M[Classifier + intent rules]
+    M --> R[(Model registry: LR v4, TF-IDF)]
+    N[Training and cross-domain notebooks] -.-> R
 ```
-
-> **Note on the deployed topology:** the codebase supports running ML
-> inference as a separate `ml_service` container (see `infra/docker-compose.yml`
-> and `backend/docs/ML_SERVICE.md` for the multi-service local/self-hosted setup, useful
-> for independently scaling inference). The **current Render deployment
-> (`render.yaml`) runs the `app_service` container (`ScamGuard-AI`) plus the
-> Next.js frontend (`scamguard-frontend`)**; the backend
-> loads the model in-process — there is no separate ML microservice running in
-> production today. This is a deliberate simplification (one fewer moving part,
-> one fewer cold start) rather than an oversight; the app_service code still
-> checks for a remote ML service first for forward-compatibility, but always
-> falls through to serving the real trained model in-process on the current
-> deployment.
-
-### 🛠️ Tech stack
 
 | Layer | Technology |
 |---|---|
-| Frontend | Next.js 14, React, TypeScript, Tailwind CSS; PWA with Android share target; Chrome/Edge/Brave extension |
-| Backend | Python, FastAPI, SQLAlchemy, Alembic, SlowAPI rate limiting, JWT with refresh rotation |
-| ML | scikit-learn logistic regression on word + character TF-IDF, intent-based risk engine, Joblib model registry |
-| AI | Google Gemini (or Groq / Anthropic / OpenAI) for Ask ScamGuard; corrective retrieval over 42 scam patterns and 10 genuine formats |
-| Inputs | OCR for screenshots, PDF parsing, QR decoding, Whisper or Web Speech API for voice |
-| Data & hosting | PostgreSQL on Neon (SQLite locally), FastAPI on Render, Next.js on Vercel, Docker Compose for self-hosting |
+| Front end | Next.js 14, React, TypeScript, Tailwind CSS, PWA |
+| Back end | Python, FastAPI, SQLAlchemy, Alembic, JWT with refresh rotation, rate limiting |
+| ML | scikit-learn logistic regression on word + character TF-IDF, intent-based risk engine |
+| Copilot | Google Gemini with built-in fallback answers |
+| Inputs | OCR, PDF parsing, QR decoding, speech-to-text |
+| Research | Jupyter notebook, Streamlit |
 
----
+## Run it locally
 
-## 🚀 Getting Started
-
-### Prerequisites
-- **Node.js**: v18+ or v20+ LTS
-- **Python**: v3.10, v3.11, or v3.12
-- **Docker & Docker Compose**: Optional (recommended for one-command containerized run)
-
----
-
-### Run it locally (Windows, macOS, Linux)
-
-**You need:** Python **3.10 to 3.14** and Node.js **18 or newer** (LTS). That's all: no database, no `.env` file, no Docker.
-
-**In VS Code:** open the project folder, then **Terminal → Run Task… → "ScamGuard: Run (backend + frontend)"** (or press **Ctrl+Shift+B**).
-
-**Or in any terminal**, from the project folder:
+Needs **Python 3.10–3.14** and **Node.js 18+**. No database, `.env` file or Docker is required.
 
 ```bash
-python run.py        # Windows (or: py run.py, or double-click start_all.bat)
-python3 run.py       # macOS / Linux (or: ./start.sh)
+python run.py      # Windows (or double-click start_all.bat)
+python3 run.py     # macOS / Linux (or ./start.sh)
 ```
 
-The first run creates `backend/.venv`, installs the Python and npm packages and writes local config (about 2–5 minutes). Then it starts the backend on http://127.0.0.1:8000 and the frontend on http://localhost:3000, checks both answer, and opens the browser. Later runs start in seconds. **Ctrl+C stops both.** Logs are in `.run-logs/`.
+The first run installs everything (2–5 minutes), then opens http://localhost:3000. The API runs on http://127.0.0.1:8000 (docs at `/docs`). In VS Code, use **Terminal → Run Task → ScamGuard: Run (backend + frontend)**. See [START_HERE.md](START_HERE.md) for troubleshooting.
 
-It also stops an old ScamGuard server that was left running (the usual cause of "server busy / down" locally), and repairs settings from older setups. Problems? See **START_HERE.md → Troubleshooting**.
+Optional full stack with PostgreSQL: `docker compose up --build`.
 
-Other VS Code tasks: *Backend only*, *Install / repair setup*, *Backend tests*, *Frontend checks*. The Run and Debug panel has *Backend: FastAPI (debug)*, *Frontend: Next.js dev* and *Debug both*.
-
-### Docker Compose (optional, full multi-service setup)
+## Tests
 
 ```bash
-docker compose up --build
+cd backend && python -m pytest -q                              # 836 tests
+cd frontend && npm run typecheck && npm run lint && npm test   # 14 tests
 ```
 
-Starts PostgreSQL, the backend, the optional separate ML service and the frontend (see `backend/docs/ML_SERVICE.md`).
+## Security and privacy
 
----
+- bcrypt passwords, short-lived JWTs with refresh rotation, self-hosted CAPTCHA and rate limits.
+- Links are opened only on the server, with SSRF protection; uploads are capped at 8 MB.
+- Quick checks are never stored; saved scans are visible only to their owner, who can download or delete them.
 
-## 🧪 Testing and Verification
-
-The project includes **836 backend tests** (pytest) and **14 frontend tests** (Vitest), verified on Python 3.10 to 3.14.
-
-Run all tests:
-```bash
-cd backend
-python -m pytest tests -v
-python -m pytest ml_service/tests -v
-python -m pytest ml_common/tests ml_training/tests -v
-```
-
----
-
-## 🔒 Security
-
-- Passwords hashed using bcrypt.
-- JWT access tokens with short expiry (15m) + secure refresh token rotation (7d).
-- Strict Content Security Policy (CSP) & CORS configuration.
-- Rate-limiting enabled via SlowAPI on sensitive auth & prediction routes.
-- Privacy-first in-memory vectorization: message content is never sold or used for model retraining without consent.
-- **URL analysis is SSRF-hardened**: every hostname the server actually connects to (including redirect targets, checked via an httpx request-level hook) is resolved and rejected if it's a loopback, private, link-local, multicast, or reserved address -- so a submitted URL can't be used to make the server fetch its own internal network or cloud metadata endpoint (`169.254.169.254`). TLS certificate verification is enforced (previously disabled).
-- **File uploads (image/PDF/QR/email) are capped at 8 MB** server-side, independent of any reverse proxy in front of the service, to prevent memory exhaustion during OCR/PDF parsing.
-- **No fabricated ML fallback**: if neither the remote ML microservice nor the in-process model can produce a real prediction, the API returns a `503 MODEL_UNAVAILABLE` error. There is no keyword-heuristic tier that manufactures a plausible-looking probability, confidence score, or model name when the real model is unavailable.
-
-<details>
-<summary><b>Known limitations</b></summary>
-
-- Scans happen when a user submits something; there is no automatic SMS or call interception (that would need a native Android app).
-- Domain age depends on the public RDAP service; if it is unreachable the trust score says "registration date not available".
-- ScamGuard-IN-2026 mixes audited real messages with synthetic ones used for training only; the reported accuracy comes from 1,874 real messages in campaigns held out from training, and most reported messages date from 2022–2024.
-- No real third-party CAPTCHA, no independent SPF/DKIM/DMARC DNS verification, and CAPTCHA/login-attempt state is in-process (single instance).
-
-</details>
-
-<details>
-<summary><b>CAPTCHA and abuse protection</b></summary>
-
-Registration and step-up login protection now use a real, self-hosted, stateless CAPTCHA (`app_service/core/captcha.py`, 11 tests): a short arithmetic challenge with an HMAC-SHA256-signed, time-limited token -- no server-side storage needed, tamper-evident, timing-safe verification. This is honestly scoped as a lightweight bot-friction mechanism, not a claim of parity with a third-party CAPTCHA service (reCAPTCHA/hCaptcha/Turnstile), which would need external account credentials this environment doesn't have; swapping one in later only requires changing the verification call site.
-
-- **Registration**: always requires a solved CAPTCHA.
-- **Login**: only requires one after 3 failed attempts for that email within 15 minutes (`app_service/core/login_attempts.py`) -- not on every normal login. That tracker is in-process (documented limitation: resets on restart, not shared across multiple app_service replicas; a multi-instance deployment would need to move it to Redis or the database).
-
-</details>
-
-<details>
-<summary><b>URL intelligence</b></summary>
-
-URL analysis now computes real, deterministic signals from the URL string itself (`ml_common/security/url_intelligence.py`, 20+ tests): punycode/IDN detection, IP-literal hosts, known URL shorteners, a short list of TLDs commonly abused in phishing campaigns, userinfo-obfuscation (`user@host` tricks), and lookalike/brand-impersonation detection via edit distance against a small explicit brand list. This is a best-effort heuristic layer, not a full public-suffix-list implementation or a live reputation/WHOIS/TLS lookup -- it does not claim domain age, certificate details, or a definitive verdict, only what's structurally observable in the URL text. TLS certificate metadata (subject/issuer/expiry) is best-effort and untested against a live host from this project's own dev environment. Results are surfaced as "Observed URL signals," kept explicitly separate from the model's own interpretation.
-
-</details>
-
-<details>
-<summary><b>Model evaluation details</b></summary>
-
-`ModelEvaluator` (`ml_training/evaluation/evaluator.py`) computes real accuracy/precision/recall/F1/ROC-AUC/false-positive-rate via scikit-learn, plus the raw confusion matrix counts. The production model (`logistic_regression` v4) is trained on ScamGuard-IN-2026 (`backend/ml_training/datasets/scamguard_in_2026/`), split by scam campaign so no near-duplicate of a test message is seen in training. `python -m ml_training.research.run_experiments` reproduces every reported number; `results.md` holds the tables.
-
-</details>
-
----
-
-<details>
-<summary><b>⚙️ Environment variables</b></summary>
-
-All backend configuration is via `backend/.env` (copy from `backend/.env.example`). Every variable actually used by the app:
-
-| Variable | Purpose | Required? |
-|---|---|---|
-| `SECRET_KEY` | JWT signing secret. **Refuses to start if left at the known placeholder value while `DEBUG=false`** -- generate a real one for anything beyond local dev. | Yes |
-| `DEBUG` | Defaults to `false`. Set `true` only for local development. | No |
-| `DATABASE_URL` | Postgres (production) or SQLite (local fallback) connection string. | Yes |
-| `ML_SERVICE_URL` | URL of a separate `ml_service` container, if running one (self-hosted `docker-compose` setup only -- **not used by the current Render deployment**, which runs ML in-process). | No |
-| `CORS_ORIGINS` | Comma-separated allowed frontend origins. | Yes |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` / `REFRESH_TOKEN_EXPIRE_DAYS` | JWT lifetimes. | No |
-| `RATE_LIMIT_DEFAULT` / `RATE_LIMIT_AUTH` | SlowAPI rate limits. | No |
-| `VOICE_TRANSCRIPTION_PROVIDER` / `VOICE_TRANSCRIPTION_API_KEY` | Optional server-side audio transcription provider. Unset by default -- browser-based live transcription (Web Speech API) works regardless; only server-side audio-*file* transcription needs this. | No |
-| `COPILOT_LLM_PROVIDER` / `COPILOT_LLM_API_KEY` | Optional external LLM for Copilot. Unset by default -- Copilot answers via the deterministic, evidence-grounded engine instead. | No |
-
-The frontend needs no `.env` for local dev beyond what Next.js generates (`frontend/.env.local`) for its own tooling; the API base URL is proxied same-origin via `next.config.js` rewrites, not an environment variable.
-
-</details>
-
-<details>
-<summary><b>📁 Repository structure</b></summary>
+## Repository structure
 
 ```
-ScamGuard-AI/
-├── docker-compose.yml          # Root one-command multi-container setup
-├── backend/
-│   ├── app_service/            # Core business logic, auth, REST API routes
-│   │   ├── api/v1/             # Endpoints: auth, messages, users, health
-│   │   ├── core/               # Config, JWT security, exceptions, rate-limiting
-│   │   ├── db/                 # Models, database session, SQLite/PostgreSQL
-│   │   └── services/           # Business logic & extraction service
-│   ├── ml_service/             # Dedicated ML inference microservice
-│   ├── ml_training/            # ML model training scripts & datasets
-│   ├── ml_common/              # Shared NLP tokenizers, TF-IDF vectorizers
-│   ├── artifacts/              # Bundled trained ML model weights & metadata
-│   ├── requirements.txt        # App service dependencies
-│   └── requirements-ml.txt     # ML service dependencies
-├── frontend/                   # Next.js 14 React frontend with Tailwind CSS
-│   ├── src/app/                # App router: login, register, dashboard, analyze, settings
-│   ├── src/components/         # Reusable UI widgets, badges, verdict cards, camera scanner
-│   └── src/lib/api/            # Typed API client with auto token refresh
-├── infra/
-│   └── docker/                 # Dockerfiles for each microservice
-└── docs/                       # Architecture documentation and specs
+backend/
+  app_service/    FastAPI app: API routes, services, database
+  ml_common/      shared preprocessing, features, model registry
+  ml_training/    training pipeline, ScamGuard-IN-2026 dataset, experiments
+  ml_service/     optional separate inference service
+  artifacts/      trained models
+  tests/          back-end tests
+frontend/         Next.js app
+browser-extension/
+research/cross_domain/   cross-domain notebook, data, outputs, Streamlit app
+docs/             report, presentation, poster, paper, screenshots
+infra/            Dockerfiles and nginx config
+run.py            one-command local run
 ```
 
-</details>
+## Team
 
----
-
-## 👤 Author & Project Team
-
-- **Project Lead & Author**: **Priyam Thakur** (1BM23CS252) ([@priyamthakur275](https://github.com/priyamthakur275))
-- **Team Members**: Bhavya Goyal (1BM23CS063), Samir Chaudhary (1BM23CS294), Sana Subodh (1BM23CS296)
-- **Guide**: Dr. Kayarvizhy N, Professor, Department of CSE, B.M.S. College of Engineering, Bengaluru
-- **Repository**: [https://github.com/priyamthakur275/scamguard-ai](https://github.com/priyamthakur275/scamguard-ai)
-- **Project**: ScamGuard AI — AI-Powered Online Scam & Fraud Detection System (Major Project, B.E. Computer Science and Engineering)
+| | |
+|---|---|
+| Author | **Priyam Thakur** (1BM23CS252) · [@priyamthakur275](https://github.com/priyamthakur275) |
+| Team | Bhavya Goyal (1BM23CS063), Samir Chaudhary (1BM23CS294), Sana Subodh (1BM23CS296) |
+| Guide | Dr. Kayarvizhy N, Professor, Department of CSE, B.M.S. College of Engineering, Bengaluru |

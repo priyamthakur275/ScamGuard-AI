@@ -27,8 +27,8 @@ class TestModelEvaluationContent:
         response = client.get("/api/v1/admin/model-evaluation", headers={"Authorization": f"Bearer {token}"})
         entries = response.json()
         assert len(entries) >= 1
-        naive_bayes_entries = [e for e in entries if e["model_name"] == "naive_bayes"]
-        assert len(naive_bayes_entries) >= 1
+        production = [e for e in entries if e["model_name"] == "logistic_regression" and e["version"] == "v4"]
+        assert len(production) == 1
 
     def test_every_entry_has_the_required_fields(self, client, admin_user):
         token = create_access_token(subject=str(admin_user.id), role=admin_user.role.value)

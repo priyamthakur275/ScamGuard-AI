@@ -1,4 +1,4 @@
-"""Controlled text transformations for robustness testing (Phase 16).
+"""Controlled text transformations for robustness testing.
 
 INTERNAL/EVALUATION TOOLING ONLY. Every function here is a pure,
 deterministic text transform -- no randomness, no ML, nothing that could

@@ -27,6 +27,6 @@ class ModelEvaluationEntry(BaseModel):
     dataset_size: int
     # Explicit, real limitation text -- not boilerplate, an actual
     # statement about THIS entry's real sample size. None only when
-    # dataset_size is genuinely unknown (pre-Phase-15 registry entries
+    # dataset_size is genuinely unknown (older registry entries
     # that predate this field).
     dataset_limitation_note: str | None = None

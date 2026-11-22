@@ -36,7 +36,6 @@ Options: `python run.py --backend-only`, `--setup-only` (install/repair only), `
 
 | What you see | Why | Fix |
 | --- | --- | --- |
-| "Server busy" / "Too many quick checks" | An old version enforced the public rate limit locally | `git pull`, then run `python run.py` again (local runs have no rate limit now) |
 | "Could not reach the server" / "Server waking up" | The backend isn't running, or an old one is frozen | Run `python run.py`: it stops an old ScamGuard server on ports 8000/3000 and starts fresh |
 | "Port 8000 (or 3000) is used by another program" | A different app uses that port | Close it (or restart the computer) and run again |
 | `'python' is not recognized` (Windows) | Python isn't on PATH | Use `py run.py`, or reinstall Python with "Add python.exe to PATH" ticked |
@@ -58,6 +57,6 @@ To start completely fresh: close the terminal, delete `backend/.venv`, `frontend
 
 - **Backend**: FastAPI on http://127.0.0.1:8000, local SQLite database (`backend/app_service/scam_detection.db`, created automatically). The production model (logistic regression v4, trained on ScamGuard-IN-2026) runs in-process.
 - **Frontend**: Next.js dev server on http://localhost:3000; it forwards `/backend-api/*` to the backend, so the browser talks to one address.
-- **Live site** (separate): https://scamguard-frontend-r6t7.onrender.com (Render + Neon).
+- **Live site**: https://scamguard-frontend-r6t7.onrender.com
 
 Keep `backend/.env` private: it holds your local secret key and is git-ignored.

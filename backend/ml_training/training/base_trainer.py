@@ -3,7 +3,7 @@
 `TrainingPipeline` depends only on this interface, never on a concrete
 scikit-learn estimator. This is what satisfies the Open/Closed Principle
 called out in the approved architecture: a future LSTM or transformer
-trainer (per the roadmap's Phase 5) can be added as a new class
+trainer (per the roadmap's) can be added as a new class
 implementing `BaseModelTrainer` without touching the pipeline, the
 evaluator, or the registry.
 """

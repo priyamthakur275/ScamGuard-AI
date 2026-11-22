@@ -11,7 +11,7 @@ does adding a small labelled Indian sample to training fix it?
 | `notebook_src.py` | The same notebook as a plain Python script (jupytext percent format) |
 | `data/raw/` | Dataset A (`SMSSpamCollection`, UCI, CC BY 4.0) and Dataset B (`spam_ham_india.csv`, MIT) with B's README and licence |
 | `data/clean/` | Both datasets after cleaning |
-| `outputs/tables/` | Every result table as CSV (`table1` … `table9`, guide numbering) |
+| `outputs/tables/` | Every result table as CSV (`table1` … `table9`) |
 | `outputs/figures/` | All charts (PNG) |
 | `outputs/models/` | Saved baseline and adapted models (joblib) used by the app |
 | `outputs/results.json` | All results in one file |

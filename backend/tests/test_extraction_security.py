@@ -105,7 +105,7 @@ class TestNetworkIntelligenceInMetadata:
     def test_blocked_url_still_returns_url_intelligence_with_new_fields(self):
         text, metadata = ExtractionService.extract(None, "http://169.254.169.254/", "URL")
         intel = metadata["url_intelligence"]
-        # Structural fields from Phase 3 must be present even on a
+        # Structural fields from must be present even on a
         # blocked target (they're computed from the URL string alone).
         assert "port" in intel
         assert "path" in intel

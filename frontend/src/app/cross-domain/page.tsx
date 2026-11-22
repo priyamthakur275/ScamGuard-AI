@@ -35,7 +35,7 @@ export default function CrossDomainPage() {
   useEffect(() => {
     getCrossDomainResults()
       .then(setStudy)
-      .catch(() => setStudyError("Could not load the study results. The server may be waking up; refresh in a few seconds."));
+      .catch(() => setStudyError("Could not load the results. Refresh in a few seconds."));
   }, []);
 
   const lrA = study?.within_vs_cross.find((r) => r.Model === "Logistic Regression" && r["Test domain"] === "Source A");
@@ -52,22 +52,17 @@ export default function CrossDomainPage() {
 
   return (
     <PublicShell>
-      <p className="text-xs text-primary">Research study · suggested by our guide</p>
-      <h1 className="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">Cross-Domain SMS Spam Detection System</h1>
-      <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-        Does a spam filter trained in one country work in another? We trained classifiers on UK messages (UCI SMS Spam Collection),
-        tested them on Indian SMS, then adapted them with a small labelled Indian sample. Spam = unwanted promotional or fraudulent SMS;
-        ham = a normal message.
-      </p>
+      <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">Cross-Domain SMS Spam Detection</h1>
+      <p className="mt-2 text-sm text-muted-foreground">Source: UCI SMS Spam Collection (UK) · Target: Indian SMS</p>
 
       {studyError && <p className="mt-4 text-sm text-destructive">{studyError}</p>}
       {study && lrA && lrB && lr10 && (
-        <section className="mt-6" aria-label="The study in four steps">
+        <section className="mt-6" aria-label="Summary">
           <div className="flex flex-col gap-3 md:flex-row">
-            <Step n={1} title="Train on UK SMS" value={f3(lrA["F1-score"])} note={`Spam F1 on UK test data (Logistic Regression, ${rowsA.toLocaleString("en-IN")} UK messages)`} />
-            <Step n={2} title="Test on Indian SMS" value={f3(lrB["F1-score"])} tone="bad" note={`Same model on ${rowsB.toLocaleString("en-IN")} Indian messages: recall falls to ${pct(lrB.Recall)}, so about half the spam is missed`} />
-            <Step n={3} title="Add Indian examples" value={`+${added10}`} note={`Labelled Indian messages added (10% of the ${pool.toLocaleString("en-IN")}-message pool)`} />
-            <Step n={4} title="Test again" value={f3(lr10.B_f1_mean)} tone="good" note={`Spam F1 on the untouched Indian test set, mean of ${study.seeds.length} seeds`} />
+            <Step n={1} title="Trained on UK SMS" value={f3(lrA["F1-score"])} note={`Spam F1, UK test set · ${rowsA.toLocaleString("en-IN")} messages`} />
+            <Step n={2} title="Tested on Indian SMS" value={f3(lrB["F1-score"])} tone="bad" note={`Spam F1 · recall ${pct(lrB.Recall)} · ${rowsB.toLocaleString("en-IN")} messages`} />
+            <Step n={3} title="Indian samples added" value={`+${added10}`} note={`10% of the ${pool.toLocaleString("en-IN")}-message labelled pool`} />
+            <Step n={4} title="After adaptation" value={f3(lr10.B_f1_mean)} tone="good" note={`Spam F1, Indian test set · mean of ${study.seeds.length} seeds`} />
           </div>
         </section>
       )}
@@ -76,7 +71,7 @@ export default function CrossDomainPage() {
 
       {uk && india && indiaSpam && (
         <section className="mt-6 rounded-xl border border-border p-5">
-          <h2 className="text-xl font-semibold">Why the UK model struggles with Indian SMS</h2>
+          <h2 className="text-xl font-semibold">UK vs Indian SMS</h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
             <div className="rounded-lg border border-border p-4">
               <p className="text-xs text-muted-foreground">Words the UK model never saw</p>
@@ -94,16 +89,11 @@ export default function CrossDomainPage() {
               <p className="mt-1 text-xs text-muted-foreground">UK test messages vs Indian messages</p>
             </div>
           </div>
-          <p className="mt-3 text-xs text-muted-foreground">
-            Indian spam names local brands and telecom offers (Airtel, Vi, Lenskart) and carries short links, which the UK data barely contains.
-          </p>
         </section>
       )}
 
-      <h2 className="mt-10 text-xl font-semibold">Full experiment results</h2>
-      <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-        Measured by the study notebook (research/cross_domain in the repository){study ? `; adaptation results are the mean over seeds ${study.seeds.join(", ")}` : ""}.
-      </p>
+      <h2 className="mt-10 text-xl font-semibold">Results</h2>
+      {study && <p className="mt-1 text-sm text-muted-foreground">Mean over seeds {study.seeds.join(", ")}</p>}
       {!study && !studyError && <p className="mt-3 text-sm text-muted-foreground">Loading…</p>}
 
       {study && (
@@ -173,14 +163,6 @@ export default function CrossDomainPage() {
         </>
       )}
 
-      <section className="mt-6 rounded-xl border border-border p-5 text-sm">
-        <h3 className="text-base font-semibold">How to reproduce it</h3>
-        <ul className="mt-2 list-disc space-y-1 pl-5 text-muted-foreground">
-          <li>Open <span className="font-mono text-foreground">research/cross_domain/CrossDomain_SMS_Spam.ipynb</span> and run all cells (Jupyter or Google Colab). It downloads both datasets, cleans them and regenerates every number on this page.</li>
-          <li>The models on this page are the files that notebook saved: Naive Bayes and Logistic Regression, baseline and adapted, seed 42.</li>
-          <li>A standalone demo of the same models runs with <span className="font-mono text-foreground">streamlit run app/app.py</span>.</li>
-        </ul>
-      </section>
     </PublicShell>
   );
 }
