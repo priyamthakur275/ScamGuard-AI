@@ -8,7 +8,7 @@
 | Model | Logistic regression (C = 16, balanced class weights) on word 1-2-gram TF-IDF (30k) + character 2-5-gram TF-IDF (60k); 36,641 features |
 | Final verdict | Model probability fused with an intent-based risk engine in log-odds space (`ml_service/inference/threat_scorer.py`); scam if the final score is at least 0.5 |
 | Input processing | `deobfuscate()` (evasion-trick removal), then lowercase and placeholder tokens for URLs, phone numbers, numbers and emails |
-| Languages | English, Hindi (Devanagari), Hinglish (Hindi in Latin script) |
+| Languages | English (main); Hindi (Devanagari) and Hinglish supported but weak on real messages (see limitations) |
 | Training data | ScamGuard-IN-2026 train + dev (9,513 rows, of which 4,737 synthetic) + 1,200 synthetic Hinglish/Hindi rows |
 | Artifacts | `backend/artifacts/logistic_regression/v5/`, registered in `artifacts/registry_index.json` |
 | Reproduce | `python -m ml_training.research.train_production` (from `backend/`) |
@@ -30,13 +30,14 @@ Real test set: 1,874 real Indian messages from scam campaigns held out of traini
 |:---:|:---:|:---:|:---:|:---:|:---:|
 | 96.7% | 97.8% | 97.1% | 97.5% (96.8-98.0) | 3.9% | 0.994 |
 
-Other sets: challenge set (259 hard cases) 96.0% F1, 0% false alarms; Hinglish/Hindi set B (synthetic) 100% F1;
+Other sets: challenge set (259 hard cases) 96.0% F1, 0% false alarms; real Hindi messages (77) 66.7% F1, 26.2% false
+alarms; Hinglish/Hindi set B (synthetic) 100% F1;
 recall under a combined evasion attack 97.2%. Full results: `backend/ml_training/research/results_v2.md`.
 
 ## Known limitations
 
-- About half the English training rows and all Hindi/Hinglish rows are synthetic; synthetic rows are never in the
-  real test set, but real-world Hindi/Hinglish accuracy has not been measured.
+- **Weak on real Hindi.** On 77 real Hindi messages: 66.7% F1, 26.2% false alarms. Almost all Hindi/Hinglish
+  training rows are synthetic. Treat Hindi verdicts as advisory.
 - Genuine-message coverage is thinner than scam coverage; about 4 in 100 genuine messages are flagged.
 - The risk engine's rules raise false alarms on English slightly (classifier alone: 2.7%) in exchange for much
   better recall on unfamiliar and code-mixed scams.

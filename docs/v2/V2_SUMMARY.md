@@ -38,6 +38,15 @@ disguised and Hindi/Hinglish messages:
 | Hinglish/Hindi set B (final, 300 msgs, 36 templates): F1 / false alarms | 85.0% / 12.7% | 100% / 0% |
 | Hinglish/Hindi set A (used for error analysis): F1 / false alarms | 88.8% / 9.3% | 95.5% / 9.3% |
 | Challenge set (259, hand-written hard cases): F1 | 96.9% | 96.0% |
+| **Real Hindi messages** (77 unused IMC'25 reports, 60 groups): F1 / false alarms | 63.9% / 33.3% | 66.7% / 26.2% (McNemar p = 0.38) |
+
+**The real Hindi result is the most important number in this document.** The 77 messages are the IMC'25 Hindi
+reports that were not in the dataset, labelled by the dataset rule before any model scored them (50 chat fragments,
+promotions and unclear reports were dropped, not guessed). v2's 100% on synthetic set B does not carry over: real
+lures ("PM loan yojana, 1% interest, call ...", "Amazon sale, camera for Rs 199") are missing from the templates,
+and genuine Devanagari notices (Covid test results, Airtel recharge reminders) are flagged because most Devanagari
+text the model has seen is a scam. The set was not used to tune anything. Fixing this needs real labelled Hindi
+messages and a model pre-trained on Hindi (MuRIL), which the transformer notebook tests on this set.
 
 Real scam messages already use these tricks: the real test set contains "Y0N0" (zeros for O) and "H.D.F.C".
 
@@ -63,8 +72,7 @@ TRAIN (80% of its templates train, 20% dev), TEST A and TEST B. Settings were ch
 templates only. Set A was looked at once for error analysis, so it is reported as a development check; set B was
 written afterwards and scored only in the final run. Exact-text overlap between training and both test sets is 0.
 All three banks and the Hindi/Hinglish rules were written by the same team, so set B shows the system covers these
-kinds of phrasing; it does not measure accuracy on real WhatsApp or SMS traffic. A labelled set of real
-code-mixed messages is the next step.
+kinds of phrasing; it does not measure accuracy on real traffic. The real-Hindi result above shows the gap.
 
 ## Not done yet (and not claimed)
 
