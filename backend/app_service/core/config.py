@@ -93,6 +93,12 @@ class Settings(BaseSettings):
     # scans hung and the UI reported the backend as busy.
     ML_SERVICE_URL: str = ""
 
+    # Telegram bot (v2). Off unless both are set. The webhook URL is
+    # /api/v1/telegram/webhook/<TELEGRAM_WEBHOOK_SECRET>; Telegram also sends
+    # the secret in the X-Telegram-Bot-Api-Secret-Token header, which is checked.
+    TELEGRAM_BOT_TOKEN: str = ""
+    TELEGRAM_WEBHOOK_SECRET: str = ""
+
     # Voice transcription: no provider is configured by default.
     # When unset, server-side audio-file transcription is honestly
     # reported as unavailable rather than faked -- see
