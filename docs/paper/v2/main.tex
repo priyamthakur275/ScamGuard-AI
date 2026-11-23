@@ -8,7 +8,7 @@
 \usepackage[hidelinks]{hyperref}
 \input{numbers.tex}
 
-\title{Hardening an Indian Scam-Message Detector:\\Evasion Robustness, a Train--Serve Mismatch,\\and a Synthetic-to-Real Gap in Hindi}
+\title{Hardening an Indian Scam-Message Detector:\\Evasion Robustness, a Train--Serve Mismatch,\\and a Synthetic-to-Real Gap in Hindi that Transformers Close}
 \author{Priyam Thakur \and Bhavya Goyal \and Samir Chaudhary \and Sana Subodh \and Kayarvizhy N\\[2pt]
 \small Department of Computer Science and Engineering, BMS College of Engineering, Bengaluru, India}
 \date{}
@@ -26,7 +26,10 @@ real data. Second, an audit of the serving path found a train--serve mismatch: t
 summary that the model never saw in training, which lowered F1 from \fRealRep\% to \fRealDep\% and raised false alarms
 from \fprRealRep\% to \fprRealDep\%. Third, after adding Hindi and Hinglish data and rules, the system scored
 \fHinBTwo\% F1 on a held-out synthetic Hinglish set. On \nRH{} real Hindi messages labelled before scoring, it
-scored only \fRHTwo\% F1 with \fprRHTwo\% false alarms, not significantly better than before ($p=\pRH$). We also
+scored only \fRHTwo\% F1 with \fprRHTwo\% false alarms, not significantly better than before ($p=\pRH$). A fine-tuned
+XLM-R trained on the same data reaches \tXlRHF\% F1 with \tXlRHFpr\% false alarms on those real messages ($p$
+\tXlRHP{} against the TF-IDF model). It scores only \tXlHinBF\% on the synthetic set, so the synthetic benchmark ranks
+the two systems in the opposite order from real data. We also
 report a temporal test, calibration (ECE \eceFinal), an ``uncertain'' band that holds \bandShare\% of messages and
 \bandErrIn{} of \bandErrTotal{} errors, a fusion ablation, and simple-rule baselines. Every number is produced by one
 script that runs in under a minute on a laptop CPU.
@@ -52,6 +55,8 @@ first evaluation:
 \item A documented train--serve mismatch in the deployed system, its measured cost, and its fix.
 \item A cautionary result: \fHinBTwo\% F1 on a template-disjoint synthetic Hinglish test, but \fRHTwo\% on real Hindi
   messages labelled before scoring. We give an error analysis and release the real test set.
+\item A comparison with fine-tuned MuRIL and XLM-R on identical splits. XLM-R closes most of the real-Hindi gap.
+  Trained only on the UCI corpus, MuRIL scores \tMuCrossFull\% F1 on Indian SMS, against \tLrCrossFull\% for TF-IDF.
 \item Supporting analyses (temporal split, calibration, review band, fusion ablation, rule baselines) and a one-command
   ingest path for newly collected real messages.
 \end{itemize}
@@ -210,14 +215,50 @@ mostly link-bearing, so its scores should be read with this in mind.
 
 \paragraph{Cost.} The full path takes \msPerMsg{} ms per message on two CPU cores.
 
+\begin{table}[t]\centering\small
+\setlength{\tabcolsep}{3.5pt}
+\caption{Fine-tuned transformers vs TF-IDF + LR (v2 pipeline) on identical splits. Classifier-only F1 / FPR (\%); $p$ is McNemar for transformer + risk engine vs LR. One seed.}
+\label{tab:tr}
+\begin{tabular}{@{}lccc@{}}\toprule
+Test set & LR v2 & MuRIL & XLM-R \\\midrule
+Real test & \tLrRealF/\tLrRealFpr & \tMuRealF/\tMuRealFpr & \tXlRealF/\tXlRealFpr \\
+Challenge & \tLrChalF/\tLrChalFpr & \tMuChalF/\tMuChalFpr & \tXlChalF/\tXlChalFpr \\
+Hinglish B (synth.) & \tLrHinBF/\tLrHinBFpr & \tMuHinBF/\tMuHinBFpr & \tXlHinBF/\tXlHinBFpr \\
+\textbf{Real Hindi} & \tLrRHF/\tLrRHFpr & \tMuRHF/\tMuRHFpr & \textbf{\tXlRHF/\tXlRHFpr} \\
+\quad $p$ vs LR & -- & \tMuRHP & \tXlRHP \\
+UCI$\to$India, full B & \tLrCrossFull & \tMuCrossFull & \tXlCrossFull \\\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Transformers.} We fine-tuned MuRIL~\cite{muril} and XLM-R~\cite{xlmr} for three epochs on the v2 training
+split (\tTrainRows{} rows; the development split picks the epoch). Both use de-obfuscated text and are run on a T4
+GPU (Table~\ref{tab:tr}). For a like-for-like comparison, the LR column is retrained on the same split, so it differs
+slightly from Table~\ref{tab:main}.
+\begin{itemize}\itemsep0pt
+\item \emph{English.} XLM-R is slightly better on the real test set (\tXlRealF\% vs \tLrRealF\%), and the difference
+  is not significant.
+\item \emph{Real Hindi.} XLM-R reaches \tXlRHF\% F1 (CI \tXlRHciLo--\tXlRHciHi) with \tXlRHFpr\% false alarms,
+  against \tLrRHF\% (CI \tLrRHciLo--\tLrRHciHi) and \tLrRHFpr\% for LR. It fixes \tXlRHWins{} of LR's errors and
+  introduces \tXlRHLosses{} ($p$ \tXlRHP). MuRIL is not significantly better than LR here ($p=\tMuRHP$).
+\item \emph{Synthetic Hinglish.} The ranking reverses: LR with the hand-written rules is perfect, and XLM-R raises
+  \tXlHinBFpr\% false alarms. A benchmark written by the rule authors rewards the rules, not real-world accuracy.
+\item \emph{Cross-domain.} Trained only on the UCI corpus, MuRIL reaches \tMuCrossFull\% F1 on Indian SMS,
+  where TF-IDF LR reaches \tLrCrossFull\%. Pre-training removes most of the domain gap that motivated local data
+  in~\cite{scamguard1}.
+\item \emph{Cost.} About \tXlMs{} ms per message on the GPU. That is acceptable as a second stage for Hindi and
+  Hinglish messages, but too large for the current free CPU deployment.
+\end{itemize}
+Each model was run with one seed and evaluated on a 77-message real-Hindi set, so these differences need
+confirmation on more seeds and more real data.
+
 \section{Limitations}
 \begin{itemize}\itemsep0pt
 \item The real Hindi set is small (\nRH{} messages) and was labelled by a single annotator.
 \item The temporal test is weakened by undated campaigns.
 \item Almost all Hindi and Hinglish training data is synthetic. A one-command ingest path splits newly collected real
   messages by group and keeps the frozen test set clean.
-\item Multilingual transformers (MuRIL~\cite{muril}, XLM-R~\cite{xlmr}) on identical splits, including the real Hindi
-  set, are prepared but not yet run. We report no transformer numbers.
+\item The transformer results come from one seed. The deployed system is still TF-IDF + LR; routing Hindi and
+  Hinglish messages to XLM-R needs a GPU or a larger server.
 \item No user study has been run.
 \end{itemize}
 

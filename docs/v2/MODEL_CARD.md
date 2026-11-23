@@ -37,7 +37,8 @@ recall under a combined evasion attack 97.2%. Full results: `backend/ml_training
 ## Known limitations
 
 - **Weak on real Hindi.** On 77 real Hindi messages: 66.7% F1, 26.2% false alarms. Almost all Hindi/Hinglish
-  training rows are synthetic. Treat Hindi verdicts as advisory.
+  training rows are synthetic. Treat Hindi verdicts as advisory. A fine-tuned XLM-R scores 88.9% / 11.9% on the same
+  set (transformer_results.md) and is the planned second stage for Hindi messages.
 - Genuine-message coverage is thinner than scam coverage; about 4 in 100 genuine messages are flagged.
 - The risk engine's rules raise false alarms on English slightly (classifier alone: 2.7%) in exchange for much
   better recall on unfamiliar and code-mixed scams.

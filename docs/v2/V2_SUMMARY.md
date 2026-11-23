@@ -65,6 +65,26 @@ Real scam messages already use these tricks: the real test set contains "Y0N0" (
   cross-domain India SMS set, which says more about that dataset than about the rule.)
 - **Speed.** 0.67 ms per message for the full path on 2 CPU cores.
 
+## Transformers (MuRIL, XLM-R), Colab T4, one seed
+
+`research/transformer/ScamGuard_Transformers_Colab.ipynb` runs `transformer_experiment.py`: 3 epochs on the v2
+training split, epoch chosen on dev, same de-obfuscated text. LR is retrained on the same split for a like-for-like
+comparison. Full tables: [transformer_results.md](../../backend/ml_training/research/transformer_results.md).
+
+| Test (F1 / false alarms) | LR v2 | MuRIL | XLM-R |
+|---|:---:|:---:|:---:|
+| Real English test | 97.1 / 4.5% | 97.5 / 2.6% | 97.8 / 3.2% |
+| **Real Hindi (77)** | 64.7 / 26.2% | 69.2 / 38.1% | **88.9 / 11.9%** (McNemar p = 0.0001) |
+| Synthetic Hinglish B | 100 / 0% | 92.9 / 11.3% | 84.5 / 32.0% |
+| UCI-trained, tested on India SMS | 67.8 | 97.5 | 95.8 |
+
+- **XLM-R fixes most of the real-Hindi weakness:** it corrects 17 of LR's errors and introduces 1.
+- **The synthetic Hinglish set ranks the systems the wrong way round.** It rewards the hand-written rules, which
+  confirms that synthetic templates measure coverage, not accuracy.
+- **Pre-training removes most of the cross-domain gap** that the v1 study fixed with local data.
+- **These are single-seed runs** on a small real-Hindi set. The next step is to route Hindi/Hinglish messages to
+  XLM-R once a GPU or larger server is available.
+
 ## How the Hinglish/Hindi sets were made (and why they are not real-world data)
 
 The generator (`ml_training/datasets/scamguard_in_2026/hinglish.py`) has three template banks written separately:
@@ -76,10 +96,8 @@ kinds of phrasing; it does not measure accuracy on real traffic. The real-Hindi 
 
 ## Not done yet (and not claimed)
 
-- **Transformers.** `research/transformer/ScamGuard_Transformers_Colab.ipynb` fine-tunes MuRIL and XLM-R on the same
-  splits and reports them alone, fused with the rules, and as a second stage for uncertain messages. Its pipeline is
-  tested on CPU with a tiny untrained model; the real run needs a Colab GPU (about 30 minutes). No transformer
-  numbers are reported until that run is done.
+- **Transformers in production.** XLM-R fixes most of the real-Hindi gap (below), but at about 1 GB it does not fit the
+  free CPU server, so the deployed model is still LR v5.
 - **User pilot.** `docs/v2/PILOT_KIT.md` and `backend/scripts/sus_score.py` are ready; no pilot has been run.
 - **Human-labelled agreement (kappa).** Not done; the label audit from v1 still applies.
 - **Paper.** The v1 paper is submitted to COMP-SIF 2027 (Paper ID 1206) and under review.

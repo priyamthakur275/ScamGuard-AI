@@ -1,0 +1,19 @@
+Colab Tesla T4, branch v2 @ 7b76b04, run 2 (screen text captured 2026-11-23 21:21 IST)
+== muril  epochs dev F1: 0.9641, 0.9709, 0.9753 (~67-70 s/epoch)
+real_test            clf 0.9749 | fused 0.9720 FPR 0.0286 | two-stage 0.9796 | LR v2 0.9709
+challenge            clf 0.9211 | fused 0.9339 FPR 0.0213 | two-stage 0.9739 | LR v2 0.9739
+test_2026            clf 0.8421 | fused 0.9000 FPR 0.0000 | two-stage 1.0000 | LR v2 0.9524
+hinglish_a_dev_check clf 0.9490 | fused 0.9524 FPR 0.1000 | two-stage 0.9585 | LR v2 0.9585
+hinglish_b_final     clf 0.9295 | fused 0.9295 FPR 0.1133 | two-stage 1.0000 | LR v2 1.0000
+real_hindi           clf 0.6923 | fused 0.6750 FPR 0.4286 | two-stage 0.6133 | LR v2 0.6471
+real_test_attacked   clf 0.9753 | fused 0.9720 FPR 0.0286 | two-stage 0.9796 | LR v2 0.9714
+== xlmr   epochs dev F1: 0.9707, 0.9746, 0.9802 (~75 s/epoch)
+real_test            clf 0.9776 | fused 0.9754 FPR 0.0331 | two-stage 0.9788 | LR v2 0.9709
+challenge            clf 0.9565 | fused 0.9828 FPR 0.0000 | two-stage 0.9784 | LR v2 0.9739
+test_2026            clf 0.9000 | fused 0.9524 FPR 0.0000 | two-stage 0.9524 | LR v2 0.9524
+hinglish_a_dev_check clf 0.9256 | fused 0.9290 FPR 0.1067 | two-stage 0.9585 | LR v2 0.9585
+hinglish_b_final     clf 0.8455 | fused 0.8621 FPR 0.3200 | two-stage 1.0000 | LR v2 1.0000
+real_hindi           clf 0.8889 | fused 0.8889 FPR 0.1190 | two-stage 0.7143 | LR v2 0.6471
+real_test_attacked   clf 0.9776 | fused 0.9750 FPR 0.0331 | two-stage 0.9788 | LR v2 0.9714
+== cross-domain muril: train_A B_test 0.9799, full_B 0.9746 ; train_A_plus_10pct_B B_test 0.9735
+== cross-domain xlmr: train_A B_test ?, full_B 0.9668 (partial, from screenshot)

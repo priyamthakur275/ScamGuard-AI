@@ -60,7 +60,10 @@ What v2 adds, measured by [`v2_experiments.py`](backend/ml_training/research/v2_
 
 **Real Hindi is the open problem.** v2 is 100% on its synthetic Hinglish set but only 66.7% F1 on real Hindi
 messages (not significantly better than v1): real lures ("PM loan yojana, 1% interest, call ...") differ from the
-templates, and genuine Devanagari notices are over-flagged. The MuRIL/XLM-R notebook includes this set.
+templates, and genuine Devanagari notices are over-flagged. A fine-tuned **XLM-R reaches 88.9% F1 with 11.9% false alarms**
+on the same real messages (McNemar p = 0.0001), and **MuRIL trained only on UCI SMS scores 97.5% on Indian SMS**
+against 67.8% for TF-IDF ([transformer results](backend/ml_training/research/transformer_results.md)). XLM-R is too
+large for the free server, so the live model is still LR v5.
 
 Notes: the v1 report scored raw text (97.7% F1, 3.2% false alarms); the live v1 app appended a concept summary
 the model was never trained on, which cost about 0.6 F1. v2 removes that mismatch. The Hinglish sets are synthetic
