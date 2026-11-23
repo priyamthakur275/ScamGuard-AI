@@ -214,7 +214,8 @@ def main(argv=None) -> int:
 
     df = pd.read_csv(DS)
     train = df[df.split.isin(["train", "dev"])]
-    hin_train = pd.DataFrame(hinglish.train_rows())
+    hin_train = pd.concat([pd.DataFrame(hinglish.train_rows()), pd.DataFrame(hinglish.collected_train_rows())], ignore_index=True)
+    R_collected = int(len(hinglish.collected_train_rows()))
     hin_test = pd.DataFrame(hinglish.test_rows())
     hin_test_b = pd.DataFrame(hinglish.test_b_rows())
     overlap = (set(hin_train.text) & (set(hin_test.text) | set(hin_test_b.text)))
@@ -349,6 +350,13 @@ def main(argv=None) -> int:
 
     # X8 -----------------------------------------------------------------------------------
     ri = pd.read_csv(REAL_INDIC)
+    R["data"]["collected_real_indic_train_rows"] = R_collected
+    col = REAL_INDIC.replace("real_indic_test.csv", "real_indic_collected.csv")
+    if os.path.exists(col):
+        ct = pd.read_csv(col).query("split == 'test'")
+        yc = lab(ct)
+        R["X8b_real_hindi_collected"] = {"messages": int(len(ct)), "groups": int(ct.group.nunique()),
+                                        **{tag: summary(Scores(yc, sysm.score(ct.text)[1]).metrics(boot=BOOT)) for tag, sysm in (("v1", v1), ("v2", v2))}}
     y = lab(ri)
     X8 = {"messages": int(len(ri)), "scam": int(y.sum()), "genuine": int((1 - y).sum()), "groups": int(ri.group.nunique()),
           "exact_overlap_with_training": int(ri.text.isin(set(train.text) | set(hin_train.text)).sum())}
@@ -428,6 +436,10 @@ def write_md(R: dict) -> None:
         L.append(f"| {tag} | {f(m['f1'])} [{f(m['f1_ci'][0])}-{f(m['f1_ci'][1])}] | {f(m['precision'])} | {f(m['recall'])} | {f(m['fpr'])} | {f(m['group_accuracy'])} | {f(m['classifier_only_f1'])} |")
     L += ["", f"McNemar v1 deployed vs v2: p = {x8['mcnemar_v1_vs_v2']['p_value']:.3g}", "", "v2 errors:", ""]
     L += [f"- ({e['label']}, score {e['score']}) {e['text']}" for e in x8["v2_errors"]]
+    if "X8b_real_hindi_collected" in R:
+        c = R["X8b_real_hindi_collected"]
+        L += ["", f"**X8b. Team-collected real Hindi/Hinglish test half** ({c['messages']} messages, {c['groups']} groups): "
+              f"v1 F1 {f(c['v1']['f1'])}, FPR {f(c['v1']['fpr'])}; v2 F1 {f(c['v2']['f1'])}, FPR {f(c['v2']['fpr'])}"]
     x7 = R["X7_latency"]
     L += ["", "## X7. Latency", "", f"{x7['ms_per_message_cpu']:.2f} ms per message, full deployed path, {x7['cpus']} CPU cores.", ""]
     with open(os.path.join(HERE, "results_v2.md"), "w") as fh:

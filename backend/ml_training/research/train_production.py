@@ -42,11 +42,15 @@ def main(argv=None) -> int:
     a = ap.parse_args(argv)
 
     df = pd.read_csv(DS)
-    train = pd.concat([df[df.split.isin(["train", "dev"])], pd.DataFrame(hinglish.train_rows())], ignore_index=True)
+    train = pd.concat([df[df.split.isin(["train", "dev"])], pd.DataFrame(hinglish.train_rows()), pd.DataFrame(hinglish.collected_train_rows())], ignore_index=True)
     tests = {"real_test": df[df.split == "test"], "challenge": load_challenge()}
     if (df.split == "test_2026").any():
         tests["test_2026"] = df[df.split == "test_2026"]
     tests["hinglish_b"] = pd.DataFrame(hinglish.test_b_rows())
+    tests["real_hindi"] = pd.read_csv(os.path.join(HERE, "..", "datasets", "scamguard_in_2026", "real_indic_test.csv"))
+    _col = os.path.join(HERE, "..", "datasets", "scamguard_in_2026", "real_indic_collected.csv")
+    if os.path.exists(_col):
+        tests["real_hindi_collected"] = pd.read_csv(_col).query("split == 'test'")
 
     pre = TextPreprocessingPipeline()
     vec = TfidfFeatureExtractor(TFIDF)

@@ -149,4 +149,4 @@ Call 2616392243
 
 ## X7. Latency
 
-0.64 ms per message, full deployed path, 2 CPU cores.
+0.71 ms per message, full deployed path, 2 CPU cores.
