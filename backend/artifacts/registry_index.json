@@ -17,11 +17,35 @@
           "false_negatives": 29
         }
       },
-      "is_production": true,
+      "is_production": false,
       "trained_at": "2026-10-20T08:04:33.576606+00:00",
       "artifact_path": "artifacts/logistic_regression/v4/model.joblib",
       "vectorizer_path": "artifacts/logistic_regression/v4/vectorizer.joblib",
       "train_rows": 9513,
+      "test_rows": 1874
+    },
+    {
+      "model_name": "logistic_regression",
+      "version": "v5",
+      "metrics": {
+        "accuracy": 0.9754535752401281,
+        "precision": 0.9849874895746455,
+        "recall": 0.9768403639371381,
+        "f1": 0.9808970099667774,
+        "roc_auc": 0.9959389789610502,
+        "false_positive_rate": 0.02706766917293233,
+        "confusion_matrix": {
+          "true_positives": 1181,
+          "true_negatives": 647,
+          "false_positives": 18,
+          "false_negatives": 28
+        }
+      },
+      "is_production": true,
+      "trained_at": "2026-11-23T11:45:36.260063+00:00",
+      "artifact_path": "/home/claude/scamguard-ai/backend/ml_training/research/../../artifacts/logistic_regression/v5/model.joblib",
+      "vectorizer_path": "/home/claude/scamguard-ai/backend/ml_training/research/../../artifacts/logistic_regression/v5/vectorizer.joblib",
+      "train_rows": 10713,
       "test_rows": 1874
     }
   ]
