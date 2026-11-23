@@ -15,6 +15,8 @@ Protocol (same data and preprocessing as v2_experiments, so numbers compare dire
   * reported for each transformer: classifier alone, transformer + v2 risk engine (fusion),
     and a two-stage system (LR v2 decides; only messages in its 0.3-0.7 review band go
     to the transformer) - the realistic way to add a slow model to a fast service
+  * the 77 real Hindi messages (real_indic_test.csv) are the most important set: v2 LR scores
+    only about 67% F1 on them
   * McNemar test against LR v2 on every test set; per-message latency on the device used
   * T1 cross-domain: the same UCI -> India SMS protocol as research/cross_domain
     (A 80/20, B 70/30 stratified, seed 42): train on A, test on all of B and on B's 30%
@@ -167,7 +169,8 @@ def main(argv=None) -> int:
     train = pd.concat([df[df.split == "train"], pd.DataFrame(hinglish.train_rows())], ignore_index=True)
     dev = pd.concat([df[df.split == "dev"], pd.DataFrame(hinglish.dev_rows())], ignore_index=True)
     tests = {"real_test": df[df.split == "test"], "challenge": load_challenge(), "test_2026": df[df.split == "test_2026"],
-             "hinglish_a_dev_check": pd.DataFrame(hinglish.test_rows()), "hinglish_b_final": pd.DataFrame(hinglish.test_b_rows())}
+             "hinglish_a_dev_check": pd.DataFrame(hinglish.test_rows()), "hinglish_b_final": pd.DataFrame(hinglish.test_b_rows()),
+             "real_hindi": pd.read_csv(os.path.join(HERE, "..", "datasets", "scamguard_in_2026", "real_indic_test.csv"))}
     r = random.Random(SEED)
     tests["real_test_attacked"] = tests["real_test"].assign(text=[ATTACKS["combined"](t, r) for t in tests["real_test"].text.astype(str)])
     if a.smoke:

@@ -26,6 +26,8 @@ X4  Calibration (ECE, reliability bins) and an "uncertain - review" band
 X5  Fusion ablation: what each part of the risk engine adds
 X6  Simple-rule baselines ("has a link", "has a link or phone number")
 X7  Latency of the full deployed path on CPU
+X8  Real Hindi messages: 77 unused IMC'25 reports (35 scam, 42 genuine, 60 near-duplicate groups),
+    labelled by the dataset rule before any model scored them; scored at message and group level
 """
 
 from __future__ import annotations
@@ -52,6 +54,7 @@ from ml_training.research.run_experiments import DS, PRE, Scores, load_challenge
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 YEARS = os.path.join(HERE, "..", "datasets", "scamguard_in_2026", "imc_years.csv")
+REAL_INDIC = os.path.join(HERE, "..", "datasets", "scamguard_in_2026", "real_indic_test.csv")
 CROSS_B = os.path.join(HERE, "..", "..", "..", "research", "cross_domain", "data", "clean")
 TFIDF = TfidfConfig(max_features=30000, ngram_range=(1, 2), min_df=2, max_df=0.95, sublinear_tf=True, char_ngram_range=(2, 5), char_max_features=60000)
 SEED = 2026
@@ -344,6 +347,28 @@ def main(argv=None) -> int:
     v2.score(sample)
     R["X7_latency"] = {"messages": len(sample), "ms_per_message_cpu": (time.perf_counter() - t1) * 1000 / len(sample), "cpus": os.cpu_count()}
 
+    # X8 -----------------------------------------------------------------------------------
+    ri = pd.read_csv(REAL_INDIC)
+    y = lab(ri)
+    X8 = {"messages": int(len(ri)), "scam": int(y.sum()), "genuine": int((1 - y).sum()), "groups": int(ri.group.nunique()),
+          "exact_overlap_with_training": int(ri.text.isin(set(train.text) | set(hin_train.text)).sum())}
+    for tag, sysm in (("v1_reported", v1r), ("v1", v1), ("v2", v2)):
+        p, s, _ = sysm.score(ri.text)
+        m = summary(Scores(y, s).metrics(boot=BOOT))
+        g = pd.DataFrame({"g": ri.group.values, "ok": (s >= 0.5) == y, "y": y}).groupby("g").agg(ok=("ok", "mean"), y=("y", "first"))
+        m["group_accuracy"] = float(g.ok.mean())
+        m["group_scam_recall"] = float(g[g.y == 1].ok.mean())
+        m["group_genuine_specificity"] = float(g[g.y == 0].ok.mean())
+        m["classifier_only_f1"] = Scores(y, p).metrics(boot=0)["f1"]
+        X8[tag] = m
+        if tag == "v2":
+            X8["v2_errors"] = [{"text": t[:160], "label": "scam" if yy else "genuine", "score": round(float(v), 3)} for t, yy, v in zip(ri.text, y, s) if (v >= 0.5) != yy]
+        if tag == "v1":
+            s_v1 = s
+    X8["mcnemar_v1_vs_v2"] = mcnemar(y, s_v1, s)
+    R["X8_real_hindi"] = X8
+    print(f"X8 real Hindi v1 F1 {X8['v1']['f1']:.4f} FPR {X8['v1']['fpr']:.4f} | v2 F1 {X8['v2']['f1']:.4f} FPR {X8['v2']['fpr']:.4f}", flush=True)
+
     R["runtime_seconds"] = round(time.time() - t0, 1)
     with open(os.path.join(HERE, "results_v2.json"), "w") as fh:
         json.dump(R, fh, indent=1)
@@ -394,6 +419,15 @@ def write_md(R: dict) -> None:
         nl = v.get("scams_without_link")
         L.append(f"| {k} | {f(v['has_link']['f1'])} | {f(v['has_link']['fpr'])} | {f(v['has_link_or_phone']['f1'])} | {f(v['scamguard_v2']['f1']) if 'scamguard_v2' in v else 'n/a (leak)'} | {f(v['scamguard_v2']['fpr']) if 'scamguard_v2' in v else 'n/a'} | "
                  f"{(f(nl['recall_scamguard_v2']) + ' (n=' + str(nl['n']) + ')') if nl else '-'} |")
+    x8 = R["X8_real_hindi"]
+    L += ["", "## X8. Real Hindi messages (unused IMC'25 reports, labelled before scoring)", "",
+          f"{x8['messages']} messages ({x8['scam']} scam, {x8['genuine']} genuine) in {x8['groups']} near-duplicate groups. Small: read the CIs.", "",
+          "| System | F1 (95% CI) | Precision | Recall | FPR | group accuracy | classifier-only F1 |", "|---|---|---|---|---|---|---|"]
+    for tag in ("v1_reported", "v1", "v2"):
+        m = x8[tag]
+        L.append(f"| {tag} | {f(m['f1'])} [{f(m['f1_ci'][0])}-{f(m['f1_ci'][1])}] | {f(m['precision'])} | {f(m['recall'])} | {f(m['fpr'])} | {f(m['group_accuracy'])} | {f(m['classifier_only_f1'])} |")
+    L += ["", f"McNemar v1 deployed vs v2: p = {x8['mcnemar_v1_vs_v2']['p_value']:.3g}", "", "v2 errors:", ""]
+    L += [f"- ({e['label']}, score {e['score']}) {e['text']}" for e in x8["v2_errors"]]
     x7 = R["X7_latency"]
     L += ["", "## X7. Latency", "", f"{x7['ms_per_message_cpu']:.2f} ms per message, full deployed path, {x7['cpus']} CPU cores.", ""]
     with open(os.path.join(HERE, "results_v2.md"), "w") as fh:

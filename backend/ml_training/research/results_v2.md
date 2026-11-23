@@ -99,6 +99,54 @@ ECE: classifier 0.0084, final 0.0169
 | hinglish_b_final | 48.5 | 0.0 | 66.1 | 100.0 | 0.0 | 100.0 (n=102) |
 | cross_domain_dataset_b | 94.1 | 0.0 | 94.3 | n/a (leak) | n/a | - |
 
+## X8. Real Hindi messages (unused IMC'25 reports, labelled before scoring)
+
+77 messages (35 scam, 42 genuine) in 60 near-duplicate groups. Small: read the CIs.
+
+| System | F1 (95% CI) | Precision | Recall | FPR | group accuracy | classifier-only F1 |
+|---|---|---|---|---|---|---|
+| v1_reported | 69.6 [55.6-80.6] | 70.6 | 68.6 | 23.8 | 66.7 | 68.7 |
+| v1 | 63.9 [50.0-75.6] | 62.2 | 65.7 | 33.3 | 60.0 | 65.7 |
+| v2 | 66.7 [52.3-78.3] | 67.6 | 65.7 | 26.2 | 64.2 | 64.7 |
+
+McNemar v1 deployed vs v2: p = 0.375
+
+v2 errors:
+
+- (scam, score 0.111) Tbhi bhej raha bro your trust is my main priority try one time you will suggest all your friends Account No.: 1349704032 IFSC Code:
+- (scam, score 0.494) क्या आप अपना पेटीएम पासवर्ड भूल गए हैं? SMS पर पासवर्ड रीसेट लिंक प्राप्त करने के लिए 3473680324 पर कॉल करें और 1 दबाएं। अधिक जानकारी के लिए इस को
+- (scam, score 0.086) प्रधान मंत्री 12-05 से 50 लाख आधारकार्ड लोन 1% ब्याज
+ 7712202774
+- (scam, score 0.224) प्रिय ग्राहक आपका पैसिटिवम केवदसी खत्म हो गई है। संपर्क कर! 12-05 नहीं तो अकाउंट 24hr बंद कर दिया जायेगा
+- (scam, score 0.043) Amazon की सबसे बड़ी Sale
+
+1. Canon Dslr camera - Rs. 199 Only.
+2. Vivo 4673756922 Mobile - Rs 4385 Only.
+*3. Apple watch * - Rs 11 Only.
+4. Jbl Bluetooth Speake
+- (scam, score 0.04) प्रधान मंत्री लोन योजना
+1 से 50 लाख आधार कार्ड लोन
+1% ब्याज 12-05
+- (scam, score 0.22) Hi, main Baldev Rana KREDITBEE ANTI FRAUD DEPARTMENT .. call our msgs karnae k bhad be apnae payment nahe keya hae esley inform apke against apki najdiki police
+- (genuine, score 0.932) श्रीमती RUBI DEVI , आयुंडी- SY S-COV-BI-KMU- 8310655360 , दिनांक - 12-05 को आपका कोरोना वायरस की जांच के लिए सैंपल लिया गया था |Antigen जांच में वह निगेटिव पाया
+- (genuine, score 0.932) श्री RAJNISH KUMAR , आईडी- SYS-COV-BI-VSL- 8123710531 , दिनांक - 12-05 को आपका कोरोना वायरस की जांच के लिए सैंपल लिया गया था | RTPCR जांच में वह पॉजिटिव पाया गय
+- (scam, score 0.155) PM जनधन योजना लोन आधारकार्ड से 1% ब्याज 40% छूट Call 2075861873
+- (scam, score 0.135) प्रधानमंत्री मुद्रा योजना द्वारा लोन 2% ब्याज 40% छूट Call
+- (genuine, score 0.857) प्रिय SHIVDAN, नंबर 99 स्थान NAGAR PALIKA CHIRAWA में पधारकर DINNER ग्रहण करने पर आमंत्रण। रसोई के संदर्भ में फीडबैक हेतु कृपया निम्न लिंक पर क्लिक करें http://
+- (scam, score 0.199) PM जनधन योजना लोन 2%ब्याज 40%छूट महिला फाइनेंस से
+Call 2616392243
+- (genuine, score 0.716) Get CASHBACK of 3636980649 on recharge of 1223646643 or more on VC http://link.example/x ter recharge give MissedCall on 7907790218 frm RMN within http://link.e
+- (scam, score 0.075) MLM ka ka plan real me double deta h, 0756 ki joining me 3101 vo bhi 4 din m direct income
+- (genuine, score 0.638) प्रिय ओला पार्टनर, इस कठिन समय में, आपको ब्याज मुक्त ऋण दे रहा है। लाभ उठाने के लिए, जल्द से जल्दी पार्टनर केयर से संपर्क करें। धन्यवाद।
+- (genuine, score 0.638) प्रिय ओला पार्टनर, इस कठिन समय में, आपको ब्याज मुक्त ऋण दे रहा है। लाभ उठाने के लिए, जल्द से जल्द पार्टनर केयर से संपर्क करें। धन्यवाद।
+- (genuine, score 0.763) ! इस प्रकार के एसएमएस फर्जी होते हैं. दिए गए नंबर पर कॉल करें और ना ही लिंक पर क्लिक करें. इससे देखते ही डिलीट कर दें, OTHERWISE आप धोखाधड़ी का 12-05 हैं. कोई भ
+- (genuine, score 0.966) आपके एयरटेल नंबर पर ऑटोगोडिंग सेवा समाप्त हो गई है औरincoming सेवाएं 12-05 को बंद हो जाएंगी सेवाओं को पुन: प्रारंभ करने के लिए अभी रिचार्ज करें। डायल करें *121*
+- (genuine, score 0.848) टीवी आईडी 12-05 बैलेंस कम होने के कारण बंद हो गई है।आपसे रिक्वेस्ट करें एयरटेल पेमेंट बैंक के साथ और पाएं रु20 कैशबैक (TnC) http://link.example/x
+- (scam, score 0.386) Congratulations!! Unlimited Calling aur 14 data Free bina kisi recharge ke ! Offer pane call 3184076064 par
+- (genuine, score 0.88) आपके एयरटेल नंबर 12-05 है
+दुकान बंद होने की कठिनाई से बचें और आज ही ऑनलाइन रीचार्ज करें
+- (genuine, score 0.632) प्रिय ग्राहक, Covid-19 के इस कठिन समय पर आपका स्वास्थ्य एवं सुरक्षा लिए सर्वोपरि है। अतः आपसे अनुरोध करते हैं कि अपने बिल का भुगतान ऑनलाइन करें। भुगतान करने के 
+
 ## X7. Latency
 
-0.67 ms per message, full deployed path, 2 CPU cores.
+0.64 ms per message, full deployed path, 2 CPU cores.

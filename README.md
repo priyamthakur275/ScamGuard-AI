@@ -9,7 +9,6 @@ Detects scams in SMS, WhatsApp text, links, emails, screenshots, PDFs, QR codes 
 [![Live site](https://img.shields.io/badge/Live_site-open-14b8a6?style=for-the-badge)](https://scamguard-frontend-r6t7.onrender.com)
 [![F1](https://img.shields.io/badge/F1-97.5%25-f59e0b?style=for-the-badge)](backend/ml_training/research/results_v2.md)
 [![Evasion](https://img.shields.io/badge/Recall_under_evasion-97.2%25-22c55e?style=for-the-badge)](backend/ml_training/research/results_v2.md)
-[![Hindi/Hinglish](https://img.shields.io/badge/English_·_Hindi_·_Hinglish-8b5cf6?style=for-the-badge)](docs/v2/V2_SUMMARY.md)
 [![Tests](https://img.shields.io/badge/Tests-863_back--end_·_14_front--end-3b82f6?style=for-the-badge)](#tests)
 
 ![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white)
@@ -55,8 +54,13 @@ What v2 adds, measured by [`v2_experiments.py`](backend/ml_training/research/v2_
 | Real test set, F1 / false alarms | 97.1% / 3.9% | 97.5% / 3.9% |
 | Evasion attack (lookalike letters, zero-width, leetspeak, defanged links): scams caught | 88.4% | **97.2%** |
 | Held-out Hinglish/Hindi set B (synthetic, 36 templates), F1 / false alarms | 85.0% / 12.7% | **100% / 0%** |
+| **Real Hindi messages** (77 unused IMC'25 reports, labelled before scoring), F1 / false alarms | 63.9% / 33.3% | **66.7% / 26.2%** |
 | Scams that contain no link: caught (a "has a link" rule catches 0%) | – | 95.8% |
 | Calibration error (ECE) / latency | – | 0.017 / 0.67 ms per message (CPU) |
+
+**Real Hindi is the open problem.** v2 is 100% on its synthetic Hinglish set but only 66.7% F1 on real Hindi
+messages (not significantly better than v1): real lures ("PM loan yojana, 1% interest, call ...") differ from the
+templates, and genuine Devanagari notices are over-flagged. The MuRIL/XLM-R notebook includes this set.
 
 Notes: the v1 report scored raw text (97.7% F1, 3.2% false alarms); the live v1 app appended a concept summary
 the model was never trained on, which cost about 0.6 F1. v2 removes that mismatch. The Hinglish sets are synthetic
@@ -85,7 +89,7 @@ The website's **Cross-domain study** page runs the baseline and adapted models s
 **Check**
 - **Quick check** on the home page, no account needed and nothing stored.
 - **Telegram bot**: forward a message, get a verdict ([setup](docs/v2/TELEGRAM_SETUP.md)). Also a **browser extension** ([browser-extension](browser-extension)).
-- **English, Hindi and Hinglish**, and robust to disguised words (lookalike letters, hidden characters, "cl1ck", "hxxp").
+- Robust to disguised words (lookalike letters, hidden characters, "cl1ck", "hxxp"); Hindi and Hinglish warning signs are recognised (accuracy on real Hindi is still limited, see Results).
 - **Investigate** for text, links, emails, screenshots (OCR), PDFs, QR codes and voice calls.
 
 **Explain**
