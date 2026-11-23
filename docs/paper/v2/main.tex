@@ -1,0 +1,240 @@
+\documentclass[10pt,twocolumn]{article}
+\usepackage[margin=0.8in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{microtype}
+\usepackage[hidelinks]{hyperref}
+\input{numbers.tex}
+
+\title{Hardening an Indian Scam-Message Detector:\\Evasion Robustness, a Train--Serve Mismatch,\\and a Synthetic-to-Real Gap in Hindi}
+\author{Priyam Thakur \and Bhavya Goyal \and Samir Chaudhary \and Sana Subodh \and Kayarvizhy N\\[2pt]
+\small Department of Computer Science and Engineering, BMS College of Engineering, Bengaluru, India}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+ScamGuard is a deployed detector for scam SMS and chat messages in India that combines a TF-IDF logistic-regression
+classifier with interpretable intent rules. This paper reports what changed, and what did not, when we hardened it.
+First, scammers disguise trigger words with lookalike letters, zero-width characters, spaced-out letters, leetspeak
+and defanged links. Under these attacks, recall on \nReal{} held-out real messages falls from \recCleanOne\% to
+\recComboOne\%. A deterministic de-obfuscation step restores it to \recComboTwo\%, and such tricks already occur in the
+real data. Second, an audit of the serving path found a train--serve mismatch: the live app appended an English concept
+summary that the model never saw in training, which lowered F1 from \fRealRep\% to \fRealDep\% and raised false alarms
+from \fprRealRep\% to \fprRealDep\%. Third, after adding Hindi and Hinglish data and rules, the system scored
+\fHinBTwo\% F1 on a held-out synthetic Hinglish set. On \nRH{} real Hindi messages labelled before scoring, it
+scored only \fRHTwo\% F1 with \fprRHTwo\% false alarms, not significantly better than before ($p=\pRH$). We also
+report a temporal test, calibration (ECE \eceFinal), an ``uncertain'' band that holds \bandShare\% of messages and
+\bandErrIn{} of \bandErrTotal{} errors, a fusion ablation, and simple-rule baselines. Every number is produced by one
+script that runs in under a minute on a laptop CPU.
+\end{abstract}
+
+\section{Introduction}
+Fraud by SMS and messaging apps is common in India, and detectors trained on public English corpora transfer poorly
+to Indian messages. ScamGuard~\cite{scamguard1} addressed this with ScamGuard-IN-2026, a corpus of \nTrain{}
+training and development messages and \nReal{} real test messages from campaigns held out of training. It also adds
+intent rules that explain each verdict. This paper studies three questions that a deployed detector faces after its
+first evaluation:
+\begin{enumerate}\itemsep0pt
+\item Does it survive the cheap disguises that scammers use?
+\item Does the live system behave like the evaluated one?
+\item Do gains on synthetic code-mixed data carry over to real Hindi messages?
+\end{enumerate}
+
+\paragraph{Contributions.}
+\begin{itemize}\itemsep0pt
+\item An evasion benchmark of five character-level attacks and their combination, applied to the real test set.
+  A rule-based de-obfuscator raises recall under the combined attack from \recComboOne\% to \recComboTwo\% at
+  unchanged false alarms on clean text.
+\item A documented train--serve mismatch in the deployed system, its measured cost, and its fix.
+\item A cautionary result: \fHinBTwo\% F1 on a template-disjoint synthetic Hinglish test, but \fRHTwo\% on real Hindi
+  messages labelled before scoring. We give an error analysis and release the real test set.
+\item Supporting analyses (temporal split, calibration, review band, fusion ablation, rule baselines) and a one-command
+  ingest path for newly collected real messages.
+\end{itemize}
+
+\section{System and data}
+\paragraph{Classifier and risk engine.} The classifier is logistic regression ($C=16$, balanced weights) over word
+1--2-gram and character 2--5-gram TF-IDF (\vocabTwo{} features in v2). A risk engine adds weighted evidence from
+intent patterns (for example ``asks for OTP'', ``pay a fee to receive'', ``legal threat''). It subtracts protective
+signals (``never share your OTP'', official helplines) in log-odds space and caps clearly genuine transaction
+notices~\cite{scamguard1}.
+
+\paragraph{Splits.} ScamGuard-IN-2026 groups near-duplicate messages into campaigns with MinHash. Whole campaigns are
+assigned to train, development or test, so no campaign crosses the boundary. The real test set holds \nReal{}
+messages; a hand-written challenge set holds \nChal{} hard cases.
+
+\paragraph{Synthetic Hindi/Hinglish banks.} We wrote three template banks separately: TRAIN, TEST~A and TEST~B. TRAIN
+is split by template, 80\% for training (\nHinTrain{} rows) and 20\% for development. Settings were chosen only on the
+development split and the development templates. Set A was inspected once for error analysis, so we report it only
+as a development check. Set B was written afterwards and scored once. No message text is shared between training and
+either test bank.
+
+\paragraph{Real Hindi test set.} IMC'25~\cite{imc25} contains user-reported smishing in many languages. We took the
+127 Hindi reports that were not in ScamGuard-IN-2026. Each was labelled with the dataset's rule before any model
+scored it. A message is a scam if it asks for a secret, a payment or fee, an app install, or a call or reply to a
+private number, or if it pushes a non-official link with a lure. Fifty chat fragments, political or entertainment
+promotions and unclear reports were dropped rather than guessed. The remaining \nRH{} messages (\nRHScam{} scam,
+\nRHGen{} genuine) form \nRHGroups{} near-duplicate groups (character 5-gram Jaccard $\ge 0.6$). We report
+message-level and group-level scores. One annotator labelled the set, so it has no agreement statistic.
+
+\paragraph{Dates.} IMC'25 keeps the timestamp visible on each reported screenshot. Taking only explicit four-digit
+years dates the first appearance of \nDatedCamps{} campaigns.
+
+\section{Methods}
+\paragraph{De-obfuscation.} A deterministic function runs before both the classifier and the rules. It applies NFKC
+normalisation, removes zero-width characters, maps Cyrillic and Greek lookalikes to Latin, rewrites defanged links
+(``hxxp'', ``[.]'', ``dot com''), and joins runs of single spaced or dotted letters. It also reverses leetspeak
+inside words that are at least half letters, while keeping units, codes and ordinals (``4G'', ``10am'', ``2nd'',
+``XX1234''). It never translates, and it leaves Devanagari untouched.
+
+\paragraph{Hindi and Hinglish rules.} We added Devanagari and Hinglish versions of existing intents. Contact with a
+private number counts only together with another intent, and a negation guard stops ``OTP kisi ko na batayein''
+(``do not tell anyone the OTP'') from reading as a request.
+
+\paragraph{Serving path.} The v1 app appended an English list of detected Hindi concepts to the message before scoring.
+The model was trained on raw text, so this created a mismatch between training and serving~\cite{sculley2015}. v2
+keeps the list for display only. The model input is the de-obfuscated text, exactly as in training.
+
+\paragraph{Systems compared.} \emph{v1 reported} is the exam-version model and risk engine, scored on raw text as in
+the v1 report. \emph{v1 deployed} is the same model scored the way the live v1 app scored it. \emph{v2} is trained on
+the same data plus the synthetic Hinglish rows, with de-obfuscation and the new rules.
+
+\paragraph{Attacks.} Each attack rewrites about 30 common trigger words (``kyc'', ``otp'', ``account'',
+``verify'', \dots) in every message:
+\begin{itemize}\itemsep0pt
+\item \emph{homoglyph}: Cyrillic letters, each with probability 0.7;
+\item \emph{zero-width}: U+200B between letters;
+\item \emph{spaced}: ``c l i c k'';
+\item \emph{leetspeak}: o$\to$0, e$\to$3, a$\to$4, i$\to$1, s$\to$5;
+\item \emph{defanged URL}: ``hxxp'' and ``[.]'' (applied to links rather than words);
+\item \emph{combined}: a random word-level trick plus defanging.
+\end{itemize}
+Attacks are applied to both classes, so false alarms are measured too.
+
+\paragraph{Statistics.} We use 1{,}000-sample bootstrap 95\% confidence intervals, exact McNemar tests on paired
+verdicts~\cite{mcnemar1947} and expected calibration error over 15 bins~\cite{guo2017}.
+
+\section{Results}
+\begin{table}[t]\centering\small
+\setlength{\tabcolsep}{4pt}\caption{Final verdicts (classifier + risk engine). F1 and false-alarm rate (FPR) in \%. McNemar compares v1 deployed with v2.}
+\label{tab:main}
+\begin{tabular}{@{}lcccc@{}}\toprule
+Test set & v1 rep. & v1 dep. & v2 & $p$ \\\midrule
+Real test, F1 & \fRealRep & \fRealDep & \fRealTwo & \pReal \\
+Real test, FPR & \fprRealRep & \fprRealDep & \fprRealTwo & \\
+Challenge, F1 & \fChalRep & \fChalDep & \fChalTwo & \\
+Hinglish B (synth.), F1 & \fHinBRep & \fHinBDep & \fHinBTwo & \pHinB \\
+Hinglish B (synth.), FPR & \fprHinBRep & \fprHinBDep & \fprHinBTwo & \\
+\textbf{Real Hindi, F1} & \fRHRep & \fRHDep & \fRHTwo & \pRH \\
+\textbf{Real Hindi, FPR} & \fprRHRep & \fprRHDep & \fprRHTwo & \\\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{English.} On the real test set, v2 reaches \accRealTwo\% accuracy and \fRealTwo\% F1 (95\% CI
+\ciLoRealTwo--\ciHiRealTwo), with ROC-AUC \aucRealTwo{} (Table~\ref{tab:main}). The difference from v1 deployed is not
+significant ($p=\pReal$). The mismatch in v1 cost 0.6 F1 points and 0.8 points of false alarms against the reported
+figure. On the challenge set, the appended summary happened to help v1, which shows that such a feature can look
+useful while being inconsistent with training.
+
+\begin{table}[t]\centering\small
+\caption{Recall on scams (\%) on the attacked real test set. FPR on clean text: v1 \fprAdvCleanOne\%, v2 \fprAdvCleanTwo\%.}
+\label{tab:adv}
+\begin{tabular}{@{}lccc@{}}\toprule
+Attack & msgs changed & v1 dep. & v2 \\\midrule
+None & -- & \recCleanOne & \recCleanTwo \\
+Homoglyph & \chgHomo & \recHomoOne & \recHomoTwo \\
+Zero-width & \chgZero & \recZeroOne & \recZeroTwo \\
+Spaced letters & \chgSpaced & \recSpacedOne & \recSpacedTwo \\
+Leetspeak & \chgLeet & \recLeetOne & \recLeetTwo \\
+Defanged URL & \chgDefang & \recDefangOne & \recDefangTwo \\
+Combined & \chgCombo & \recComboOne & \recComboTwo \\\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Evasion.} Each word-level trick costs v1 2.0--2.4 points of recall, defanged links cost 0.4, and the
+combined attack costs 8.0.
+v2 is essentially unaffected (Table~\ref{tab:adv}). Under attack, v1's false alarms fall slightly, because the
+attacks also hide genuine messages' trigger words. The threat is real: the clean test set already contains ``Y0N0''
+for YONO and ``H.D.F.C''. Character-level attacks are a known weakness of NLP models~\cite{boucher2022}, and here a
+few lines of normalisation remove most of it.
+
+\paragraph{Synthetic versus real Hindi.} v2 is perfect on synthetic set B and significantly better than v1
+($p$ \pHinB). On real Hindi messages, every system is weak: v2 reaches \fRHTwo\% F1 (CI \ciLoRHTwo--\ciHiRHTwo) and
+\fprRHTwo\% false alarms, against \fRHDep\% and \fprRHDep\% for v1 deployed. Group-level accuracy is \grpRHTwo\%. The
+gain is not significant ($p=\pRH$). We see two causes:
+\begin{itemize}\itemsep0pt
+\item \emph{Missed scams.} Real lures are absent from the templates. Examples are government-scheme loans (``PM loan
+  yojana, 1\% interest, call \dots''), absurd sales (``camera for Rs~199'') and multi-level-marketing pitches.
+\item \emph{False alarms.} Genuine Devanagari notices are over-flagged, such as Covid test results, ration
+  distribution messages and operator recharge reminders. Most Devanagari text in training is scam text, so the script
+  itself has become evidence.
+\end{itemize}
+Templates written by the same people who wrote the rules measure coverage of those phrasings, not accuracy. We did
+not tune anything on the real set.
+
+\paragraph{Temporal split.} We trained without any campaign first seen in 2021 or later. The model then caught
+\recFuture\% of \nFutureMsgs{} scam messages from \nFutureCamps{} campaigns first seen in 2022--23. Random hold-outs
+of the same size scored \recRandMin--\recRandMax\% (mean \recRandMean\%). No drift is visible, but undated
+campaigns remain in training, so this test is weak.
+
+\paragraph{Calibration and the review band.} ECE is \eceClf{} for the classifier and \eceFinal{} for the final score.
+Final scores in $[0.3, 0.7)$ cover \bandShare\% of real test messages and \bandErrIn{} of the \bandErrTotal{} errors.
+Outside the band, accuracy is \bandAccOut\%. v2 marks such results ``not sure: check before you act'' rather than
+forcing a label.
+
+\begin{table}[t]\centering\small
+\caption{Fusion ablation for v2 (F1 / FPR, \%).}
+\label{tab:abl}
+\begin{tabular}{@{}lccc@{}}\toprule
+Variant & Real test & Challenge & Hinglish B \\\midrule
+Classifier only & \ablRealClfF/\ablRealClfFpr & \ablChalClfF/\ablChalClfFpr & \ablHinBClfF/\ablHinBClfFpr \\
+Rules only & \ablRealRulesF/\ablRealRulesFpr & \ablChalRulesF/\ablChalRulesFpr & \ablHinBRulesF/\ablHinBRulesFpr \\
++ intents & \ablRealIntentsF/\ablRealIntentsFpr & \ablChalIntentsF/\ablChalIntentsFpr & \ablHinBIntentsF/\ablHinBIntentsFpr \\
++ protective & \ablRealProtF/\ablRealProtFpr & \ablChalProtF/\ablChalProtFpr & \ablHinBProtF/\ablHinBProtFpr \\
+Full (+ cap) & \ablRealFullF/\ablRealFullFpr & \ablChalFullF/\ablChalFullFpr & \ablHinBFullF/\ablHinBFullFpr \\\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Fusion.} On the in-distribution real test set, the classifier alone is best (Table~\ref{tab:abl}). The
+rules add false alarms, but they add 5.8 F1 points on the challenge set and 8.7 on Hinglish set B, at zero false
+alarms on both. We keep the rules for that robustness and because they produce the explanations.
+
+\paragraph{Simple rules.} ``Contains a link'' scores \linkRealF\% F1 with \linkRealFpr\% false alarms on the real
+test set. It misses all \nNoLink{} scams without a link; v2 catches \recNoLink\% of them. The same rule scores
+\linkCrossF\% on the India SMS set used in the v1 cross-domain study~\cite{scamguard1}. That benchmark's spam is
+mostly link-bearing, so its scores should be read with this in mind.
+
+\paragraph{Cost.} The full path takes \msPerMsg{} ms per message on two CPU cores.
+
+\section{Limitations}
+\begin{itemize}\itemsep0pt
+\item The real Hindi set is small (\nRH{} messages) and was labelled by a single annotator.
+\item The temporal test is weakened by undated campaigns.
+\item Almost all Hindi and Hinglish training data is synthetic. A one-command ingest path splits newly collected real
+  messages by group and keeps the frozen test set clean.
+\item Multilingual transformers (MuRIL~\cite{muril}, XLM-R~\cite{xlmr}) on identical splits, including the real Hindi
+  set, are prepared but not yet run. We report no transformer numbers.
+\item No user study has been run.
+\end{itemize}
+
+\section{Ethics and reproducibility}
+The no-login check and the Telegram channel never store messages. Phone numbers, account numbers, emails and UPI IDs
+in the data are replaced by random stand-ins. From \texttt{backend/}, \texttt{python -m
+ml\_training.research.v2\_experiments} regenerates every number in this paper, and this paper's numbers are
+generated from its output.
+
+\begin{thebibliography}{9}\small
+\bibitem{scamguard1} P.~Thakur, B.~Goyal, S.~Chaudhary, S.~Subodh, and K.~N, ``ScamGuard: AI-based online scam and fraud detection system,'' under review, 2026.
+\bibitem{imc25} ``Smishing-Dataset-IMC25,'' GitHub repository, \url{https://github.com/reportsmishing/Smishing-Dataset-IMC25}, CC BY 4.0.
+\bibitem{sculley2015} D.~Sculley et al., ``Hidden technical debt in machine learning systems,'' in \emph{NeurIPS}, 2015.
+\bibitem{mcnemar1947} Q.~McNemar, ``Note on the sampling error of the difference between correlated proportions or percentages,'' \emph{Psychometrika}, vol.~12, pp.~153--157, 1947.
+\bibitem{guo2017} C.~Guo, G.~Pleiss, Y.~Sun, and K.~Q.~Weinberger, ``On calibration of modern neural networks,'' in \emph{ICML}, 2017.
+\bibitem{boucher2022} N.~Boucher, I.~Shumailov, R.~Anderson, and N.~Papernot, ``Bad characters: Imperceptible NLP attacks,'' in \emph{IEEE S\&P}, 2022.
+\bibitem{muril} S.~Khanuja et al., ``MuRIL: Multilingual representations for Indian languages,'' arXiv:2103.10730, 2021.
+\bibitem{xlmr} A.~Conneau et al., ``Unsupervised cross-lingual representation learning at scale,'' in \emph{ACL}, 2020.
+\end{thebibliography}
+\end{document}
