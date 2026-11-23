@@ -12,6 +12,7 @@ import { MoreDetails } from "@/components/analysis/more-details";
 import { cn, scamCategoryLabel } from "@/lib/utils";
 import type { AnalysisResult } from "@/types";
 import { useLanguage } from "@/lib/i18n/language-context";
+import { ReviewBand } from "@/components/analysis/review-band";
 import { ScamXray, type XrayData } from "@/components/analysis/scam-xray";
 import { WhatIf } from "@/components/analysis/what-if";
 import { TrustLens } from "@/components/analysis/trust-lens";
@@ -167,6 +168,8 @@ export function QuickCheck({ initialText = "", autoRun = false, heading }: Quick
               </>
             )}
 
+            {/* fraud_index is 0-100 in the knowledge-base view; threat_score is 0-1 */}
+            <ReviewBand threatScore={verdict ? verdict.fraud_index / 100 : result.threat_score} className="mt-4" />
             <div className="mt-4">
               <ScamXray compact xray={(result.metadata?.xray as XrayData | undefined) ?? null} />
             </div>

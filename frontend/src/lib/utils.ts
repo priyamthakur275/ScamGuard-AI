@@ -6,6 +6,18 @@ export function cn(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs));
 }
 
+/**
+ * Scores in [0.3, 0.7) are where the system is least sure: on the real test set this
+ * band holds 3.6% of messages but a third of all errors (results_v2.md, X4). Such
+ * results are shown as "check before you act". Keep in step with REVIEW_BAND in
+ * backend/ml_service/inference/threat_scorer.py.
+ */
+export const REVIEW_BAND = { low: 0.3, high: 0.7 } as const;
+
+export function needsReview(threatScore: number): boolean {
+  return threatScore >= REVIEW_BAND.low && threatScore < REVIEW_BAND.high;
+}
+
 export function formatPercent(value: number): string {
   return `${Math.round(value * 100)}%`;
 }

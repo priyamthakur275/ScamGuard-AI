@@ -236,6 +236,15 @@ def is_genuine_transaction(text: str, found: dict[str, float], protective: dict[
 
 GENUINE_TRANSACTION_CAP = 0.15
 
+# Final scores in [low, high) are shown as "not sure: check before you act". On the real
+# test set this band holds 3.6% of messages and a third of all errors (results_v2.md, X4).
+# Keep in step with REVIEW_BAND in frontend/src/lib/utils.ts.
+REVIEW_BAND = (0.3, 0.7)
+
+
+def needs_review(threat_score: float) -> bool:
+    return REVIEW_BAND[0] <= threat_score < REVIEW_BAND[1]
+
 # Genuine notice guard: the same idea for service notices (passport granted,
 # EPF credited, number ported, report spam to 1909, data usage). The model is
 # overconfident on them because its public training data is UK spam, where

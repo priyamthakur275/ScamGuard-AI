@@ -14,6 +14,7 @@ import logging
 import httpx
 
 from app_service.core.config import get_settings
+from ml_service.inference.threat_scorer import needs_review
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +45,7 @@ def format_reply(result: dict) -> str:
     category = (result.get("scam_category") or "").replace("_", " ")
     head = (f"🚨 <b>Likely scam</b>{(' · ' + html.escape(category)) if category else ''}" if scam else "✅ <b>Looks genuine</b>")
     lines = [head, f"Scam likelihood: <b>{round(score * 100)}%</b>" + (f" ({html.escape(level)} risk)" if level else "")]
-    if 0.3 <= score < 0.7:
+    if needs_review(score):
         lines.append("⚠️ <i>Not sure. Check with the official number before you act.</i>")
     spans = ((result.get("metadata") or {}).get("xray") or {}).get("spans") or []
     signs, seen = [], set()
