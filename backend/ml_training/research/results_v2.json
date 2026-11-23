@@ -14,7 +14,8 @@
   "vocabulary": {
    "v1": 35148,
    "v2": 36641
-  }
+  },
+  "collected_real_indic_train_rows": 0
  },
  "X1_main": {
   "real_test": {
@@ -1458,7 +1459,7 @@
  },
  "X7_latency": {
   "messages": 500,
-  "ms_per_message_cpu": 0.6358553740000161,
+  "ms_per_message_cpu": 0.7097768279999741,
   "cpus": 2
  },
  "X8_real_hindi": {
@@ -1665,5 +1666,5 @@
    "p_value": 0.375
   }
  },
- "runtime_seconds": 38.3
+ "runtime_seconds": 45.0
 }

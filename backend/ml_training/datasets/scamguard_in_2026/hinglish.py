@@ -229,6 +229,19 @@ def _part(templates, dev: bool):
     return [t for i, t in enumerate(templates) if (i % 5 == 4) == dev]
 
 
+def collected_train_rows() -> list[dict]:
+    """Real Hindi/Hinglish messages collected by the team (add_real_indic.py), train half only."""
+    import os
+
+    import pandas as pd
+    f = os.path.join(os.path.dirname(os.path.abspath(__file__)), "real_indic_collected.csv")
+    if not os.path.exists(f):
+        return []
+    d = pd.read_csv(f)
+    d = d[d.split == "train"]
+    return [{"text": t, "label": lab, "subtype": "real_indic", "source": "real_indic_collected", "is_synthetic": 0} for t, lab in zip(d.text, d.label)]
+
+
 def train_rows(n_each: int = 600, seed: int = 42) -> list[dict]:
     return _rows(_part(TRAIN_SCAM, False), _part(TRAIN_GENUINE, False), n_each, seed, "synthetic_hinglish", 1)
 
