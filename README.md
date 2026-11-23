@@ -7,9 +7,10 @@
 Detects scams in SMS, WhatsApp text, links, emails, screenshots, PDFs, QR codes and calls, and explains every verdict.
 
 [![Live site](https://img.shields.io/badge/Live_site-open-14b8a6?style=for-the-badge)](https://scamguard-frontend-r6t7.onrender.com)
-[![Accuracy](https://img.shields.io/badge/Accuracy-97.1%25-f59e0b?style=for-the-badge)](backend/ml_training/research/results.md)
-[![False alarms](https://img.shields.io/badge/False_alarms-3.2%25-22c55e?style=for-the-badge)](backend/ml_training/research/results.md)
-[![Tests](https://img.shields.io/badge/Tests-836_back--end_·_14_front--end-3b82f6?style=for-the-badge)](#tests)
+[![F1](https://img.shields.io/badge/F1-97.5%25-f59e0b?style=for-the-badge)](backend/ml_training/research/results_v2.md)
+[![Evasion](https://img.shields.io/badge/Recall_under_evasion-97.2%25-22c55e?style=for-the-badge)](backend/ml_training/research/results_v2.md)
+[![Hindi/Hinglish](https://img.shields.io/badge/English_·_Hindi_·_Hinglish-8b5cf6?style=for-the-badge)](docs/v2/V2_SUMMARY.md)
+[![Tests](https://img.shields.io/badge/Tests-863_back--end_·_14_front--end-3b82f6?style=for-the-badge)](#tests)
 
 ![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
@@ -39,17 +40,33 @@ Major Project Phase-2, Department of CSE, B.M.S. College of Engineering, Group 5
 | Conference paper (COMP-SIF 2027, Paper ID 1206) | [docs/paper/ScamGuard_Conference_Paper.pdf](docs/paper/ScamGuard_Conference_Paper.pdf) |
 | Cross-domain study (notebook and Streamlit app) | [research/cross_domain](research/cross_domain) |
 
-## Results
+## Results (v2)
 
-Deployed system (classifier + intent rules) on **1,874 real Indian messages from scam campaigns held out of training**:
+Deployed system (classifier + intent rules, model v5) on **1,874 real Indian messages from scam campaigns held out of training**:
 
 | Accuracy | Precision | Recall | F1 (95% CI) | False-alarm rate | ROC-AUC |
 |:---:|:---:|:---:|:---:|:---:|:---:|
-| **97.1%** | **98.2%** | **97.2%** | **97.7%** (97.1–98.3) | **3.2%** | **0.995** |
+| **96.7%** | **97.8%** | **97.1%** | **97.5%** (96.8–98.0) | **3.9%** | **0.994** |
+
+What v2 adds, measured by [`v2_experiments.py`](backend/ml_training/research/v2_experiments.py) ([full tables](backend/ml_training/research/results_v2.md)):
+
+| Test | v1 (as deployed) | v2 |
+|---|:---:|:---:|
+| Real test set, F1 / false alarms | 97.1% / 3.9% | 97.5% / 3.9% |
+| Evasion attack (lookalike letters, zero-width, leetspeak, defanged links): scams caught | 88.4% | **97.2%** |
+| Held-out Hinglish/Hindi set B (synthetic, 36 templates), F1 / false alarms | 85.0% / 12.7% | **100% / 0%** |
+| Scams that contain no link: caught (a "has a link" rule catches 0%) | – | 95.8% |
+| Calibration error (ECE) / latency | – | 0.017 / 0.67 ms per message (CPU) |
+
+Notes: the v1 report scored raw text (97.7% F1, 3.2% false alarms); the live v1 app appended a concept summary
+the model was never trained on, which cost about 0.6 F1. v2 removes that mismatch. The Hinglish sets are synthetic
+and written by the same team that wrote the rules, so they show coverage of these phrasings, not real-world
+accuracy. On the English test set v2 and v1 are not significantly different (McNemar p = 0.12).
+See [docs/v2/V2_SUMMARY.md](docs/v2/V2_SUMMARY.md) and the [model card](docs/v2/MODEL_CARD.md).
 
 - **Dataset:** ScamGuard-IN-2026, 11,399 Indian messages with audited labels ([datasheet](backend/ml_training/datasets/scamguard_in_2026/DATASHEET.md)).
 - **No leakage:** the split is by scam campaign, so no near-duplicate of a test message appears in training.
-- **Reproducible:** `python -m ml_training.research.run_experiments` (from `backend/`) regenerates every number; tables are in [results.md](backend/ml_training/research/results.md).
+- **Reproducible:** from `backend/`, `python -m ml_training.research.v2_experiments` regenerates every v2 number in about 40 seconds ([results_v2.md](backend/ml_training/research/results_v2.md)); `run_experiments` regenerates the v1 study ([results.md](backend/ml_training/research/results.md)).
 
 ### Cross-domain study
 
@@ -67,6 +84,8 @@ The website's **Cross-domain study** page runs the baseline and adapted models s
 
 **Check**
 - **Quick check** on the home page, no account needed and nothing stored.
+- **Telegram bot**: forward a message, get a verdict ([setup](docs/v2/TELEGRAM_SETUP.md)). Also a **browser extension** ([browser-extension](browser-extension)).
+- **English, Hindi and Hinglish**, and robust to disguised words (lookalike letters, hidden characters, "cl1ck", "hxxp").
 - **Investigate** for text, links, emails, screenshots (OCR), PDFs, QR codes and voice calls.
 
 **Explain**
@@ -89,10 +108,12 @@ The website's **Cross-domain study** page runs the baseline and adapted models s
 ```mermaid
 graph LR
     U[Browser / PWA / Extension] --> F[Next.js 14 front end]
+    T[Telegram] -->|webhook| B
     F -->|/backend-api| B[FastAPI back end]
     B --> D[(PostgreSQL / SQLite)]
-    B --> M[Classifier + intent rules]
-    M --> R[(Model registry: LR v4, TF-IDF)]
+    B --> X[De-obfuscation]
+    X --> M[Classifier + intent rules, English / Hindi / Hinglish]
+    M --> R[(Model registry: LR v5, TF-IDF)]
     N[Training and cross-domain notebooks] -.-> R
 ```
 
@@ -103,7 +124,7 @@ graph LR
 | ML | scikit-learn logistic regression on word + character TF-IDF, intent-based risk engine |
 | Copilot | Google Gemini with built-in fallback answers |
 | Inputs | OCR, PDF parsing, QR decoding, speech-to-text |
-| Research | Jupyter notebook, Streamlit |
+| Research | Jupyter notebook, Streamlit; MuRIL / XLM-R comparison notebook (PyTorch, Colab) |
 
 ## Run it locally
 
@@ -121,7 +142,7 @@ Optional full stack with PostgreSQL: `docker compose up --build`.
 ## Tests
 
 ```bash
-cd backend && python -m pytest -q                              # 836 tests
+cd backend && python -m pytest -q                              # 863 tests
 cd frontend && npm run typecheck && npm run lint && npm test   # 14 tests
 ```
 
@@ -144,7 +165,8 @@ backend/
 frontend/         Next.js app
 browser-extension/
 research/cross_domain/   cross-domain notebook, data, outputs, Streamlit app
-docs/             report, presentation, poster, paper, screenshots
+research/transformer/    MuRIL / XLM-R vs TF-IDF comparison (Colab notebook)
+docs/             report, presentation, poster, paper, screenshots; docs/v2 for v2
 infra/            Dockerfiles and nginx config
 run.py            one-command local run
 ```
