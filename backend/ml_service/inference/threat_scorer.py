@@ -113,6 +113,31 @@ _INTENTS: tuple[tuple[str, float, re.Pattern[str]], ...] = tuple(
         ("new_domain", 0.35, r"domain was registered \d+ days ago"),
         ("harassment", 0.4, r"send your (photos|pictures) to (all )?your contacts|morphed"),
     ]
+) + tuple(
+    # v2: the same intents written in Devanagari Hindi and in Hinglish (Hindi in Latin
+    # script). Devanagari vowel signs are not word characters for Python's \b, so the
+    # Devanagari parts use plain substrings, and "।" (danda) ends a clause like ".".
+    (name, weight, re.compile(rx, re.I))
+    for name, weight, rx in [
+        # The gap may not contain a negation, so "OTP kisi ko na batayein" / "OTP किसी को न बताएं" is a warning, not a request.
+        ("asks_for_secret", 0.55, r"(otp|o\.t\.p|ओटीपी|pin|पिन|cvv|password|पासवर्ड|code|कोड)(?:(?!न |मत |नहीं |\bna |\bmat |\bnahi |\bnaa )[^.?!।]){0,30}(batayein|bataiye|bata do|bata dijiye|batado|bolo|dalo|daalo|daalein|daaliye|dijiye|बताएं|बताइए|बताओ|बता दें|भेजें|भेजो|शेयर करें|दें)"
+         r"|\b(dalo|daalo|daalein|daaliye|enter karo|enter karein)\b[^.?!।]{0,20}\b(upi pin|pin|otp)\b"),
+        ("move_money", 0.4, r"(rs\.?|inr|₹|\d{3,})[^.?!।]{0,30}\b(phonepe|gpay|paytm|bhim|upi)?\s*(kar do|kardo|kar dijiye|bhej do|bhejo|bhejiye|bhej dijiye|transfer karo|transfer karein|jama karo|jama karein|de do)\b"
+         r"|(भेजें|भेजिए|भेज दें|भुगतान करें|जमा करें|ट्रांसफर करें)[^.?!।]{0,10}$|(रुपये|₹|\d{3,})[^.?!।]{0,30}(भेजें|भेजिए|भेज दें|का भुगतान करें|जमा करें|ट्रांसफर करें)"),
+        ("pay_to_receive", 0.45, r"\b(fee|fees|charge|charges|shulk)\b[^.?!।]{0,20}\b(bhejo|bhejiye|dijiye|de do|bharein|bharo|bhariye|jama karein|jama karo|pay karo|pay karein)\b"
+         r"|(फीस|शुल्क|चार्ज)[^.?!।]{0,30}(भेजें|भेजिए|भुगतान|जमा करें|दें)"),
+        ("legal_threat", 0.45, r"(गिरफ्तार|गिरफ्तारी|अरेस्ट|पुलिस केस|ड्रग्स|मनी लॉन्ड्रिंग|डिजिटल अरेस्ट)|\b(arrest ho\w*|giraftar\w*|jail (jaoge|jayenge|hogi)|police case|case darj|warrant)\b"),
+        ("account_threat", 0.2, r"(बंद कर दिया जाएगा|बंद हो जाएगा|बंद हो जायेगा|ब्लॉक|काट दिया जाएगा|फ्रीज)|\b(block ho (jayega|jaega|gaya|jayegi)|band ho (jayega|jaega|jayegi|gaya)|kat (jayega|jaega)|freeze ho (jayega|gaya)|suspend ho (jayega|gaya))\b"),
+        ("deadline", 0.15, r"(तुरंत|अभी|आज ही|आज रात)|\b(aaj hi|aaj raat|fauran|jaldi se)\b"),
+        ("too_good", 0.4, r"(लॉटरी|इनाम|बधाई हो! आपने|जीत लिए|जीते हैं|जीता है)|\b(jeeta|jeete|jeeti|inaam|lucky draw)\b"),
+        ("new_number_emergency", 0.4, r"\b(naya number|new number hai|number change ho gaya|phone kho gaya|phone gum ho gaya|phone toot gaya|hospital me hu|hospital mein hoon)\b"
+         r"|(नया नंबर|फोन खो गया)"),
+        ("kyc_update_demand", 0.35, r"(kyc|केवाईसी|पैन|आधार|pan|aadhaar)[^.?!।]{0,30}(अपडेट करें|अपडेट करो|लिंक करें|update karein|update karo|update kijiye|link karein|link karo)"),
+        ("verify_account_demand", 0.3, r"\b(verify|re-?verify|reactivate)\s+(karein|karo|kijiye|karne)\b|(वेरिफाई|सत्यापित) करें"),
+        # Calling or messaging a private mobile number counts only together with another intent.
+        ("call_private_number", 0.25, r"(\b(call|sampark|contact|whatsapp|baat) (karein|karo|kijiye|kare|karna)\b|\bpe (call|sampark|contact)\b|संपर्क करें|कॉल करें)[^.?!।]{0,30}(?<!\d)(\+?91[\s-]?)?[6-9]\d{9}(?!\d)"
+         r"|(?<!\d)(\+?91[\s-]?)?[6-9]\d{9}(?!\d)[^.?!।]{0,15}(pe|par|पर) (call|sampark|contact|baat|संपर्क|कॉल)"),
+    ]
 )
 
 _PROTECTIVE: tuple[tuple[str, float, re.Pattern[str]], ...] = tuple(
@@ -146,6 +171,14 @@ _PROTECTIVE: tuple[tuple[str, float, re.Pattern[str]], ...] = tuple(
         # Banks tell you how to block your own card: "Not you? SMS BLOCK to 56161600".
         ("block_instruction", 0.4, r"\b(sms|send|text)\s+['\"]?block\b[^.?!]{0,30}\bto\s+\d{5,8}\b|\bnot you\?[^.?!]{0,40}\bblock\b"),
         ("official_app", 0.35, r"\b(on|in|via|through|using|from) the (official )?[a-z][\w-]*( [a-z][\w-]*){0,2} (app|portal|website)\b|\bvia netbanking\b|\bnetbanking or\b"),
+    ]
+) + tuple(
+    (name, weight, re.compile(rx, re.I))
+    for name, weight, rx in [
+        # v2 Hindi / Hinglish protective phrasing.
+        ("warns_not_to_share", 0.6, r"(शेयर न करें|साझा न करें|किसी को न बताएं|कभी नहीं मांगता|कभी नहीं मांगते|नहीं मांगता|नहीं मांगते)|\bkabhi( bhi)? [^.?!।]{0,25}\bnahi maang\w*"),
+        ("official_report_channel", 0.6, r"(शिकायत|रिपोर्ट|shikayat|report karein|report kare)[^.?!।]{0,60}(1930|cybercrime\.gov\.in|1909)|(1930|cybercrime\.gov\.in)[^.?!।]{0,40}(पर कॉल|शिकायत|pe call|par call|report)"),
+        ("official_app", 0.35, r"\b(official|aadhikarik)\s+(app|website|portal)\b|(आधिकारिक) (ऐप|वेबसाइट)|\b(branch|shakha) (se|me|mein|jaakar)\b"),
     ]
 )
 
@@ -379,7 +412,7 @@ class ThreatScorer:
             found.pop(name, None)
         evidence_for = sum(found.values())
         # Weak context signals only count once a real intent is present.
-        if set(found) <= {"deadline", "impersonation", "account_threat", "link_with_action"}:
+        if set(found) <= {"deadline", "impersonation", "account_threat", "link_with_action", "call_private_number"}:
             evidence_for *= 0.5
         evidence_against = sum(protective.values()) if evidence_for < 0.5 else 0.5 * sum(protective.values())
 

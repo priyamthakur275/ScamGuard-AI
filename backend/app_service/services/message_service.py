@@ -73,7 +73,7 @@ class MessageService:
         """The real ML/XAI pipeline call, extracted so both analyze()
         (persists a Message+Prediction) and analyze_ephemeral() (demo mode -- runs the exact same real pipeline but never writes to
         the database) share one implementation instead of duplicating it.
-        Returns (data, normalized_text, metadata).
+        Returns (data, stored_text, metadata); stored_text is the user's own text.
         """
         if text is None or not text.strip():
             raise ValidationAppError("Message text must not be empty.")
@@ -87,10 +87,17 @@ class MessageService:
         # this pipeline. Applied once here, centrally, so every input
         # modality (text/URL/email/image OCR/PDF/voice) benefits from it
         # without duplicating this call in each extractor.
-        from ml_common.preprocessing.multilingual import analyze_multilingual, normalize_for_analysis
+        # v2: the concept summary is kept for display (metadata) only. Feeding
+        # it to the model was a train/serve mismatch: the model was never
+        # trained on it, and it raised false alarms on plain English messages.
+        # Instead, common evasion tricks (lookalike letters, zero-width
+        # characters, spaced-out or leetspeak words, defanged links) are undone
+        # so the model and the intent rules see the plain words.
+        from ml_common.preprocessing.multilingual import analyze_multilingual
+        from ml_common.preprocessing.robust import deobfuscate
         original_text = text
         multilingual = analyze_multilingual(text)
-        text = normalize_for_analysis(text)
+        text = deobfuscate(text)
         if metadata is None:
             metadata = {}
         metadata = {**metadata, "multilingual": multilingual.to_dict()}
@@ -179,7 +186,8 @@ class MessageService:
                     metadata = {**metadata, "campaign": campaign}
             except Exception:
                 logger.warning("Campaign fingerprint failed", exc_info=True)
-        return data, text, metadata
+        # v2: store and show exactly what the user entered; the cleaned text is only used for scoring.
+        return data, original_text[:4000], metadata
 
     def _apply_community_reports(self, data: dict, metadata: dict) -> tuple[dict, dict]:
         """Adds community report counts for the scan's numbers/links/UPI IDs.
