@@ -28,6 +28,7 @@ import { motion, Variants } from "framer-motion";
 import { ReportDownloadMenu } from "@/components/analysis/report-download-menu";
 import { ShareWarning } from "@/components/analysis/share-warning";
 import { ReportScam } from "@/components/analysis/report-scam";
+import { ReviewBand } from "@/components/analysis/review-band";
 import { ChatPanel } from "@/components/analysis/chat-panel";
 import { ScamXray, type XrayData } from "@/components/analysis/scam-xray";
 import { WhatIf } from "@/components/analysis/what-if";
@@ -123,6 +124,8 @@ export function VerdictCard({ result, onFeedback }: VerdictCardProps) {
 
               </div>
             </div>
+
+            <ReviewBand threatScore={result.threat_score} className="-mt-4" />
 
             {!isDemo && <div className="-mt-4 flex flex-wrap items-center gap-3 border-b border-border pb-6">
               <Button variant="outline" onClick={() => document.getElementById(`copilot-${result.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" })}>Ask ScamGuard</Button>

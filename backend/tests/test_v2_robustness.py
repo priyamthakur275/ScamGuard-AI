@@ -69,3 +69,14 @@ def test_pipeline_stores_the_users_own_text(db_session):
     assert result.text == text
     assert "Detected concepts" not in result.text
     assert result.verdict == "scam"
+
+
+def test_review_band_matches_frontend():
+    import re
+    from pathlib import Path
+    from ml_service.inference.threat_scorer import REVIEW_BAND, needs_review
+    ts = Path(__file__).resolve().parents[2] / "frontend" / "src" / "lib" / "utils.ts"
+    if ts.exists():
+        m = re.search(r"REVIEW_BAND = \{ low: ([\d.]+), high: ([\d.]+) \}", ts.read_text())
+        assert m and (float(m.group(1)), float(m.group(2))) == REVIEW_BAND
+    assert needs_review(0.3) and needs_review(0.69) and not needs_review(0.7) and not needs_review(0.29)

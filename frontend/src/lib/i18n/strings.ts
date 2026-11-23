@@ -91,6 +91,11 @@ export const STRINGS = {
   "qc.scam": { en: "Likely scam", hi: "संभवतः स्कैम" },
   "qc.safe": { en: "Looks legitimate", hi: "सही लगता है" },
   "qc.likelihood": { en: "scam likelihood", hi: "स्कैम की संभावना" },
+  "review.title": { en: "Not sure: check before you act", hi: "पक्का नहीं: कुछ करने से पहले जाँच लें" },
+  "review.body": {
+    en: "This message is in the range where ScamGuard makes most of its mistakes. Do not pay, click or share any code until you have checked with the official number or app of the bank or company.",
+    hi: "यह संदेश उस दायरे में है जहाँ ScamGuard सबसे ज़्यादा गलती करता है। बैंक या कंपनी के आधिकारिक नंबर या ऐप से जाँच किए बिना कोई भुगतान, क्लिक या कोड साझा न करें।",
+  },
   "qc.model": { en: "ML model", hi: "ML मॉडल" },
   "qc.signals": { en: "Signals", hi: "संकेत" },
   "qc.full": { en: "Get the full analysis", hi: "पूरा विश्लेषण देखें" },
