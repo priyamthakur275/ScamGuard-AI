@@ -51,3 +51,8 @@ ScamGuard-AI-Final.zip
 
 # ScamGuard-IN-2026 raw sources and team SMS exports (never commit)
 backend/ml_training/datasets/scamguard_in_2026/raw/
+docs/paper/v2/*.aux
+docs/paper/v2/*.log
+docs/paper/v2/*.fls
+docs/paper/v2/*.fdb_latexmk
+docs/paper/v2/*.out
