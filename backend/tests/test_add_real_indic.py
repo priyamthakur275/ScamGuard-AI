@@ -1,7 +1,9 @@
 """v2: ingesting team-collected real Hindi/Hinglish messages."""
-import pandas as pd
+import pytest
 
-from ml_training.datasets.scamguard_in_2026 import add_real_indic as ari
+pd = pytest.importorskip("pandas")  # the app-only CI image has no pandas; the ML CI runs this
+
+from ml_training.datasets.scamguard_in_2026 import add_real_indic as ari  # noqa: E402
 
 
 def test_ingest_masks_dedups_protects_frozen_test_and_splits_by_group(tmp_path, monkeypatch):
