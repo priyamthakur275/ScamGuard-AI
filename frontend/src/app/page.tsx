@@ -186,7 +186,7 @@ export default function HomePage() {
                 className="h-12 px-7 text-sm font-semibold sm:h-14 sm:text-base"
                 onClick={() => document.getElementById("quick-check")?.scrollIntoView({ behavior: "smooth" })}
               >
-                Scan Now
+                Try a Scan Now
                 <ArrowRight className="ml-1.5 h-4 w-4" aria-hidden="true" />
               </Button>
               <Button

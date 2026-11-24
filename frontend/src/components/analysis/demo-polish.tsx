@@ -55,34 +55,44 @@ export function ScanProgress({ channel, label }: { channel: string; label?: stri
   }, [steps.length]);
 
   return (
-    <div className="scanner-panel sg-scan-beam px-6 py-8" role="status" aria-live="polite">
+    <div className="scanner-panel sg-scan-beam px-6 py-10 sm:py-12" role="status" aria-live="polite">
       <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
-        <div className="h-36 w-36">
+        <div className="h-40 w-full max-w-lg sm:h-44">
           <ThreatCoreCanvas mode="scanning" active />
         </div>
-        <div className="mt-2 flex items-center gap-2 font-mono text-xs text-primary">
+        <div className="mt-2 flex items-center gap-2 font-mono text-[11px] text-primary">
           <span>ACTIVE PIPELINE · {channel.toUpperCase()}</span>
           {label && <span>· {label}</span>}
           <span className="tabular-nums">· {elapsed.toFixed(1)}s</span>
         </div>
-        <h2 className="mt-2 text-2xl font-bold tracking-tight text-foreground">Scanning &amp; Analyzing…</h2>
-        <p className="mt-1 text-sm text-muted-foreground">{steps[step] ?? "Processing evidence…"}</p>
+        <h2 className="mt-2 font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+          Scanning &amp; Analyzing…
+        </h2>
+        <p className="mt-1.5 text-sm text-muted-foreground">{steps[step] ?? "Processing evidence…"}</p>
       </div>
 
-      {/* Horizontal connected progress stepper matching Reference Panel 3 */}
-      <ol className="mx-auto mt-7 grid max-w-3xl grid-cols-1 gap-3 sm:grid-cols-4 sm:gap-2">
+      {/* Connected horizontal 4-step progress stepper (Panel 05 reference) */}
+      <ol className="mx-auto mt-8 grid max-w-3xl grid-cols-1 gap-4 sm:grid-cols-4 sm:gap-2">
         {steps.slice(0, 4).map((s, i) => {
           const done = i < step;
           const current = i === step;
           return (
-            <li key={s} className="relative flex items-center gap-2.5 sm:flex-col sm:items-center sm:text-center">
+            <li key={s} className="relative flex items-center gap-3 sm:flex-col sm:items-center sm:text-center">
+              {i < 3 && (
+                <span
+                  aria-hidden="true"
+                  className={`hidden sm:block absolute left-[calc(50%+1.25rem)] right-[calc(-50%+1.25rem)] top-3.5 h-px ${
+                    done ? "bg-safe/60" : "bg-border"
+                  }`}
+                />
+              )}
               <span
-                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs transition-colors ${
+                className={`relative z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border font-mono text-xs transition-colors ${
                   done
                     ? "border-safe/60 bg-safe/15 text-safe"
                     : current
                     ? "border-primary bg-primary/20 text-primary shadow-[0_0_16px_-2px_rgba(0,229,255,0.75)]"
-                    : "border-border bg-muted/40 text-muted-foreground"
+                    : "border-border bg-card text-muted-foreground"
                 }`}
               >
                 {done ? (
@@ -90,7 +100,7 @@ export function ScanProgress({ channel, label }: { channel: string; label?: stri
                 ) : current ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
                 ) : (
-                  <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />
+                  i + 1
                 )}
               </span>
               <span className={`text-xs ${current ? "font-medium text-primary" : done ? "text-foreground" : "text-muted-foreground"}`}>
@@ -102,7 +112,7 @@ export function ScanProgress({ channel, label }: { channel: string; label?: stri
       </ol>
 
       {elapsed > 8 && (
-        <p className="mt-5 text-center text-xs text-muted-foreground">
+        <p className="mt-6 text-center text-xs text-muted-foreground">
           The free server sleeps when idle and can take up to a minute to wake the first time. Your scan will finish on its own.
         </p>
       )}

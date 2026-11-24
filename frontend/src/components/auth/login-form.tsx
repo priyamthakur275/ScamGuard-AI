@@ -3,6 +3,7 @@
 import { useState, useEffect, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { ApiError } from "@/lib/api/client";
 import { loginSchema } from "@/lib/validation/auth-schemas";
@@ -19,6 +20,7 @@ export function LoginForm() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [captchaAnswer, setCaptchaAnswer] = useState("");
   const [captchaToken, setCaptchaToken] = useState("");
   const [captchaRequired, setCaptchaRequired] = useState(false);
@@ -131,16 +133,27 @@ export function LoginForm() {
         disabled={isSubmitting}
       />
 
-      <Input
-        label="Password"
-        type="password"
-        autoComplete="current-password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        error={fieldErrors.password}
-        placeholder="••••••••"
-        disabled={isSubmitting}
-      />
+      <div className="relative">
+        <Input
+          label="Password"
+          type={showPassword ? "text" : "password"}
+          autoComplete="current-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          error={fieldErrors.password}
+          placeholder="••••••••"
+          className="pr-10"
+          disabled={isSubmitting}
+        />
+        <button
+          type="button"
+          onClick={() => setShowPassword((prev) => !prev)}
+          aria-label={showPassword ? "Hide password" : "Show password"}
+          className="absolute right-2.5 top-[34px] rounded p-1 text-muted-foreground transition-colors hover:text-foreground"
+        >
+          {showPassword ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
+        </button>
+      </div>
 
       {captchaRequired && (
         <CaptchaField

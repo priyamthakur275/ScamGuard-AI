@@ -34,7 +34,7 @@ export function RiskTrendChart({ entries }: { entries: AnalysisResult[] }) {
         )}
       </CardHeader>
       <CardContent className="h-64 flex-1 pt-2">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
           <AreaChart data={data} margin={{ left: -12, right: 8, top: 8, bottom: 0 }}>
             <defs>
               <linearGradient id="sgThreatArea" x1="0" y1="0" x2="0" y2="1">

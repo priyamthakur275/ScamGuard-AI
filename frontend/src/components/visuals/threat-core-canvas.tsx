@@ -203,83 +203,90 @@ export function ThreatCoreCanvas({
     const drawScanning = (elapsed: number, isDark: boolean, cyanRGB: string, tealRGB: string) => {
       const cx = width * 0.5;
       const cy = height * 0.5;
-      const R = Math.min(width, height) * 0.36;
+      const R = Math.min(width, height) * 0.34;
 
       // Ambient radial cyan glow
-      const glow = ctx.createRadialGradient(cx, cy, R * 0.08, cx, cy, R * 1.45);
-      glow.addColorStop(0, `rgba(${cyanRGB}, ${isDark ? 0.28 : 0.16})`);
-      glow.addColorStop(0.55, `rgba(${tealRGB}, ${isDark ? 0.09 : 0.05})`);
+      const glow = ctx.createRadialGradient(cx, cy, R * 0.08, cx, cy, R * 1.65);
+      glow.addColorStop(0, `rgba(${cyanRGB}, ${isDark ? 0.3 : 0.16})`);
+      glow.addColorStop(0.55, `rgba(${tealRGB}, ${isDark ? 0.11 : 0.06})`);
       glow.addColorStop(1, "rgba(0,0,0,0)");
       ctx.fillStyle = glow;
       ctx.beginPath();
-      ctx.arc(cx, cy, R * 1.45, 0, Math.PI * 2);
+      ctx.arc(cx, cy, R * 1.65, 0, Math.PI * 2);
       ctx.fill();
 
-      // Subtle dashed baseline ring
+      // Symmetrical horizontal dotted cyber wave across wings (Panel 05)
+      if (width > height * 1.35) {
+        const rows = 4;
+        const cols = 42;
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const nx = c / (cols - 1);
+            const x = nx * width;
+            const centerClearance = Math.abs(nx - 0.5) * 2;
+            const edgeFade = Math.sin(nx * Math.PI) * Math.min(1, centerClearance * 1.6);
+            if (edgeFade < 0.05) continue;
+            const wave = Math.sin(nx * 7 + elapsed * 1.6 + r * 0.8) * 12 + Math.cos(nx * 4 - elapsed) * 6;
+            const y = cy + (r - 1.5) * 8 + wave;
+            ctx.beginPath();
+            ctx.arc(x, y, 1.3, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${cyanRGB}, ${(edgeFade * (isDark ? 0.42 : 0.28)).toFixed(3)})`;
+            ctx.fill();
+          }
+        }
+      }
+
+      // Subtle dashed outer baseline ring
       ctx.save();
       ctx.setLineDash([4, 6]);
-      ctx.strokeStyle = `rgba(${cyanRGB}, ${isDark ? 0.22 : 0.28})`;
+      ctx.strokeStyle = `rgba(${cyanRGB}, ${isDark ? 0.24 : 0.28})`;
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.arc(cx, cy, R * 1.16, 0, Math.PI * 2);
+      ctx.arc(cx, cy, R * 1.24, 0, Math.PI * 2);
       ctx.stroke();
       ctx.setLineDash([]);
 
-      // Rotating thick outer segmented arcs
-      const a1 = elapsed * 1.45;
-      ctx.strokeStyle = `rgba(${cyanRGB}, ${isDark ? 0.92 : 0.85})`;
-      ctx.lineWidth = 3;
+      // Rotating segmented outer ring
+      const a1 = elapsed * 1.4;
+      ctx.strokeStyle = `rgba(${cyanRGB}, ${isDark ? 0.9 : 0.85})`;
+      ctx.lineWidth = 2.6;
       ctx.lineCap = "round";
       ctx.shadowColor = `rgba(${cyanRGB}, 0.75)`;
       ctx.shadowBlur = 12;
       ctx.beginPath();
-      ctx.arc(cx, cy, R * 0.96, a1, a1 + Math.PI * 0.65);
+      ctx.arc(cx, cy, R * 1.02, a1, a1 + Math.PI * 0.65);
       ctx.stroke();
       ctx.beginPath();
-      ctx.arc(cx, cy, R * 0.96, a1 + Math.PI, a1 + Math.PI * 1.65);
+      ctx.arc(cx, cy, R * 1.02, a1 + Math.PI, a1 + Math.PI * 1.65);
       ctx.stroke();
 
       // Counter-rotating inner ring
-      const a2 = -elapsed * 1.1;
+      const a2 = -elapsed * 1.05;
       ctx.shadowBlur = 6;
-      ctx.lineWidth = 1.75;
+      ctx.lineWidth = 1.6;
       ctx.strokeStyle = `rgba(${tealRGB}, ${isDark ? 0.72 : 0.7})`;
       ctx.beginPath();
-      ctx.arc(cx, cy, R * 0.72, a2, a2 + Math.PI * 0.8);
+      ctx.arc(cx, cy, R * 0.82, a2, a2 + Math.PI * 0.78);
       ctx.stroke();
       ctx.beginPath();
-      ctx.arc(cx, cy, R * 0.72, a2 + Math.PI * 1.05, a2 + Math.PI * 1.75);
+      ctx.arc(cx, cy, R * 0.82, a2 + Math.PI * 1.05, a2 + Math.PI * 1.75);
       ctx.stroke();
       ctx.shadowBlur = 0;
 
       // Pulse wave expanding outward
       if (!reduceMotion) {
-        const pulse = (elapsed * 0.8) % 1;
-        const pr = R * 0.35 + pulse * R * 0.85;
+        const pulse = (elapsed * 0.75) % 1;
+        const pr = R * 0.48 + pulse * R * 0.85;
         ctx.beginPath();
         ctx.arc(cx, cy, pr, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(${cyanRGB}, ${(1 - pulse) * 0.38})`;
-        ctx.lineWidth = 1.25;
+        ctx.strokeStyle = `rgba(${cyanRGB}, ${(1 - pulse) * 0.34})`;
+        ctx.lineWidth = 1.2;
         ctx.stroke();
       }
-
-      // Centered magnifying lens reticle
-      const lensR = R * 0.24;
-      ctx.beginPath();
-      ctx.arc(cx - lensR * 0.14, cy - lensR * 0.14, lensR, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${cyanRGB}, ${isDark ? 0.12 : 0.1})`;
-      ctx.fill();
-      ctx.lineWidth = 2.2;
-      ctx.strokeStyle = `rgba(${cyanRGB}, 0.95)`;
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.moveTo(cx + lensR * 0.52, cy + lensR * 0.52);
-      ctx.lineTo(cx + lensR * 1.15, cy + lensR * 1.15);
-      ctx.lineCap = "round";
-      ctx.lineWidth = 2.6;
-      ctx.stroke();
       ctx.restore();
+
+      // Luminous center Shield inside scanning rings (Panel 05)
+      drawShield(ctx, cx, cy, R * 0.56, cyanRGB, "59, 130, 246", isDark, true);
     };
 
     const drawRadar = (elapsed: number, isDark: boolean, cyanRGB: string, safeRGB: string, warnRGB: string, alertRGB: string) => {
@@ -530,8 +537,8 @@ export function ThreatCoreCanvas({
         ctx.restore();
       };
 
-      drawOrbitWithBeacon(0.42, 0.14, 1.18, 0.65, cyanRGB, isDark ? 0.34 : 0.36);
-      drawOrbitWithBeacon(-0.36, 0.22, 1.24, -0.45, tealRGB, isDark ? 0.24 : 0.28);
+      drawOrbitWithBeacon(0.42, 0.14, 1.18, 0.65, cyanRGB, isDark ? 0.36 : 0.36);
+      drawOrbitWithBeacon(-0.36, 0.22, 1.24, -0.45, "139, 92, 246", isDark ? 0.28 : 0.28);
 
       // Back hemisphere nodes
       const sorted = [...projected].sort((a, b) => a.z3 - b.z3);
@@ -705,7 +712,7 @@ export function ThreatCoreCanvas({
       };
 
       drawOrbit(0.35, 1.14, cyanRGB, isDark ? 0.34 : 0.38);
-      if (isHero) drawOrbit(-0.32, 1.22, blueRGB, isDark ? 0.24 : 0.28);
+      if (isHero) drawOrbit(-0.32, 1.22, "139, 92, 246", isDark ? 0.28 : 0.28);
 
       // Back half of sphere nodes
       const sorted = [...projected].sort((a, b) => a.z3 - b.z3);

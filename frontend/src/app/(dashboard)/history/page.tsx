@@ -54,9 +54,9 @@ export default function HistoryPage() {
       <div className="flex flex-wrap gap-4 items-end justify-between">
         <div>
           <p className="console-kicker mb-1.5">Audit Archive</p>
-          <h1 className="text-3xl font-bold tracking-tight md:text-4xl">Scan history</h1>
+          <h1 className="text-3xl font-bold tracking-tight md:text-4xl">Scan History</h1>
           <p className="mt-1.5 text-sm text-muted-foreground">
-            A record of every message you&apos;ve analyzed, saved to your account.
+            Your recent scans and forensic analysis results.
           </p>
         </div>
         {entries.length > 0 && (

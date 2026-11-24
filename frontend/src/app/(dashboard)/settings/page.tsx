@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Download, Eye, EyeOff, Moon, Sun, Trash2 } from "lucide-react";
+import { ChevronRight, Download, Eye, EyeOff, KeyRound, Moon, Sliders, Sun, Trash2, User } from "lucide-react";
 import { useDialogFocus } from "@/hooks/use-dialog-focus";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -16,67 +16,33 @@ import { cn, formatDate } from "@/lib/utils";
 const DEMO_EMAIL = "demo@scamguard.app";
 
 const SCAN_TABS = [
-  ["text", "Text message"],
-  ["url", "Link"],
+  ["text", "SMS / Text"],
+  ["url", "URL"],
   ["email", "Email"],
   ["image", "Screenshot"],
-  ["voice", "Voice call"],
+  ["voice", "Voice"],
   ["pdf", "PDF"],
-  ["qr", "QR code"],
+  ["qr", "QR"],
 ] as const;
-
-function Section({ id, title, description, children }: { id: string; title: string; description: string; children: ReactNode }) {
-  return (
-    <section id={id} aria-labelledby={`${id}-title`} className="console-panel grid gap-6 p-6 md:grid-cols-[minmax(0,14rem)_minmax(0,1fr)] md:p-7">
-      <div>
-        <h2 id={`${id}-title`} className="font-display text-lg font-semibold text-foreground">{title}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">{description}</p>
-      </div>
-      <div className="min-w-0">{children}</div>
-    </section>
-  );
-}
-
-function Segmented<T extends string>({ value, options, onChange, label }: { value: T; options: readonly (readonly [T, ReactNode])[]; onChange: (v: T) => void; label: string }) {
-  return (
-    <div role="radiogroup" aria-label={label} className="inline-flex rounded-xl border border-border bg-muted/40 p-1">
-      {options.map(([v, node]) => (
-        <button
-          key={v}
-          type="button"
-          role="radio"
-          aria-checked={value === v}
-          onClick={() => onChange(v)}
-          className={cn(
-            "flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-sm transition-colors",
-            value === v ? "bg-card text-foreground shadow-sm ring-1 ring-primary/40" : "text-muted-foreground hover:text-foreground",
-          )}
-        >
-          {node}
-        </button>
-      ))}
-    </div>
-  );
-}
 
 function PasswordField({ label, value, onChange, autoComplete }: { label: string; value: string; onChange: (v: string) => void; autoComplete: string }) {
   const [show, setShow] = useState(false);
   return (
     <label className="block">
-      <span className="text-sm font-medium">{label}</span>
+      <span className="text-xs font-medium text-foreground">{label}</span>
       <span className="relative mt-1.5 block">
         <input
           type={show ? "text" : "password"}
           value={value}
           autoComplete={autoComplete}
           onChange={(e) => onChange(e.target.value)}
-          className="h-11 w-full border border-border bg-background px-3 pr-11 text-sm"
+          className="h-10 w-full border border-border bg-background px-3 pr-10 text-sm"
         />
         <button
           type="button"
           onClick={() => setShow(!show)}
           aria-label={show ? `Hide ${label.toLowerCase()}` : `Show ${label.toLowerCase()}`}
-          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-muted-foreground hover:text-foreground"
+          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:text-foreground"
         >
           {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
         </button>
@@ -95,6 +61,8 @@ export default function SettingsPage() {
   const [savingName, setSavingName] = useState(false);
   const [defaultTab, setDefaultTab] = useState("text");
 
+  const [openDrawer, setOpenDrawer] = useState<"account" | "password" | "privacy" | null>(null);
+
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -105,6 +73,7 @@ export default function SettingsPage() {
   const [deleteText, setDeleteText] = useState("");
   const [working, setWorking] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
+
   const closeDialog = useCallback(() => {
     if (!working) {
       setConfirm(null);
@@ -150,7 +119,7 @@ export default function SettingsPage() {
     { ok: newPassword.length >= 8, text: "8 or more characters" },
     { ok: /\d/.test(newPassword), text: "A number" },
     { ok: /[A-Z]/.test(newPassword), text: "A capital letter" },
-    { ok: newPassword.length > 0 && newPassword === confirmPassword, text: "Both new passwords match" },
+    { ok: newPassword.length > 0 && newPassword === confirmPassword, text: "Passwords match" },
   ];
   const passwordReady = currentPassword.length > 0 && rules.every((r) => r.ok);
 
@@ -217,133 +186,221 @@ export default function SettingsPage() {
     .join("");
 
   return (
-    <div className="sg-page flex flex-col gap-6 pb-12">
-      <header className="console-panel flex flex-wrap items-center gap-5 p-6 md:p-7">
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-primary/40 bg-primary/15 font-display text-xl font-bold text-primary shadow-[0_0_24px_-6px_rgba(0,229,255,0.45)]">
-          {initials}
+    <div className="sg-page mx-auto flex max-w-4xl flex-col gap-6 pb-12">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-6">
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-primary/40 bg-primary/15 font-display text-lg font-bold text-primary shadow-[0_0_20px_-6px_rgba(0,229,255,0.45)]">
+            {initials}
+          </div>
+          <div>
+            <p className="console-kicker mb-0.5">Workspace Preferences</p>
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Settings</h1>
+            <p className="font-mono text-xs text-muted-foreground">
+              {user?.email}
+              {user?.created_at ? ` · member since ${formatDate(user.created_at)}` : ""}
+            </p>
+          </div>
         </div>
-        <div className="min-w-0">
-          <p className="console-kicker mb-1">Workspace Preferences</p>
-          <h1 className="font-display text-2xl font-bold sm:text-3xl">{user?.full_name || "Your account"}</h1>
-          <p className="mt-0.5 font-mono text-xs text-muted-foreground">
-            {user?.email}
-            {user?.created_at ? ` · member since ${formatDate(user.created_at)}` : ""}
-          </p>
-        </div>
-      </header>
+      </div>
 
       {isDemo && (
         <p className="rounded-xl border border-caution/30 bg-caution/10 px-4 py-3 text-xs leading-relaxed text-foreground/90">
-          This is the shared demo account, so the name, password, and account deletion are disabled. Theme and scanning preferences still work.
+          This is the shared demo account, so profile name, password, and account deletion are disabled. Theme and default scan preferences still apply.
         </p>
       )}
 
-      <Section id="profile" title="Your name" description="Shown on your dashboard and on reports you download.">
-        <form onSubmit={saveName} className="flex max-w-lg flex-col gap-3 sm:flex-row sm:items-end">
-          <label className="block flex-1">
-            <span className="text-sm font-medium">Full name</span>
-            <input
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              disabled={isDemo}
-              maxLength={80}
-              autoComplete="name"
-              className="mt-1.5 h-11 w-full border border-border bg-background px-3 text-sm disabled:opacity-60"
-            />
-          </label>
-          <Button type="submit" isLoading={savingName} disabled={isDemo || fullName.trim() === (user?.full_name || "")}>
-            Save name
-          </Button>
-        </form>
-      </Section>
+      {/* Panel 13 Unified Settings Container */}
+      <div className="console-panel divide-y divide-border overflow-hidden">
+        {/* Account row */}
+        <div>
+          <button
+            type="button"
+            aria-expanded={openDrawer === "account"}
+            onClick={() => setOpenDrawer(openDrawer === "account" ? null : "account")}
+            className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition-colors hover:bg-muted/20 sm:px-6"
+          >
+            <div className="flex items-center gap-3.5">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-primary/25 bg-primary/10 text-primary">
+                <User className="h-4 w-4" aria-hidden="true" />
+              </span>
+              <div>
+                <p className="font-medium text-foreground">Account</p>
+                <p className="text-xs text-muted-foreground">
+                  Display name: {user?.full_name || "Not set"} · Manage profile identity
+                </p>
+              </div>
+            </div>
+            <ChevronRight className={cn("h-4 w-4 text-muted-foreground transition-transform", openDrawer === "account" && "rotate-90 text-primary")} />
+          </button>
 
-      <Section id="look" title="Look" description="Applies on this device straight away.">
-        <div className="flex flex-col gap-5">
-          <div>
-            <p className="mb-2 text-sm font-medium">Theme</p>
-            <Segmented
-              label="Theme"
-              value={theme}
-              onChange={setTheme}
-              options={[["dark", <><Moon className="h-4 w-4" /> Dark</>], ["light", <><Sun className="h-4 w-4" /> Light</>]] as const}
-            />
+          {openDrawer === "account" && (
+            <form onSubmit={saveName} className="flex flex-col gap-3 border-t border-border/50 bg-background/35 px-5 py-4 sm:flex-row sm:items-end sm:px-6">
+              <label className="block flex-1">
+                <span className="text-xs font-medium text-muted-foreground">Full name</span>
+                <input
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  disabled={isDemo}
+                  maxLength={80}
+                  autoComplete="name"
+                  className="mt-1.5 h-10 w-full border border-border bg-background px-3 text-sm disabled:opacity-60"
+                />
+              </label>
+              <Button type="submit" size="sm" isLoading={savingName} disabled={isDemo || fullName.trim() === (user?.full_name || "")}>
+                Save name
+              </Button>
+            </form>
+          )}
+        </div>
+
+        {/* Theme row */}
+        <div className="flex flex-wrap items-center justify-between gap-4 px-5 py-4 sm:px-6">
+          <div className="flex items-center gap-3.5">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-primary/25 bg-primary/10 text-primary">
+              {theme === "dark" ? <Moon className="h-4 w-4" aria-hidden="true" /> : <Sun className="h-4 w-4" aria-hidden="true" />}
+            </span>
+            <div>
+              <p className="font-medium text-foreground">Theme</p>
+              <p className="text-xs text-muted-foreground">Switch between obsidian dark and daylight interfaces</p>
+            </div>
           </div>
-        </div>
-      </Section>
-
-      <Section id="scanning" title="Scanning" description="Pick what the Investigate page opens on.">
-        <div className="flex flex-wrap gap-2">
-          {SCAN_TABS.map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              aria-pressed={defaultTab === value}
-              onClick={() => {
-                setDefaultTab(value);
-                void savePreference({ default_channel: value }, `Investigate will open on ${label}`);
-              }}
-              className={cn(
-                "rounded-xl border px-3.5 py-2 text-sm transition-colors",
-                defaultTab === value ? "border-primary/60 bg-primary/15 text-foreground" : "border-border text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </Section>
-
-      <Section id="password" title="Password" description="Use one you don't use anywhere else.">
-        <form onSubmit={savePassword} className="grid max-w-lg gap-4">
-          <PasswordField label="Current password" value={currentPassword} onChange={setCurrentPassword} autoComplete="current-password" />
-          <PasswordField label="New password" value={newPassword} onChange={setNewPassword} autoComplete="new-password" />
-          <PasswordField label="Repeat new password" value={confirmPassword} onChange={setConfirmPassword} autoComplete="new-password" />
-          <ul className="grid grid-cols-2 gap-1.5 text-sm">
-            {rules.map((r) => (
-              <li key={r.text} className={r.ok ? "text-risk-low" : "text-muted-foreground"}>
-                {r.ok ? "✓" : "○"} {r.text}
-              </li>
+          <div role="radiogroup" aria-label="Theme" className="inline-flex rounded-lg border border-border bg-muted/40 p-1">
+            {(
+              [
+                ["dark", "Dark", Moon],
+                ["light", "Light", Sun],
+              ] as const
+            ).map(([val, label, Icon]) => (
+              <button
+                key={val}
+                type="button"
+                role="radio"
+                aria-checked={theme === val}
+                onClick={() => setTheme(val)}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-md px-3 py-1 text-xs font-medium transition-colors",
+                  theme === val ? "bg-card text-primary shadow-sm ring-1 ring-primary/35" : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                {label}
+              </button>
             ))}
-          </ul>
-          <div>
-            <Button type="submit" isLoading={savingPassword} disabled={isDemo || !passwordReady}>
-              Change password
-            </Button>
           </div>
-        </form>
-      </Section>
+        </div>
 
-      <Section id="data" title="Your data" description="Everything ScamGuard stores about you, and how to remove it.">
-        <ul className="divide-y divide-border rounded-2xl border border-border">
-          <li className="flex flex-wrap items-center justify-between gap-3 p-4">
+        {/* Default Scan Channel row */}
+        <div className="flex flex-col justify-between gap-3 px-5 py-4 sm:px-6 lg:flex-row lg:items-center">
+          <div className="flex items-center gap-3.5">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-primary/25 bg-primary/10 text-primary">
+              <Sliders className="h-4 w-4" aria-hidden="true" />
+            </span>
             <div>
-              <p className="text-sm font-medium">Download my data</p>
-              <p className="text-sm text-muted-foreground">Your profile and every saved scan, as a JSON file.</p>
+              <p className="font-medium text-foreground">Default Scan Channel</p>
+              <p className="text-xs text-muted-foreground">Choose the tab Scan Tool opens on</p>
             </div>
-            <Button variant="outline" onClick={downloadData} isLoading={exporting}>
-              <Download className="h-4 w-4" /> Download
-            </Button>
-          </li>
-          <li className="flex flex-wrap items-center justify-between gap-3 p-4">
-            <div>
-              <p className="text-sm font-medium">Delete scan history</p>
-              <p className="text-sm text-muted-foreground">Removes all saved scans. Your account stays.</p>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {SCAN_TABS.map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={defaultTab === value}
+                onClick={() => {
+                  setDefaultTab(value);
+                  void savePreference({ default_channel: value }, `Scan Tool will open on ${label}`);
+                }}
+                className={cn(
+                  "rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors",
+                  defaultTab === value
+                    ? "border-primary/50 bg-primary/15 text-primary"
+                    : "border-border text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Password row */}
+        <div>
+          <button
+            type="button"
+            aria-expanded={openDrawer === "password"}
+            onClick={() => setOpenDrawer(openDrawer === "password" ? null : "password")}
+            className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition-colors hover:bg-muted/20 sm:px-6"
+          >
+            <div className="flex items-center gap-3.5">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-primary/25 bg-primary/10 text-primary">
+                <KeyRound className="h-4 w-4" aria-hidden="true" />
+              </span>
+              <div>
+                <p className="font-medium text-foreground">Password</p>
+                <p className="text-xs text-muted-foreground">Update your workspace authentication password</p>
+              </div>
             </div>
-            <Button variant="outline" onClick={() => setConfirm("clear")}>
-              <Trash2 className="h-4 w-4" /> Delete history
-            </Button>
-          </li>
-          <li className="flex flex-wrap items-center justify-between gap-3 p-4">
-            <div>
-              <p className="text-sm font-medium text-destructive">Delete account</p>
-              <p className="text-sm text-muted-foreground">Permanently removes your account and all scans.</p>
+            <ChevronRight className={cn("h-4 w-4 text-muted-foreground transition-transform", openDrawer === "password" && "rotate-90 text-primary")} />
+          </button>
+
+          {openDrawer === "password" && (
+            <form onSubmit={savePassword} className="grid max-w-xl gap-3.5 border-t border-border/50 bg-background/35 px-5 py-4 sm:px-6">
+              <PasswordField label="Current password" value={currentPassword} onChange={setCurrentPassword} autoComplete="current-password" />
+              <div className="grid gap-3.5 sm:grid-cols-2">
+                <PasswordField label="New password" value={newPassword} onChange={setNewPassword} autoComplete="new-password" />
+                <PasswordField label="Repeat new password" value={confirmPassword} onChange={setConfirmPassword} autoComplete="new-password" />
+              </div>
+              <ul className="grid grid-cols-2 gap-1 text-xs">
+                {rules.map((r) => (
+                  <li key={r.text} className={r.ok ? "text-safe" : "text-muted-foreground"}>
+                    {r.ok ? "✓" : "○"} {r.text}
+                  </li>
+                ))}
+              </ul>
+              <div>
+                <Button type="submit" size="sm" isLoading={savingPassword} disabled={isDemo || !passwordReady}>
+                  Change password
+                </Button>
+              </div>
+            </form>
+          )}
+        </div>
+
+        {/* Privacy & Data row */}
+        <div>
+          <button
+            type="button"
+            aria-expanded={openDrawer === "privacy"}
+            onClick={() => setOpenDrawer(openDrawer === "privacy" ? null : "privacy")}
+            className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition-colors hover:bg-muted/20 sm:px-6"
+          >
+            <div className="flex items-center gap-3.5">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-primary/25 bg-primary/10 text-primary">
+                <Download className="h-4 w-4" aria-hidden="true" />
+              </span>
+              <div>
+                <p className="font-medium text-foreground">Privacy &amp; Data</p>
+                <p className="text-xs text-muted-foreground">Export your workspace JSON, wipe scan history, or delete account</p>
+              </div>
             </div>
-            <Button variant="destructive" onClick={() => setConfirm("delete")} disabled={isDemo}>
-              Delete account
-            </Button>
-          </li>
-        </ul>
-      </Section>
+            <ChevronRight className={cn("h-4 w-4 text-muted-foreground transition-transform", openDrawer === "privacy" && "rotate-90 text-primary")} />
+          </button>
+
+          {openDrawer === "privacy" && (
+            <div className="flex flex-wrap items-center gap-3 border-t border-border/50 bg-background/35 px-5 py-4 sm:px-6">
+              <Button variant="outline" size="sm" onClick={downloadData} isLoading={exporting}>
+                <Download className="h-3.5 w-3.5" aria-hidden="true" /> Export my data
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setConfirm("clear")}>
+                <Trash2 className="h-3.5 w-3.5" aria-hidden="true" /> Delete scan history
+              </Button>
+              <Button variant="destructive" size="sm" onClick={() => setConfirm("delete")} disabled={isDemo}>
+                Delete account
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
 
       <AnimatePresence>
         {confirm && (
@@ -358,7 +415,7 @@ export default function SettingsPage() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.96 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-md border border-border bg-card p-6"
+              className="console-panel w-full max-w-md bg-card p-6"
             >
               <h3 className="font-display text-xl font-semibold">
                 {confirm === "clear" ? "Delete all saved scans?" : "Delete your account?"}
@@ -374,7 +431,7 @@ export default function SettingsPage() {
                   <input
                     value={deleteText}
                     onChange={(e) => setDeleteText(e.target.value)}
-                    className="mt-1.5 h-11 w-full border border-destructive/40 bg-background px-3 text-sm"
+                    className="mt-1.5 h-10 w-full border border-destructive/40 bg-background px-3 text-sm"
                   />
                 </label>
               )}

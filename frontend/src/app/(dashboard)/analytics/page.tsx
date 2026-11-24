@@ -29,9 +29,6 @@ type TimeFilter = "24h" | "7d" | "30d" | "all";
 
 export default function AnalyticsPage() {
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
-  // The risk-trend chart shows the most RECENT scans regardless of the
-  // selected range (it's explicitly a "recent trend" view, not an
-  // all-time one) -- so it's fetched separately from the real aggregate.
   const [recentEntries, setRecentEntries] = useState<AnalysisResult[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -66,7 +63,7 @@ export default function AnalyticsPage() {
           <h1 className="text-3xl font-bold tracking-tight md:text-4xl">Analytics</h1>
         </div>
         <Skeleton className="h-24 w-full" />
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.65fr)]">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Skeleton className="h-72 w-full" />
           <Skeleton className="h-72 w-full" />
         </div>
@@ -140,8 +137,7 @@ export default function AnalyticsPage() {
           <p className="console-kicker mb-1.5">Detection Telemetry</p>
           <h1 className="text-3xl font-bold tracking-tight md:text-4xl">Analytics</h1>
           <p className="mt-1.5 text-sm text-muted-foreground">
-            Server-verified threat patterns across {summary.total_scans.toLocaleString("en-IN")} analyzed item
-            {summary.total_scans === 1 ? "" : "s"}.
+            Key insights and performance across {summary.total_scans.toLocaleString("en-IN")} analyzed items.
           </p>
         </div>
 
@@ -163,43 +159,53 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* Focused 3-metric hairline telemetry strip */}
-      <section aria-label="Key telemetry" className="console-panel grid divide-y divide-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+      {/* 4-column top metric strip matching Panel 07 */}
+      <section aria-label="Key telemetry" className="console-panel grid divide-y divide-border sm:grid-cols-2 lg:grid-cols-4 sm:divide-y-0 lg:divide-x">
         <div className="p-5 sm:px-6">
           <p className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">Total Analyzed</p>
           <p className="mt-2 font-display text-3xl font-bold tabular-nums text-foreground">
             {summary.total_scans.toLocaleString("en-IN")}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            {topCategory ? `Top tactic: ${scamCategoryLabel(topCategory)}` : "No threat categories flagged"}
+            {topCategory ? `Top: ${scamCategoryLabel(topCategory)}` : "All channels"}
+          </p>
+        </div>
+
+        <div className="p-5 sm:px-6">
+          <p className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">Flagged</p>
+          <p className="mt-2 font-display text-3xl font-bold tabular-nums text-destructive">
+            {scamCount.toLocaleString("en-IN")}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {summary.high_risk_count.toLocaleString("en-IN")} high or critical risk
           </p>
         </div>
 
         <div className="p-5 sm:px-6">
           <p className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">Flagged Rate</p>
-          <p className="mt-2 font-display text-3xl font-bold tabular-nums text-destructive">
+          <p className="mt-2 font-display text-3xl font-bold tabular-nums text-foreground">
             {formatPercent(flaggedRate)}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            {scamCount.toLocaleString("en-IN")} scam or suspicious · {summary.high_risk_count.toLocaleString("en-IN")} high risk
+            Share flagged as scam or spam
           </p>
         </div>
 
         <div className="p-5 sm:px-6">
-          <p className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">Avg Threat Score</p>
+          <p className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">Avg. Threat Score</p>
           <p className="mt-2 font-display text-3xl font-bold tabular-nums text-primary">
             {formatPercent(summary.average_threat_score)}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            {accurateShare !== null ? `${accurateShare}% analyst agreement (${ratedFeedback} rated)` : `${summary.feedback_pending} awaiting feedback`}
+            {accurateShare !== null ? `${accurateShare}% analyst accuracy` : `${summary.feedback_pending} unrated`}
           </p>
         </div>
       </section>
 
-      {/* Primary Charts: Threat Trend + Verdict Share */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.65fr)]">
-        <RiskTrendChart entries={recentEntries} />
+      {/* Panel 07 middle 2-column grid: Verdict Share (left) + Detection Trend (right) */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <ThreatDistributionPieChart distribution={summary.verdict_distribution} />
+        <RiskTrendChart entries={recentEntries} />
       </div>
 
       {/* Category Breakdown & Feedback Calibration */}

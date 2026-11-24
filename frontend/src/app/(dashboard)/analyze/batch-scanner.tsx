@@ -1,15 +1,17 @@
 "use client";
 
 import { ScanProgress } from "@/components/analysis/demo-polish";
-import { useState, useCallback, useEffect, memo } from "react";
+import { useState, useCallback, memo } from "react";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
+import { RotateCcw } from "lucide-react";
 
 const ScanTabs = dynamic(() => import("@/components/dashboard/scan-tabs").then(mod => mod.ScanTabs), { ssr: false });
 const VerdictCard = dynamic(() => import("@/components/analysis/verdict-card").then(mod => mod.VerdictCard), { ssr: false });
 import { scanFile, submitFeedback, ApiError } from "@/lib/api/messages";
 import { useToast } from "@/hooks/use-toast";
 import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import type { AnalysisResult } from "@/types";
 
 interface ScanItem {
@@ -111,15 +113,17 @@ export const BatchScanner = memo(function BatchScanner() {
     }
   }, []);
 
+  const hasCompleted = items.some((i) => i.status === "done" || i.status === "error");
+
   return (
     <div className="flex flex-col gap-8">
-      <ScanTabs onScan={handleScan} isScanning={isScanning} />
+      {!isScanning && !hasCompleted && <ScanTabs onScan={handleScan} isScanning={isScanning} />}
 
       {isScanning && (
         <ScanProgress channel={channel} label={items.length > 1 ? `Item ${currentIndex + 1} of ${items.length}` : undefined} />
       )}
 
-      {items.some((i) => i.status === "done" || i.status === "error") && (
+      {hasCompleted && (
         <div className="space-y-6">
           <div className="flex flex-col gap-8">
             <AnimatePresence>
@@ -137,7 +141,15 @@ export const BatchScanner = memo(function BatchScanner() {
                     transition={{ type: "spring", stiffness: 300, damping: 24 }}
                   >
                     {item.status === "error" && (
-                      <Alert variant="error">{item.error || "This item could not be scanned."}</Alert>
+                      <Alert variant="error">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <span>{item.error || "This item could not be scanned."}</span>
+                          <Button variant="outline" size="sm" onClick={handleReset}>
+                            <RotateCcw className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+                            Scan Another
+                          </Button>
+                        </div>
+                      </Alert>
                     )}
 
                     {item.status === "done" && item.result && (

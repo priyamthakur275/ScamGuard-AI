@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ArrowLeft, ShieldCheck } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Globe, MessageSquareWarning, ShieldCheck, Tag } from "lucide-react";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { ThreatCoreCanvas } from "@/components/visuals/threat-core-canvas";
 import { cn } from "@/lib/utils";
@@ -20,15 +20,15 @@ export function AuthShell({ children }: { children: ReactNode }) {
   const isRegister = pathname?.startsWith("/register");
 
   return (
-    <div className="grid min-h-screen bg-background lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
-      {/* Left: Cinematic rotating 3D cybersecurity sphere / radar stage */}
+    <div className="grid min-h-screen bg-background lg:grid-cols-[minmax(0,1.14fr)_minmax(0,0.86fr)]">
+      {/* Left: Cinematic rotating 3D cybersecurity sphere + Threat Nodes (Reference Panel 02) */}
       <aside className="auth-stage relative isolate hidden overflow-hidden border-r border-border/80 px-10 py-9 lg:flex lg:flex-col lg:justify-between xl:px-14">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 -z-10"
           style={{
             background:
-              "radial-gradient(46rem 46rem at 52% 48%, rgba(0, 229, 255, 0.12), transparent 62%), radial-gradient(30rem 30rem at 20% 85%, rgba(45, 212, 191, 0.06), transparent 60%)",
+              "radial-gradient(46rem 46rem at 52% 48%, rgba(0, 229, 255, 0.13), transparent 62%), radial-gradient(32rem 32rem at 68% 36%, rgba(139, 92, 246, 0.08), transparent 60%)",
           }}
         />
 
@@ -48,18 +48,38 @@ export function AuthShell({ children }: { children: ReactNode }) {
           </span>
         </div>
 
-        {/* Centerpiece: large interactive rotating 3D threat sphere */}
-        <div className="relative mx-auto my-2 flex h-[min(56vh,520px)] w-full max-w-[560px] items-center justify-center">
+        {/* Centerpiece: large interactive rotating 3D threat sphere with clean perimeter threat pills */}
+        <div className="relative mx-auto my-2 flex h-[min(58vh,520px)] w-full max-w-[580px] items-center justify-center">
           <ThreatCoreCanvas mode="auth" threatRatio={0.22} />
+
+          {/* Orbiting Threat Labels (Panel 02 reference) */}
+          <div className="pointer-events-none absolute inset-4 hidden xl:block" aria-hidden="true">
+            <div className="absolute left-4 top-12 flex items-center gap-2 rounded-xl border border-caution/35 bg-card/85 px-3 py-1.5 text-xs font-medium text-foreground shadow-lg backdrop-blur-md">
+              <AlertTriangle className="h-3.5 w-3.5 text-caution" />
+              Phishing
+            </div>
+            <div className="absolute right-6 top-16 flex items-center gap-2 rounded-xl border border-primary/35 bg-card/85 px-3 py-1.5 text-xs font-medium text-foreground shadow-lg backdrop-blur-md">
+              <Tag className="h-3.5 w-3.5 text-primary" />
+              Fake Offer
+            </div>
+            <div className="absolute bottom-20 left-2 flex items-center gap-2 rounded-xl border border-violet-400/35 bg-card/85 px-3 py-1.5 text-xs font-medium text-foreground shadow-lg backdrop-blur-md">
+              <Globe className="h-3.5 w-3.5 text-violet-400" />
+              Malicious Site
+            </div>
+            <div className="absolute bottom-14 right-4 flex items-center gap-2 rounded-xl border border-destructive/40 bg-card/85 px-3 py-1.5 text-xs font-medium text-foreground shadow-lg backdrop-blur-md">
+              <MessageSquareWarning className="h-3.5 w-3.5 text-destructive" />
+              Scam SMS
+            </div>
+          </div>
         </div>
 
         {/* Minimal editorial signature */}
-        <div className="relative z-10 max-w-md space-y-2 border-t border-border/60 pt-5">
-          <p className="font-display text-xl font-semibold tracking-tight text-foreground">
-            Explainable threat intelligence for messages, links, UPI &amp; voice.
+        <div className="relative z-10 max-w-md space-y-1.5 border-t border-border/60 pt-5">
+          <p className="font-display text-lg font-semibold tracking-tight text-foreground">
+            Explainable AI defense for messages, links, UPI &amp; voice.
           </p>
           <p className="font-mono text-[11px] tracking-wide text-muted-foreground">
-            Zero-storage quick checks · Verified Indian scam signals · Cybercrime helpline 1930
+            Zero-storage quick checks · Indian cybercrime helpline 1930
           </p>
         </div>
       </aside>
@@ -97,10 +117,20 @@ export function AuthShell({ children }: { children: ReactNode }) {
 
         <main className="flex flex-1 items-center justify-center px-4 py-8 sm:px-6 lg:py-10">
           <div className="console-panel w-full max-w-[420px] p-6 sm:p-8">
+            {/* Brand mark centered at top of card (Panel 02 reference) */}
+            <div className="mb-5 flex items-center justify-center gap-2">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-primary/40 bg-primary/10 text-primary shadow-[0_0_16px_-4px_rgba(0,229,255,0.45)]">
+                <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+              </span>
+              <span className="font-display text-base font-bold tracking-tight text-foreground">
+                ScamGuard <span className="text-primary">AI</span>
+              </span>
+            </div>
+
             {/* Segmented Sign in / Create account switcher */}
             <nav
               aria-label="Authentication mode"
-              className="mb-6 grid grid-cols-2 rounded-lg border border-border bg-muted/40 p-1"
+              className="mb-5 grid grid-cols-2 rounded-lg border border-border bg-muted/40 p-1"
             >
               {AUTH_TABS.map((tab) => {
                 const active = tab.href === "/register" ? isRegister : !isRegister;
@@ -110,7 +140,7 @@ export function AuthShell({ children }: { children: ReactNode }) {
                     href={tab.href}
                     aria-current={active ? "page" : undefined}
                     className={cn(
-                      "relative flex items-center justify-center rounded-md py-2 text-xs font-medium transition-colors",
+                      "relative flex items-center justify-center rounded-md py-1.5 text-xs font-medium transition-colors",
                       active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
                     )}
                   >

@@ -31,7 +31,7 @@ export default function AdaptationChart({ rows }: { rows: CdAdaptationRow[] }) {
   });
 
   return (
-    <ResponsiveContainer width="100%" height="100%">
+    <ResponsiveContainer width="100%" height={280} minWidth={0}>
       <LineChart data={data} margin={{ top: 10, right: 16, bottom: 4, left: -10 }}>
         <CartesianGrid vertical={false} strokeDasharray="3 5" stroke="hsl(var(--border))" strokeOpacity={0.6} />
         <XAxis

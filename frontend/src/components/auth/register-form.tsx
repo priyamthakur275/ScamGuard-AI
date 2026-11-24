@@ -3,6 +3,7 @@
 import { useState, useEffect, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { ApiError } from "@/lib/api/client";
 import { registerSchema } from "@/lib/validation/auth-schemas";
@@ -18,6 +19,7 @@ export function RegisterForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [captchaAnswer, setCaptchaAnswer] = useState("");
   const [captchaToken, setCaptchaToken] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -119,21 +121,32 @@ export function RegisterForm() {
         disabled={isSubmitting}
       />
 
-      <Input
-        label="Password"
-        type="password"
-        autoComplete="new-password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        error={fieldErrors.password}
-        placeholder="At least 8 characters"
-        hint="At least 8 characters, one number, and one uppercase letter."
-        disabled={isSubmitting}
-      />
+      <div className="relative">
+        <Input
+          label="Password"
+          type={showPassword ? "text" : "password"}
+          autoComplete="new-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          error={fieldErrors.password}
+          placeholder="At least 8 characters"
+          hint="At least 8 characters, one number, and one uppercase letter."
+          className="pr-10"
+          disabled={isSubmitting}
+        />
+        <button
+          type="button"
+          onClick={() => setShowPassword((prev) => !prev)}
+          aria-label={showPassword ? "Hide password" : "Show password"}
+          className="absolute right-2.5 top-[34px] rounded p-1 text-muted-foreground transition-colors hover:text-foreground"
+        >
+          {showPassword ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
+        </button>
+      </div>
 
       <Input
         label="Confirm password"
-        type="password"
+        type={showPassword ? "text" : "password"}
         autoComplete="new-password"
         value={confirmPassword}
         onChange={(e) => setConfirmPassword(e.target.value)}

@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { RiskBadge } from "@/components/analysis/risk-badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { truncate, verdictLabel, formatDate, formatPercent, scamCategoryLabel, formatVersion } from "@/lib/utils";
+import { formatDate, formatPercent, formatVersion, inputTypeLabel } from "@/lib/utils";
 import { saveBlob } from "@/lib/api/client";
 import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "framer-motion";
@@ -184,21 +184,20 @@ export const HistoryTable = memo(function HistoryTable({ entries, onFeedback, on
 
       <div className="console-panel custom-scrollbar relative max-h-[700px] overflow-x-auto overflow-y-auto">
         <table className="w-full text-left text-sm whitespace-nowrap">
-          <thead className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl text-xs text-muted-foreground shadow-sm after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-border/50">
+          <thead className="sticky top-0 z-20 bg-background/85 backdrop-blur-xl text-xs text-muted-foreground shadow-sm after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-border/50">
             <tr>
+              <th className="px-4 py-3 font-semibold tracking-wider w-full">Input</th>
               <th className="px-4 py-3 font-semibold tracking-wider">Type</th>
-              <th className="px-4 py-3 font-semibold tracking-wider w-full">Message</th>
-              <th className="px-4 py-3 font-semibold tracking-wider">Verdict</th>
-              <th className="px-4 py-3 font-semibold tracking-wider">Threat</th>
-              <th className="px-4 py-3 font-semibold tracking-wider">Category</th>
-              <th className="px-4 py-3 font-semibold tracking-wider">Date</th>
+              <th className="px-4 py-3 font-semibold tracking-wider">Result</th>
+              <th className="px-4 py-3 font-semibold tracking-wider">Score</th>
+              <th className="px-4 py-3 font-semibold tracking-wider">Time</th>
               <th className="px-4 py-3 text-right"><span className="sr-only">Actions</span></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border/30 bg-card/40">
             {filteredEntries.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">
+                <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">
                   <div className="flex flex-col items-center justify-center gap-3">
                     <Search className="w-8 h-8 text-muted-foreground/50" />
                     <p>No matching entries found</p>
@@ -208,30 +207,36 @@ export const HistoryTable = memo(function HistoryTable({ entries, onFeedback, on
             ) : (
               filteredEntries.map((entry) => {
                 const isExpanded = expandedId === entry.id;
+                const numericScore = Math.round(entry.threat_score * 100);
                 return (
                   <Fragment key={entry.id}>
                     <tr 
                       className={`group hover:bg-primary/5 transition-colors cursor-pointer ${isExpanded ? 'bg-primary/5' : ''}`}
                       onClick={() => setExpandedId(isExpanded ? null : entry.id)}
                     >
-                      <td className="px-4 py-3.5">{getInputIcon(entry.input_type)}</td>
-                      <td
-                        className="px-4 py-3.5 max-w-[14rem] truncate font-medium text-foreground lg:max-w-[18rem] 2xl:max-w-md"
-                        title={displayEntryText(entry)}
-                      >
-                        {displayEntryText(entry)}
+                      <td className="px-4 py-3.5 max-w-[16rem] lg:max-w-[22rem] 2xl:max-w-lg" title={displayEntryText(entry)}>
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <span className="shrink-0">{getInputIcon(entry.input_type)}</span>
+                          <span className="truncate font-medium text-foreground">{displayEntryText(entry)}</span>
+                        </div>
                       </td>
-                      <td className="px-4 py-3">{verdictLabel(entry.verdict)}</td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3.5">
+                        <span className="rounded border border-border bg-muted/40 px-2 py-0.5 font-mono text-[11px] uppercase text-muted-foreground">
+                          {inputTypeLabel(entry.input_type)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3.5">
                         {entry.threat_level ? (
                           <ThreatLevelBadge level={entry.threat_level} />
                         ) : (
                           <RiskBadge level={entry.risk_level} />
                         )}
                       </td>
-                      <td className="px-4 py-3 text-foreground">{scamCategoryLabel(entry.scam_category)}</td>
-                      <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatDate(entry.created_at)}</td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-4 py-3.5 font-mono text-sm font-semibold tabular-nums text-foreground">
+                        {numericScore}
+                      </td>
+                      <td className="px-4 py-3.5 text-muted-foreground whitespace-nowrap">{formatDate(entry.created_at)}</td>
+                      <td className="px-4 py-3.5 text-right">
                         <div className="flex items-center justify-end gap-1 opacity-100 transition-opacity">
                           {onDelete && (
                             <Button
@@ -265,7 +270,7 @@ export const HistoryTable = memo(function HistoryTable({ entries, onFeedback, on
                     <AnimatePresence>
                       {isExpanded && (
                         <tr>
-                          <td colSpan={7} className="whitespace-normal border-b-0 p-0">
+                          <td colSpan={6} className="whitespace-normal border-b-0 p-0">
                             <motion.div 
                               initial={{ height: 0, opacity: 0 }}
                               animate={{ height: "auto", opacity: 1 }}

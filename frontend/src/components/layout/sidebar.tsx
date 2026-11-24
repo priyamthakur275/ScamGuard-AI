@@ -66,32 +66,17 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     };
   }, [isOpen, onClose]);
 
-  const navGroups = [
-    {
-      title: "Operations",
-      items: [
-        { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
-        { href: "/analyze", label: "Scan Tool", icon: ScanSearch },
-        { href: "/history", label: "History", icon: History },
-        { href: "/analytics", label: "Analytics", icon: BarChart3 },
-      ],
-    },
-    {
-      title: "Intelligence & Tools",
-      items: [
-        { href: "/trends", label: "Threat Trends", icon: TrendingUp },
-        { href: "/tools", label: "Safety Tools", icon: Wrench },
-        { href: "/flashcards", label: "Playbooks", icon: BookOpen },
-        { href: "/cross-domain", label: "Cross-domain study", icon: FlaskConical },
-      ],
-    },
-    {
-      title: "System",
-      items: [
-        { href: "/settings", label: "Settings", icon: Settings },
-        ...(user?.role === "admin" ? [{ href: "/admin", label: "Admin Console", icon: ShieldAlert }] : []),
-      ],
-    },
+  const navItems = [
+    { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
+    { href: "/analyze", label: "Scan Tool", icon: ScanSearch },
+    { href: "/history", label: "History", icon: History },
+    { href: "/analytics", label: "Analytics", icon: BarChart3 },
+    { href: "/trends", label: "Scam Trends", icon: TrendingUp },
+    { href: "/cross-domain", label: "Cross-domain Study", icon: FlaskConical },
+    { href: "/tools", label: "Safety Tools", icon: Wrench },
+    { href: "/flashcards", label: "Playbooks", icon: BookOpen },
+    { href: "/settings", label: "Settings", icon: Settings },
+    ...(user?.role === "admin" ? [{ href: "/admin", label: "Admin Console", icon: ShieldAlert }] : []),
   ];
 
   return (
@@ -132,34 +117,27 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           </Button>
         </div>
 
-        <nav className="flex-1 space-y-5 overflow-y-auto px-3 pb-4 pt-4">
-          {navGroups.map((group) => (
-            <div key={group.title} className="space-y-1">
-              <p className="px-3.5 pb-1 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/75">
-                {group.title}
-              </p>
-              {group.items.map(({ href, label, icon: Icon }) => {
-                const isActive = pathname === href || pathname.startsWith(`${href}/`);
-                return (
-                  <Link
-                    key={href}
-                    aria-current={isActive ? "page" : undefined}
-                    href={href}
-                    onClick={onClose}
-                    className={cn(
-                      "relative flex items-center gap-3 rounded-lg px-3.5 py-2 text-sm transition-colors duration-150 ease-out",
-                      isActive
-                        ? "font-medium text-foreground"
-                        : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
-                    )}
-                  >
-                    <Icon className="h-4 w-4" aria-hidden="true" />
-                    {label}
-                  </Link>
-                );
-              })}
-            </div>
-          ))}
+        <nav className="flex-1 space-y-1 overflow-y-auto px-3 pb-4 pt-4">
+          {navItems.map(({ href, label, icon: Icon }) => {
+            const isActive = pathname === href || pathname.startsWith(`${href}/`);
+            return (
+              <Link
+                key={href}
+                aria-current={isActive ? "page" : undefined}
+                href={href}
+                onClick={onClose}
+                className={cn(
+                  "relative flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-sm transition-colors duration-150 ease-out",
+                  isActive
+                    ? "font-medium text-foreground"
+                    : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
+                )}
+              >
+                <Icon className="h-4 w-4" aria-hidden="true" />
+                {label}
+              </Link>
+            );
+          })}
         </nav>
 
         {/* Reference Panel 2 Bottom AI Assistant Card -> opens live Copilot */}

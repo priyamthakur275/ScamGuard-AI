@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import { usePathname } from "next/navigation";
 import { Bot, Mic, MicOff, RotateCcw, Send, Square, Trash2, Volume2, VolumeX, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ErrorBoundary } from "@/components/error-boundary";
+import { useAuth } from "@/lib/auth/auth-context";
 import { useCopilot } from "./copilot-provider";
 import { RagVerdict } from "./rag-verdict";
 import type { ChatMessage } from "@/lib/copilot/types";
@@ -286,6 +288,13 @@ function ChatPanel() {
  * inside the chat can never take the page down with it. */
 export function ScamGuardChat() {
   const { open, setOpen, busy } = useCopilot();
+  const { isAuthenticated } = useAuth();
+  const pathname = usePathname();
+  const isAuthPage = pathname?.startsWith("/login") || pathname?.startsWith("/register");
+  const hideDesktopFab = isAuthenticated && pathname !== "/";
+
+  if (isAuthPage) return null;
+
   return (
     <ErrorBoundary area="Copilot" silentFallback>
       <div className="print:hidden">
@@ -300,7 +309,7 @@ export function ScamGuardChat() {
           </ErrorBoundary>
         )}
         {!open && (
-          <div className="group fixed bottom-5 right-5 z-50 flex items-center gap-2.5">
+          <div className={cn("group fixed bottom-5 right-5 z-50 flex items-center gap-2.5", hideDesktopFab && "md:hidden")}>
             <span className="pointer-events-none hidden rounded-xl rounded-br-sm border border-border bg-card/95 px-3 py-1.5 text-xs font-medium text-foreground opacity-0 shadow-lg backdrop-blur transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100 sm:inline-block">
               Ask ScamGuard Copilot
             </span>

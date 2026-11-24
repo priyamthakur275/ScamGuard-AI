@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { ShieldCheck } from "lucide-react";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { InstallAppButton } from "@/components/layout/install-app-button";
+import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { useLanguage } from "@/lib/i18n/language-context";
 import { useAuth } from "@/lib/auth/auth-context";
 import type { StringKey } from "@/lib/i18n/strings";
@@ -20,11 +21,20 @@ const NAV: { href: string; label: StringKey }[] = [
   { href: "/extension", label: "nav.extension" },
 ];
 
-/** Header + footer for public (no-login) pages. */
+/** Header + footer for public (no-login) pages; seamlessly uses DashboardShell when signed in. */
 export function PublicShell({ children }: { children: ReactNode }) {
   const { t } = useLanguage();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const pathname = usePathname();
+
+  if (!isLoading && isAuthenticated) {
+    return (
+      <DashboardShell>
+        <div className="sg-page">{children}</div>
+      </DashboardShell>
+    );
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <header className="sticky top-0 z-50 flex h-[4.25rem] items-center justify-between gap-4 border-b border-border bg-background/85 px-5 backdrop-blur-xl md:px-10">
@@ -56,14 +66,14 @@ export function PublicShell({ children }: { children: ReactNode }) {
           <InstallAppButton />
           <ThemeToggle />
           <Link
-            href={isAuthenticated ? "/dashboard" : "/login"}
+            href="/login"
             className="rounded-lg border border-border bg-card/60 px-3.5 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-primary/45 hover:text-primary"
           >
-            {isAuthenticated ? "Dashboard" : t("nav.signin")}
+            {t("nav.signin")}
           </Link>
         </nav>
       </header>
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10 md:px-6">{children}</main>
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 md:px-8">{children}</main>
       <footer className="border-t border-border px-4 py-6 text-center text-xs text-muted-foreground">
         {t("footer.lost")} <a href="tel:1930" className="font-semibold text-foreground">1930</a> {t("footer.report")}{" "}
         <a href="https://cybercrime.gov.in/" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">cybercrime.gov.in</a>.

@@ -196,6 +196,10 @@ export function ScanTabs({ onScan, isScanning = false }: ScanTabsProps) {
             </Button>
           </div>
         )}
+
+        <p className="mt-6 border-t border-border/60 pt-4 text-center font-mono text-[11px] text-muted-foreground">
+          Supported: websites, SMS, emails, screenshots, voice transcripts, PDFs, and QR codes
+        </p>
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { AlertTriangle, CheckCircle2, FileWarning, ReceiptIndianRupee, Info, Loader2, MessagesSquare, QrCode, ShieldAlert, Upload, Wallet } from "lucide-react";
+import { AlertTriangle, ArrowRight, CheckCircle2, FileWarning, ReceiptIndianRupee, Info, Loader2, MessagesSquare, QrCode, ShieldAlert, Upload, Wallet } from "lucide-react";
 import { PublicShell } from "@/components/layout/public-shell";
 import { checkFile, checkPaymentScreenshot, checkQr, checkTimeline, getPayReasons, payCheck, type QrResult, type TimelineResult, type ToolFlag, type ToolResult } from "@/lib/api/tools";
 import { useLanguage } from "@/lib/i18n/language-context";
@@ -283,22 +283,61 @@ export default function ToolsPage() {
   const panels: Record<Tab, ReactNode> = { qr: <QrTool />, pay: <PayTool />, proof: <ProofTool />, file: <FileTool />, chat: <TimelineTool /> };
   return (
     <PublicShell>
-      <div className="mx-auto max-w-4xl py-2 sm:py-6">
-        <p className="console-kicker mb-2">Interactive Safety Checks · Zero Storage</p>
-        <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{t("tools.title")}</h1>
-        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{t("tools.subtitle")}</p>
-        <div role="tablist" aria-label="Safety tools" className="mt-8 grid grid-cols-2 gap-2.5 sm:grid-cols-5">
-          {TABS.map(({ id, label, icon: Icon }) => (
-            <button key={id} role="tab" type="button" aria-selected={tab === id} aria-controls={`panel-${id}`} id={`tab-${id}`} onClick={() => setTab(id)}
-              className={cn("flex flex-col items-center justify-center gap-1.5 rounded-xl border px-3 py-3 text-xs font-medium transition-colors sm:text-sm",
-                tab === id ? "border-primary/50 bg-primary/10 text-primary shadow-sm" : "border-border bg-card/50 text-muted-foreground hover:border-primary/35 hover:text-foreground")}>
-              <Icon className="h-5 w-5" aria-hidden />
-              <span>{t(label)}</span>
-            </button>
-          ))}
+      <div className="mx-auto max-w-5xl space-y-6">
+        <div className="border-b border-border pb-6">
+          <p className="console-kicker mb-2">Interactive Safety Checks · Zero Storage</p>
+          <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{t("tools.title")}</h1>
+          <p className="mt-1.5 max-w-2xl text-sm text-muted-foreground">{t("tools.subtitle")}</p>
         </div>
-        <div role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`} className="scanner-panel mt-6 space-y-5 p-6">
-          <p className="text-sm text-muted-foreground">{active.blurb}</p>
+
+        {/* Panel 11 card selector grid */}
+        <div role="tablist" aria-label="Safety tools" className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-5">
+          {TABS.map(({ id, label, icon: Icon, blurb }) => {
+            const selected = tab === id;
+            return (
+              <button
+                key={id}
+                role="tab"
+                type="button"
+                aria-selected={selected}
+                aria-controls={`panel-${id}`}
+                id={`tab-${id}`}
+                onClick={() => setTab(id)}
+                className={cn(
+                  "console-panel flex flex-col justify-between p-4 text-left transition-all",
+                  selected
+                    ? "border-primary/55 bg-primary/10 ring-1 ring-primary/35"
+                    : "hover:border-primary/30",
+                )}
+              >
+                <div>
+                  <div
+                    className={cn(
+                      "flex h-9 w-9 items-center justify-center rounded-lg border",
+                      selected
+                        ? "border-primary/50 bg-primary/20 text-primary"
+                        : "border-border bg-background/60 text-primary",
+                    )}
+                  >
+                    <Icon className="h-4.5 w-4.5" aria-hidden="true" />
+                  </div>
+                  <p className="mt-3 font-display text-sm font-semibold text-foreground">{t(label)}</p>
+                  <p className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">{blurb}</p>
+                </div>
+                <span className={cn("mt-3 inline-flex items-center gap-1 font-mono text-[11px] font-medium", selected ? "text-primary" : "text-muted-foreground")}>
+                  {selected ? "Active" : "Open"}
+                  <ArrowRight className="h-3 w-3" aria-hidden="true" />
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`} className="scanner-panel space-y-5 p-6">
+          <div className="border-b border-border/70 pb-4">
+            <h2 className="font-display text-lg font-semibold text-foreground">{t(active.label)}</h2>
+            <p className="mt-0.5 text-sm text-muted-foreground">{active.blurb}</p>
+          </div>
           {panels[tab]}
         </div>
       </div>
