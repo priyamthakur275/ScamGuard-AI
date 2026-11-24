@@ -68,6 +68,18 @@ class PredictionService:
                 # which says nothing about this site. Start from the documented
                 # website trust score instead; URL evidence then moves it.
                 base_probability = min(max(1 - trust["score"] / 100, 0.02), 0.98)
+        model_probability, model_name, model_version = raw_result.scam_probability, raw_result.model_name, raw_result.model_version
+        if (request.input_type or "").upper() != "URL":
+            # v2: Hindi/Hinglish messages go to the compact XLM-R model when it is
+            # deployed (indic_model.py); otherwise nothing changes.
+            from ml_service.inference.indic_model import MODEL_NAME, get_indic_model, is_indic
+            indic = get_indic_model() if is_indic(request.text) else None
+            if indic is not None:
+                try:
+                    base_probability = model_probability = indic.probability(request.text)
+                    model_name, model_version = MODEL_NAME, "v1"
+                except Exception:
+                    pass  # keep the TF-IDF model's probability
         threat = self._threat_scorer.assess(base_probability, tokens, request.text, ignore_intents=ignore)
 
         # scam_probability is always the model's own, real, unmodified
@@ -99,14 +111,14 @@ class PredictionService:
 
         result = PredictionResult(
             verdict=verdict,
-            scam_probability=round(raw_result.scam_probability, 4),
+            scam_probability=round(model_probability, 4),
             risk_level=threat.risk_level,
             scam_category=threat.scam_category,
             confidence_score=confidence,
             threat_score=threat.threat_score,
             top_contributing_tokens=top_tokens,
-            model_name=raw_result.model_name,
-            model_version=raw_result.model_version,
+            model_name=model_name,
+            model_version=model_version,
             latency_ms=latency_ms,
         )
         

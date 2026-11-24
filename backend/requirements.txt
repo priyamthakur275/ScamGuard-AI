@@ -40,3 +40,7 @@ beautifulsoup4
 fastapi-cache2
 structlog
 prometheus-fastapi-instrumentator
+
+# v2: optional Hindi/Hinglish model (off unless INDIC_MODEL_DIR or INDIC_MODEL_URL is set)
+onnxruntime==1.29.0
+tokenizers==0.22.2
