@@ -83,8 +83,11 @@ export default function AnalyticsPage() {
 
   if (error) {
     return (
-      <div className="flex flex-col gap-6">
-        <h1 className="font-sans text-2xl font-semibold tracking-tight">Analytics</h1>
+      <div className="sg-page flex flex-col gap-6">
+        <div>
+          <p className="console-kicker mb-1.5">Detection Telemetry</p>
+          <h1 className="text-3xl font-bold tracking-tight md:text-4xl">Analytics</h1>
+        </div>
         <Alert variant="error">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <span>{error}</span>
@@ -97,8 +100,11 @@ export default function AnalyticsPage() {
 
   if (!summary || summary.total_scans === 0) {
     return (
-      <div className="flex flex-col gap-6">
-        <h1 className="font-sans text-2xl font-semibold tracking-tight">Analytics</h1>
+      <div className="sg-page flex flex-col gap-6">
+        <div>
+          <p className="console-kicker mb-1.5">Detection Telemetry</p>
+          <h1 className="text-3xl font-bold tracking-tight md:text-4xl">Analytics</h1>
+        </div>
         {timeFilter !== "all" && <Button variant="outline" onClick={() => setTimeFilter("all")}>Show all time</Button>}
         <EmptyState
           icon={BarChart3}
@@ -118,11 +124,12 @@ export default function AnalyticsPage() {
   const topCategory = Object.entries(summary.category_distribution).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "None";
 
   return (
-    <div className="flex flex-col gap-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="sg-page flex flex-col gap-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="font-sans text-2xl font-semibold tracking-tight">Analytics</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="console-kicker mb-1.5">Detection Telemetry</p>
+          <h1 className="text-3xl font-bold tracking-tight md:text-4xl">Analytics</h1>
+          <p className="mt-1.5 text-sm text-muted-foreground">
             Server-side totals across {summary.total_scans} analyzed message{summary.total_scans === 1 ? "" : "s"}.
           </p>
         </div>

@@ -283,19 +283,21 @@ export default function ToolsPage() {
   const panels: Record<Tab, ReactNode> = { qr: <QrTool />, pay: <PayTool />, proof: <ProofTool />, file: <FileTool />, chat: <TimelineTool /> };
   return (
     <PublicShell>
-      <div className="mx-auto max-w-3xl px-4 py-10 sm:py-14">
-        <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">{t("tools.title")}</h1>
-        <p className="mt-2 text-muted-foreground">{t("tools.subtitle")}</p>
-        <div role="tablist" aria-label="Safety tools" className="mt-8 grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <div className="mx-auto max-w-4xl py-2 sm:py-6">
+        <p className="console-kicker mb-2">Interactive Safety Checks · Zero Storage</p>
+        <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{t("tools.title")}</h1>
+        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{t("tools.subtitle")}</p>
+        <div role="tablist" aria-label="Safety tools" className="mt-8 grid grid-cols-2 gap-2.5 sm:grid-cols-5">
           {TABS.map(({ id, label, icon: Icon }) => (
             <button key={id} role="tab" type="button" aria-selected={tab === id} aria-controls={`panel-${id}`} id={`tab-${id}`} onClick={() => setTab(id)}
-              className={cn("flex flex-col items-center gap-1.5 rounded-2xl border px-2 py-3 text-xs font-medium sm:flex-row sm:justify-center sm:text-sm",
-                tab === id ? "border-primary bg-primary/10 text-primary" : "border-border hover:border-primary/50")}>
-              <Icon className="h-5 w-5" aria-hidden /> {t(label)}
+              className={cn("flex flex-col items-center justify-center gap-1.5 rounded-xl border px-3 py-3 text-xs font-medium transition-colors sm:text-sm",
+                tab === id ? "border-primary/50 bg-primary/10 text-primary shadow-sm" : "border-border bg-card/50 text-muted-foreground hover:border-primary/35 hover:text-foreground")}>
+              <Icon className="h-5 w-5" aria-hidden />
+              <span>{t(label)}</span>
             </button>
           ))}
         </div>
-        <div role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`} className="mt-6 space-y-5">
+        <div role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`} className="scanner-panel mt-6 space-y-5 p-6">
           <p className="text-sm text-muted-foreground">{active.blurb}</p>
           {panels[tab]}
         </div>

@@ -300,35 +300,43 @@ export function ScamGuardChat() {
           </ErrorBoundary>
         )}
         {!open && (
-          <button type="button" onClick={() => setOpen(true)} className="fixed bottom-[5.5rem] right-5 z-50 hidden rounded-2xl rounded-br-sm border border-border bg-card px-3 py-2 text-xs font-medium text-foreground shadow-lg sm:block">
-            Hi! How may I help you?
+          <div className="group fixed bottom-5 right-5 z-50 flex items-center gap-2.5">
+            <span className="pointer-events-none hidden rounded-xl rounded-br-sm border border-border bg-card/95 px-3 py-1.5 text-xs font-medium text-foreground opacity-0 shadow-lg backdrop-blur transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100 sm:inline-block">
+              Ask ScamGuard Copilot
+            </span>
+            <button
+              type="button"
+              onClick={() => setOpen(true)}
+              aria-expanded={false}
+              aria-label="Open ScamGuard Copilot"
+              className="relative flex h-[3.25rem] w-[3.25rem] items-center justify-center rounded-[999px] bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105"
+            >
+              <svg viewBox="0 0 32 32" className="h-8 w-8" aria-hidden="true">
+                <line x1="16" y1="3" x2="16" y2="7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                <circle cx="16" cy="3" r="1.8" fill="currentColor" />
+                <rect x="6" y="7" width="20" height="16" rx="6" fill="currentColor" />
+                <circle cx="12" cy="15" r="2.4" className="fill-primary motion-safe:animate-pulse" />
+                <circle cx="20" cy="15" r="2.4" className="fill-primary motion-safe:animate-pulse" />
+                <rect x="12" y="19" width="8" height="1.6" rx="0.8" className="fill-primary" />
+                <rect x="3" y="12" width="3" height="6" rx="1.5" fill="currentColor" />
+                <rect x="26" y="12" width="3" height="6" rx="1.5" fill="currentColor" />
+                <rect x="11" y="24" width="10" height="5" rx="2" fill="currentColor" />
+              </svg>
+              {busy && <span className="absolute right-0.5 top-0.5 h-2.5 w-2.5 animate-pulse rounded-[999px] bg-caution" aria-hidden />}
+            </button>
+          </div>
+        )}
+        {open && (
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            aria-expanded
+            aria-label="Close ScamGuard Copilot"
+            className="fixed bottom-5 right-5 z-50 hidden h-[3.25rem] w-[3.25rem] items-center justify-center rounded-[999px] bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 sm:flex"
+          >
+            <X className="h-6 w-6" />
           </button>
         )}
-        <button
-          type="button"
-          onClick={() => setOpen(!open)}
-          aria-expanded={open}
-          aria-label={open ? "Close ScamGuard Copilot" : "Open ScamGuard Copilot"}
-          className={cn(
-            "fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-[999px] bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105",
-            open && "hidden sm:flex",
-          )}
-        >
-          {open ? <X className="h-6 w-6" /> : (
-            <svg viewBox="0 0 32 32" className="h-9 w-9" aria-hidden="true">
-              <line x1="16" y1="3" x2="16" y2="7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              <circle cx="16" cy="3" r="1.8" fill="currentColor" />
-              <rect x="6" y="7" width="20" height="16" rx="6" fill="currentColor" />
-              <circle cx="12" cy="15" r="2.4" className="fill-primary motion-safe:animate-pulse" />
-              <circle cx="20" cy="15" r="2.4" className="fill-primary motion-safe:animate-pulse" />
-              <rect x="12" y="19" width="8" height="1.6" rx="0.8" className="fill-primary" />
-              <rect x="3" y="12" width="3" height="6" rx="1.5" fill="currentColor" />
-              <rect x="26" y="12" width="3" height="6" rx="1.5" fill="currentColor" />
-              <rect x="11" y="24" width="10" height="5" rx="2" fill="currentColor" />
-            </svg>
-          )}
-          {busy && !open && <span className="absolute right-1 top-1 h-2.5 w-2.5 animate-pulse rounded-[999px] bg-caution" aria-hidden />}
-        </button>
       </div>
     </ErrorBoundary>
   );

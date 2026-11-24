@@ -118,18 +118,23 @@ export function ScanTabs({ onScan, isScanning = false }: ScanTabsProps) {
                   ? "Paste the full email, including headers (From, Reply-To, Subject) if you have them"
                   : "Paste the suspicious SMS, WhatsApp message, or chat text"
               }
-              className="min-h-[240px] resize-y border-border bg-background text-base leading-7 placeholder:text-muted-foreground"
+              className="min-h-[240px] resize-y border-border bg-background/85 text-base leading-7 placeholder:text-muted-foreground"
               value={textValue}
               onChange={(e) => setTextValue(e.target.value)}
             />
-            <ExampleChips
-              channel={activeTab}
-              disabled={isScanning}
-              onPick={(text) => {
-                setTextValue(text);
-                onScan([text], [], activeTab);
-              }}
-            />
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <ExampleChips
+                channel={activeTab}
+                disabled={isScanning}
+                onPick={(text) => {
+                  setTextValue(text);
+                  onScan([text], [], activeTab);
+                }}
+              />
+              <span className="ml-auto font-mono text-[11px] tabular-nums text-muted-foreground">
+                {textValue.length}/4000
+              </span>
+            </div>
           </div>
         )}
 

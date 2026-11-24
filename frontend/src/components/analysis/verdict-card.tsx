@@ -54,6 +54,7 @@ export function VerdictCard({ result, onFeedback }: VerdictCardProps) {
   const severity = result.threat_level === "critical" ? "critical" : result.risk_level;
   const severityClass = { low: "text-risk-low", medium: "text-risk-medium", high: "text-risk-high", critical: "text-risk-critical" }[severity];
   const isSafe = result.verdict === "legitimate";
+  const isSuspicious = !isSafe && result.risk_level === "medium" && result.threat_level !== "high" && result.threat_level !== "critical";
   const maxWeight = Math.max(0, ...result.top_contributing_tokens.map((t) => t.weight));
   const hasExplainableData = Boolean(
     result.ai_explanation ||
@@ -79,7 +80,7 @@ export function VerdictCard({ result, onFeedback }: VerdictCardProps) {
             {/* Header: verdict reads as a stamped case-file result, not a
                 dashboard tile -- the stamp is the one bold element on this
                 screen; everything else here stays quiet. */}
-            <div data-verdict={isSafe ? "safe" : "scam"} className={`verdict-heading flex flex-col gap-8 xl:flex-row xl:items-start sm:justify-between ${isDemo ? "border-b border-border pb-8" : ""}`}>
+            <div data-verdict={isSafe ? "safe" : isSuspicious ? "suspicious" : "scam"} className={`verdict-heading flex flex-col gap-8 xl:flex-row xl:items-start sm:justify-between ${isDemo ? "border-b border-border pb-8" : ""}`}>
               <div className="flex min-w-0 items-start gap-4">
                 <div
                   className={`flex h-12 w-12 shrink-0 rounded-lg items-center justify-center border-2 font-mono ${

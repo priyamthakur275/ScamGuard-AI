@@ -10,11 +10,12 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <BackendWarmup />
       {/* Left: the same X-Ray moment as the landing page, so signing in
           feels like part of one product. */}
-      <div className="relative isolate hidden overflow-hidden border-r border-border px-12 py-10 lg:flex lg:flex-col lg:justify-between">
-        <div aria-hidden="true" className="hero-glow" />
-        <Link href="/" className="flex items-center gap-2 text-sm font-medium">
-          <ShieldAlert className="h-5 w-5 text-primary" />
-          ScamGuard
+      <div className="auth-blueprint relative isolate hidden overflow-hidden border-r border-border px-12 py-10 lg:flex lg:flex-col lg:justify-between">
+        <Link href="/" className="flex items-center gap-2.5 text-sm font-semibold">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-primary/35 bg-primary/10">
+            <ShieldAlert className="h-4.5 w-4.5 text-primary" />
+          </span>
+          <span className="font-display text-lg font-bold tracking-tight">ScamGuard</span>
         </Link>
         <div className="my-10 max-w-lg">
           <HeroXray />

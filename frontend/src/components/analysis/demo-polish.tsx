@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Check, Loader2, Volume2, VolumeX } from "lucide-react";
+import { ThreatCoreCanvas } from "@/components/visuals/threat-core-canvas";
 
 /* ------------------------------------------------------------------ */
 /* 1. Count-up number for the verdict score                            */
@@ -54,30 +55,43 @@ export function ScanProgress({ channel, label }: { channel: string; label?: stri
   }, [steps.length]);
 
   return (
-    <div className="rounded-xl border border-border bg-card px-6 py-5" role="status" aria-live="polite">
-      <div className="flex items-center justify-between gap-4">
-        <p className="font-medium">Analyzing evidence…</p>
-        {label && <span className="text-sm text-muted-foreground">{label}</span>}
+    <div className="scanner-panel sg-scan-beam px-6 py-5" role="status" aria-live="polite">
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+        <div className="mx-auto h-28 w-28 shrink-0 sm:mx-0">
+          <ThreatCoreCanvas mode="scanning" active />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
+            <div>
+              <p className="console-kicker">Active Analysis · {channel.toUpperCase()}</p>
+              <p className="mt-0.5 font-medium text-foreground">Analyzing evidence…</p>
+            </div>
+            <div className="flex items-center gap-3 font-mono text-xs text-muted-foreground">
+              {label && <span>{label}</span>}
+              <span className="tabular-nums text-primary">{elapsed.toFixed(1)}s</span>
+            </div>
+          </div>
+          <ol className="mt-3.5 space-y-2">
+            {steps.map((s, i) => (
+              <li key={s} className={`flex items-center gap-3 text-sm transition-opacity duration-200 ${i > step ? "opacity-40" : "opacity-100"}`}>
+                {i < step ? (
+                  <Check className="h-4 w-4 shrink-0 text-risk-low" aria-hidden="true" />
+                ) : i === step ? (
+                  <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" aria-hidden="true" />
+                ) : (
+                  <span className="h-4 w-4 shrink-0 rounded-full border border-border" aria-hidden="true" />
+                )}
+                <span>{s}</span>
+              </li>
+            ))}
+          </ol>
+          {elapsed > 8 && (
+            <p className="mt-3 text-xs text-muted-foreground">
+              The free server sleeps when idle and can take up to a minute to wake the first time. Your scan will finish on its own.
+            </p>
+          )}
+        </div>
       </div>
-      <ol className="mt-4 space-y-2">
-        {steps.map((s, i) => (
-          <li key={s} className={`flex items-center gap-3 text-sm transition-opacity ${i > step ? "opacity-40" : "opacity-100"}`}>
-            {i < step ? (
-              <Check className="h-4 w-4 text-risk-low" />
-            ) : i === step ? (
-              <Loader2 className="h-4 w-4 animate-spin text-primary" />
-            ) : (
-              <span className="h-4 w-4 rounded-full border border-border" />
-            )}
-            {s}
-          </li>
-        ))}
-      </ol>
-      {elapsed > 8 && (
-        <p className="mt-4 text-xs text-muted-foreground">
-          The free server sleeps when idle and can take up to a minute to wake the first time. Your scan will finish on its own.
-        </p>
-      )}
     </div>
   );
 }

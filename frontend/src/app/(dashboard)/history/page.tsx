@@ -51,10 +51,11 @@ export default function HistoryPage() {
 
   return (
     <div className="sg-page flex flex-col gap-6">
-      <div className="flex flex-wrap gap-4 items-center justify-between">
+      <div className="flex flex-wrap gap-4 items-end justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Scan history</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="console-kicker mb-1.5">Audit Archive</p>
+          <h1 className="text-3xl font-bold tracking-tight md:text-4xl">Scan history</h1>
+          <p className="mt-1.5 text-sm text-muted-foreground">
             A record of every message you&apos;ve analyzed, saved to your account.
           </p>
         </div>
