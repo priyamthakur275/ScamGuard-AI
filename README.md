@@ -12,6 +12,11 @@ ScamGuard says whether it is a scam, shows *why*, and tells you exactly what to 
 [![Evasion](https://img.shields.io/badge/Recall_under_evasion-97.2%25-22c55e?style=for-the-badge)](backend/ml_training/research/results_v2.md)
 [![Tests](https://img.shields.io/badge/Tests-885_passing-3b82f6?style=for-the-badge)](#-engineering)
 
+[![Backend CI](https://github.com/priyamthakur275/ScamGuard-AI/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/priyamthakur275/ScamGuard-AI/actions/workflows/backend-ci.yml)
+[![Frontend CI](https://github.com/priyamthakur275/ScamGuard-AI/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/priyamthakur275/ScamGuard-AI/actions/workflows/frontend-ci.yml)
+[![ML CI](https://github.com/priyamthakur275/ScamGuard-AI/actions/workflows/ml-ci.yml/badge.svg)](https://github.com/priyamthakur275/ScamGuard-AI/actions/workflows/ml-ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
+
 ![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
 ![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?logo=scikitlearn&logoColor=white)
@@ -181,3 +186,7 @@ Major Project, Department of CSE, **B.M.S. College of Engineering, Bengaluru** (
 | Author | **Priyam Thakur** · [@priyamthakur275](https://github.com/priyamthakur275) |
 | Team | Bhavya Goyal · Samir Chaudhary · Sana Subodh |
 | Guide | Dr. Kayarvizhy N, Professor, Department of CSE |
+
+## 📄 License & Security
+
+Released under the [MIT License](LICENSE). See [SECURITY.md](SECURITY.md) for security architecture and vulnerability reporting.
