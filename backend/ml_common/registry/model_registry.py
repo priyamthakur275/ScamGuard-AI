@@ -81,8 +81,11 @@ class ModelRegistry:
             model_key = f"{model_name}/{version}/model.joblib"
             vectorizer_key = f"{model_name}/{version}/vectorizer.joblib"
 
-            stored_model_path = self._store.save(local_model_path, model_key)
-            stored_vectorizer_path = self._store.save(local_vectorizer_path, vectorizer_key)
+            # Record portable, machine-independent paths ("artifacts/<model>/<version>/...").
+            # Loading never uses them (see resolve_artifact_paths); they are for people reading the index.
+            self._store.save(local_model_path, model_key)
+            self._store.save(local_vectorizer_path, vectorizer_key)
+            stored_model_path, stored_vectorizer_path = f"artifacts/{model_key}", f"artifacts/{vectorizer_key}"
 
             info = ModelVersionInfo(
                 model_name=model_name,
