@@ -243,13 +243,16 @@ slightly from Table~\ref{tab:main}.
 \item \emph{Synthetic Hinglish.} The ranking reverses: LR with the hand-written rules is perfect, and XLM-R raises
   \tXlHinBFpr\% false alarms. A benchmark written by the rule authors rewards the rules, not real-world accuracy.
 \item \emph{Cross-domain.} Trained only on the UCI corpus, MuRIL reaches \tMuCrossFull\% F1 on Indian SMS,
-  where TF-IDF LR reaches \tLrCrossFull\%. Pre-training removes most of the domain gap that motivated local data
+  where TF-IDF LR reaches \tLrCrossFull\%. In this seed, pre-training removes most of the domain gap that motivated local data
   in~\cite{scamguard1}.
 \item \emph{Cost.} About \tXlMs{} ms per message on the GPU. That is acceptable as a second stage for Hindi and
   Hinglish messages, but too large for the current free CPU deployment.
 \end{itemize}
-Each model was run with one seed and evaluated on a 77-message real-Hindi set, so these differences need
-confirmation on more seeds and more real data.
+\emph{Seeds.} Table~\ref{tab:tr} is seed 42. Over three seeds (42, 123, 2026), XLM-R averages \sXlRHMean{} $\pm$
+\sXlRHSd{} F1 on real Hindi (worst seed \sXlRHMin), with \sXlRHFprMean\% false alarms. MuRIL averages
+\sMuRHMean{} $\pm$ \sMuRHSd{}, and LR is deterministic at \tLrRHF. On the real English test set the averages are
+\sXlRealMean{} (XLM-R) and \sMuRealMean{} (MuRIL). Trained only on UCI, the transformers score \sMuCrossMean{} and
+\sXlCrossMean{} on all of India SMS. The real-Hindi set is still small, so the size of the gain needs more real data.
 
 \section{Limitations}
 \begin{itemize}\itemsep0pt
@@ -257,7 +260,8 @@ confirmation on more seeds and more real data.
 \item The temporal test is weakened by undated campaigns.
 \item Almost all Hindi and Hinglish training data is synthetic. A one-command ingest path splits newly collected real
   messages by group and keeps the frozen test set clean.
-\item The transformer results come from one seed. The deployed system is still TF-IDF + LR; routing Hindi and
+\item Seeds 123 and 2026 are transcribed from the training log because their result files were lost with the cloud
+  session; seed 42 is complete. The deployed system is still TF-IDF + LR; routing Hindi and
   Hinglish messages to XLM-R needs a GPU or a larger server.
 \item No user study has been run.
 \end{itemize}

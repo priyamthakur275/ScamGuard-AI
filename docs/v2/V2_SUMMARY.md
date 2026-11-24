@@ -82,7 +82,8 @@ comparison. Full tables: [transformer_results.md](../../backend/ml_training/rese
 - **The synthetic Hinglish set ranks the systems the wrong way round.** It rewards the hand-written rules, which
   confirms that synthetic templates measure coverage, not accuracy.
 - **Pre-training removes most of the cross-domain gap** that the v1 study fixed with local data.
-- **These are single-seed runs** on a small real-Hindi set. The next step is to route Hindi/Hinglish messages to
+- **Three seeds** (42, 123, 2026; see research/transformer/SEEDS.md): XLM-R averages 84.5 ± 4.2 F1 on real Hindi
+  (worst 80.6), MuRIL 77.5 ± 7.4, LR 64.7. The real-Hindi set is still small. The next step is to route Hindi/Hinglish messages to
   XLM-R once a GPU or larger server is available.
 
 ## How the Hinglish/Hindi sets were made (and why they are not real-world data)
