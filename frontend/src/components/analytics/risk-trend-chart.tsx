@@ -1,8 +1,7 @@
 "use client";
 
 import { useReducedMotion } from "framer-motion";
-
-import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { AnalysisResult } from "@/types";
 
@@ -16,47 +15,78 @@ export function RiskTrendChart({ entries }: { entries: AnalysisResult[] }) {
       probability: Math.round(entry.threat_score * 100),
     }));
 
+  const avgScore =
+    data.length > 0 ? Math.round(data.reduce((sum, d) => sum + d.probability, 0) / data.length) : 0;
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Scam likelihood, last {data.length} scans</CardTitle>
+    <Card className="console-panel flex flex-col">
+      <CardHeader className="flex-row items-center justify-between gap-2 pb-2">
+        <div>
+          <CardTitle className="text-base font-semibold">Threat Trend</CardTitle>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Scam likelihood across latest {data.length} scan{data.length === 1 ? "" : "s"}
+          </p>
+        </div>
+        {data.length > 0 && (
+          <span className="rounded-md border border-primary/30 bg-primary/10 px-2.5 py-1 font-mono text-xs font-medium text-primary tabular-nums">
+            Avg {avgScore}%
+          </span>
+        )}
       </CardHeader>
-      <CardContent className="h-64">
+      <CardContent className="h-64 flex-1 pt-2">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data}>
-            <CartesianGrid vertical={false} strokeDasharray="3 5" className="stroke-border" />
-            <XAxis dataKey="index" allowDecimals={false} tick={{ fontSize: 12 }} stroke="currentColor" className="text-muted-foreground" />
+          <AreaChart data={data} margin={{ left: -12, right: 8, top: 8, bottom: 0 }}>
+            <defs>
+              <linearGradient id="sgThreatArea" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.42} />
+                <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid vertical={false} strokeDasharray="3 5" className="stroke-border/80" />
+            <XAxis
+              dataKey="index"
+              allowDecimals={false}
+              minTickGap={24}
+              tick={{ fontSize: 11 }}
+              tickLine={false}
+              axisLine={false}
+              stroke="currentColor"
+              className="text-muted-foreground"
+            />
             <YAxis
               domain={[0, 100]}
               tickFormatter={(v) => `${v}%`}
-              tick={{ fontSize: 12 }}
+              tick={{ fontSize: 11 }}
+              tickLine={false}
+              axisLine={false}
               stroke="currentColor"
               className="text-muted-foreground"
             />
             <Tooltip
-              formatter={(value: number) => [`${value}%`, "Scam likelihood"]}
-              labelFormatter={(label) => `Scan ${label}`}
+              formatter={(value: number) => [`${value}%`, "Threat Score"]}
+              labelFormatter={(label) => `Scan #${label}`}
               contentStyle={{
                 backgroundColor: "hsl(var(--card))",
-                
-                border: "1px solid hsl(var(--border) / 0.5)",
+                border: "1px solid hsl(var(--primary) / 0.35)",
                 borderRadius: "0.75rem",
-                fontSize: "0.875rem",
-                boxShadow: "0 8px 32px 0 rgba(0,0,0,0.36)",
-                color: "hsl(var(--foreground))"
+                fontSize: "0.8125rem",
+                boxShadow: "0 10px 30px rgba(2, 6, 23, 0.5)",
+                color: "hsl(var(--foreground))",
               }}
             />
-            <Line 
-              type="monotone" 
-              dataKey="probability" 
-              stroke="hsl(var(--risk-critical))" 
-              strokeWidth={2} 
-              dot={data.length <= 12} 
-              activeDot={{ r: 6, strokeWidth: 0, fill: "hsl(var(--risk-critical))" }}
-              isAnimationActive={!reduceMotion} animationDuration={400}
+            <Area
+              type="monotone"
+              dataKey="probability"
+              stroke="hsl(var(--primary))"
+              strokeWidth={2.5}
+              fill="url(#sgThreatArea)"
+              dot={data.length <= 12 ? { r: 3, fill: "hsl(var(--primary))", strokeWidth: 0 } : false}
+              activeDot={{ r: 5, strokeWidth: 2, stroke: "hsl(var(--background))", fill: "hsl(var(--primary))" }}
+              isAnimationActive={!reduceMotion}
+              animationDuration={450}
               animationEasing="ease-out"
             />
-          </LineChart>
+          </AreaChart>
         </ResponsiveContainer>
       </CardContent>
     </Card>

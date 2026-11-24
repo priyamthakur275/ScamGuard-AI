@@ -9,8 +9,10 @@ import {
   FileOutput,
   Lock,
   MessageCircleQuestion,
+  Play,
   ScanSearch,
   ShieldAlert,
+  ShieldCheck,
   Sparkles,
 } from "lucide-react";
 import { motion, Variants } from "framer-motion";
@@ -65,11 +67,10 @@ const FEATURES = [
   },
 ];
 
-const BENCHMARKS = [
-  { value: "97.5%", label: "Campaign-Held-Out F1", sub: "1,874 real Indian messages" },
-  { value: "97.2%", label: "Evasion Recall", sub: "Homoglyphs, leetspeak & defanged URLs" },
-  { value: "0.67 ms", label: "CPU Latency", sub: "Real-time scoring per message" },
-  { value: "885+", label: "Automated Tests", sub: "Backend, ML & Frontend CI" },
+const HERO_STATS = [
+  { value: "97.5%", label: "Campaign-Held-Out F1" },
+  { value: "97.2%", label: "Evasion Recall" },
+  { value: "0.67 ms", label: "Scoring Latency" },
 ];
 
 const containerVariants: Variants = {
@@ -107,35 +108,50 @@ export default function HomePage() {
       <BackendWarmup />
       <header className="sticky top-0 z-50 flex h-[4.25rem] items-center justify-between border-b border-border bg-background/85 px-5 backdrop-blur-xl md:px-10">
         <Link href="/" className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-primary/35 bg-primary/10">
-            <ShieldAlert className="h-4.5 w-4.5 text-primary" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-primary/40 bg-primary/10 shadow-[0_0_18px_-4px_rgba(0,229,255,0.45)]">
+            <ShieldCheck className="h-4.5 w-4.5 text-primary" />
           </div>
-          <span className="font-display text-lg font-bold tracking-tight text-foreground">ScamGuard</span>
+          <span className="font-display text-lg font-bold tracking-tight text-foreground">
+            ScamGuard <span className="text-primary">AI</span>
+          </span>
         </Link>
-        <nav className="flex items-center gap-3 md:gap-5">
-          <Link href="/#quick-check" className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground lg:inline">
-            Quick check
+
+        <nav className="hidden items-center gap-6 text-sm md:flex">
+          <Link href="/" className="relative py-1 font-medium text-primary after:absolute after:inset-x-0 after:-bottom-0.5 after:h-0.5 after:rounded-full after:bg-primary">
+            Home
           </Link>
-          <Link href="/tools" className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground md:inline">
+          <Link href="/#features" className="text-muted-foreground transition-colors hover:text-foreground">
+            Features
+          </Link>
+          <Link href="/tools" className="text-muted-foreground transition-colors hover:text-foreground">
             Safety tools
           </Link>
-          <Link href="/trends" className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground md:inline">
-            Scam trends
+          <Link href="/trends" className="text-muted-foreground transition-colors hover:text-foreground">
+            Insights
           </Link>
+          <Link href="/cross-domain" className="text-muted-foreground transition-colors hover:text-foreground">
+            Research
+          </Link>
+        </nav>
+
+        <div className="flex items-center gap-2 sm:gap-3">
           <InstallAppButton />
           <ThemeToggle />
-          <Link href="/login" className="whitespace-nowrap text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-            Sign in
+          <Link
+            href="/login"
+            className="whitespace-nowrap rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-muted/60 sm:px-3.5 sm:text-sm"
+          >
+            Log In
           </Link>
-          <Button onClick={() => router.push("/register")} size="sm" className="hidden sm:inline-flex">
-            Get started
+          <Button onClick={() => router.push("/register")} size="sm" className="px-2.5 text-xs sm:px-3.5 sm:text-sm">
+            Get Started
           </Button>
-        </nav>
+        </div>
       </header>
 
       <main className="relative isolate flex-1 overflow-x-clip">
-        {/* Hero Command Showcase */}
-        <section className="relative mx-auto grid max-w-6xl items-center gap-12 px-6 py-14 lg:grid-cols-[1.08fr_0.92fr] lg:py-20">
+        {/* Reference Panel 1: Cinematic Hero with Large 3D Shield-Globe Centerpiece */}
+        <section className="relative mx-auto grid max-w-6xl items-center gap-10 px-6 pb-16 pt-12 lg:min-h-[calc(100vh-4.25rem)] lg:grid-cols-[1.05fr_0.95fr] lg:py-20">
           <motion.div
             className="flex flex-col items-start text-left"
             initial={false}
@@ -144,26 +160,24 @@ export default function HomePage() {
           >
             <motion.div
               variants={itemVariants}
-              className="mb-5 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3.5 py-1 font-mono text-[11px] font-medium text-primary"
+              className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/35 bg-primary/10 px-3.5 py-1 text-xs font-medium text-primary"
             >
-              <span className="h-1.5 w-1.5 rounded-full bg-risk-low" aria-hidden="true" />
-              AI Threat Intelligence · Zero-Storage Quick Check
+              <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
+              AI-Powered Scam Protection
             </motion.div>
 
             <motion.h1
               variants={itemVariants}
-              className="mb-5 max-w-2xl font-display text-4xl font-bold leading-[1.08] tracking-tight sm:text-5xl lg:text-[3.35rem]"
+              className="mb-5 max-w-2xl font-display text-4xl font-bold leading-[1.06] tracking-tight sm:text-5xl lg:text-[3.65rem]"
             >
-              Forward the message.{" "}
-              <span className="text-signal">We&apos;ll show you the trap.</span>
+              Stay One Step <span className="text-signal">Ahead of Scams</span>
             </motion.h1>
 
             <motion.p
               variants={itemVariants}
               className="mb-8 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg"
             >
-              ScamGuard analyzes SMS, WhatsApp chats, links, emails, screenshots, and calls in milliseconds—pinpointing
-              the exact psychological and technical triggers behind Indian digital fraud.
+              Detect, analyze, and stop online threats in real time with AI, threat intelligence, and fraud analytics.
             </motion.p>
 
             <motion.div variants={itemVariants} className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
@@ -172,7 +186,7 @@ export default function HomePage() {
                 className="h-12 px-7 text-sm font-semibold sm:h-14 sm:text-base"
                 onClick={() => document.getElementById("quick-check")?.scrollIntoView({ behavior: "smooth" })}
               >
-                Check a message now
+                Scan Now
                 <ArrowRight className="ml-1.5 h-4 w-4" aria-hidden="true" />
               </Button>
               <Button
@@ -181,42 +195,47 @@ export default function HomePage() {
                 className="h-12 px-7 text-sm font-medium sm:h-14 sm:text-base"
                 onClick={() => router.push("/login")}
               >
-                Open workspace / Demo
+                <Play className="mr-1.5 h-3.5 w-3.5 fill-current text-primary" aria-hidden="true" />
+                Try Demo
               </Button>
             </motion.div>
-            <motion.p variants={itemVariants} className="mt-4 font-mono text-xs text-muted-foreground">
-              No sign-up needed for quick check · Nothing you paste is stored.
-            </motion.p>
+
+            {/* Real Verified Model Telemetry Row (from results_v2.md) */}
+            <motion.div
+              variants={itemVariants}
+              className="mt-10 grid w-full max-w-lg grid-cols-3 gap-6 border-t border-border/80 pt-6"
+            >
+              {HERO_STATS.map((s) => (
+                <div key={s.label}>
+                  <p className="font-display text-2xl font-bold tabular-nums tracking-tight text-foreground sm:text-3xl">
+                    {s.value}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">{s.label}</p>
+                </div>
+              ))}
+            </motion.div>
           </motion.div>
 
-          {/* Custom 3D Neural Core + Intercepted Signal X-Ray */}
-          <div className="relative flex flex-col items-center">
-            <div className="relative flex h-[210px] w-full items-center justify-center sm:h-[235px]">
-              <ThreatCoreCanvas mode="hero" threatRatio={0.22} />
-              <div className="pointer-events-none absolute inset-x-0 bottom-2 flex justify-center">
-                <span className="rounded-full border border-primary/25 bg-background/85 px-3 py-0.5 font-mono text-[10px] tracking-wider text-primary backdrop-blur">
-                  NEURAL + INTENT ENGINE · DE-OBFUSCATION ACTIVE
-                </span>
-              </div>
-            </div>
-            <div className="-mt-3 w-full">
-              <HeroXray />
-            </div>
+          {/* Dominant 3D Holographic Shield + Neural Globe + Flowing Cyan Wave */}
+          <div className="relative flex h-[340px] w-full items-center justify-center sm:h-[430px] lg:h-[470px]">
+            <ThreatCoreCanvas mode="hero" threatRatio={0} />
           </div>
         </section>
 
-        {/* Verified Benchmark Telemetry Strip */}
-        <section aria-label="Verified model benchmarks" className="border-y border-border bg-card/55">
-          <div className="mx-auto grid max-w-6xl grid-cols-2 divide-x divide-y divide-border sm:grid-cols-4 sm:divide-y-0">
-            {BENCHMARKS.map((item) => (
-              <div key={item.label} className="px-6 py-5 transition-colors hover:bg-muted/30">
-                <p className="font-mono text-2xl font-semibold tabular-nums tracking-tight text-foreground sm:text-[1.75rem]">
-                  {item.value}
-                </p>
-                <p className="mt-1 text-xs font-semibold text-primary">{item.label}</p>
-                <p className="mt-0.5 text-[11px] text-muted-foreground">{item.sub}</p>
-              </div>
-            ))}
+        {/* Live Signal X-Ray Showcase */}
+        <section className="border-t border-border bg-card/30 px-6 py-14">
+          <div className="mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[0.9fr_1.1fr]">
+            <div>
+              <p className="console-kicker mb-2">Explainable Detection</p>
+              <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
+                Every flagged message reveals why it&apos;s a trap.
+              </h2>
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-base">
+                Instead of an opaque score, ScamGuard dissects incoming messages into psychological stages—urgency
+                pressure, credential asks, and suspicious cash-out domains—so anyone can spot the scam immediately.
+              </p>
+            </div>
+            <HeroXray />
           </div>
         </section>
 
@@ -224,7 +243,7 @@ export default function HomePage() {
         <HowToCards />
 
         {/* Feature Capabilities Grid */}
-        <section className="border-t border-border bg-card/25 px-6 py-20">
+        <section id="features" className="scroll-mt-20 border-t border-border bg-card/25 px-6 py-20">
           <div className="mx-auto max-w-6xl">
             <div className="mb-12 max-w-2xl">
               <p className="console-kicker mb-2">Defense Capabilities</p>
@@ -243,7 +262,7 @@ export default function HomePage() {
               {FEATURES.map(({ icon: Icon, title, description }) => (
                 <motion.div key={title} variants={itemVariants}>
                   <Card className="console-panel h-full p-6">
-                    <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-lg border border-primary/25 bg-primary/10 text-primary">
+                    <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-lg border border-primary/30 bg-primary/10 text-primary">
                       <Icon className="h-5 w-5" aria-hidden="true" />
                     </div>
                     <h3 className="mb-2 text-lg font-semibold text-foreground">{title}</h3>
@@ -297,7 +316,7 @@ export default function HomePage() {
       <footer className="border-t border-border bg-background px-6 py-10">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-5 md:flex-row">
           <div className="flex items-center gap-2">
-            <ShieldAlert className="h-4 w-4 text-primary" aria-hidden="true" />
+            <ShieldCheck className="h-4 w-4 text-primary" aria-hidden="true" />
             <span className="text-sm font-medium text-muted-foreground">ScamGuard AI · 2026</span>
           </div>
           <p className="text-center text-xs text-muted-foreground">
@@ -314,7 +333,7 @@ export default function HomePage() {
               Create account
             </Link>
             <Link href="/login" className="text-muted-foreground transition-colors hover:text-foreground">
-              Sign in
+              Log in
             </Link>
           </div>
         </div>

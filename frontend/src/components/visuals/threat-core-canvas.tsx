@@ -3,11 +3,25 @@
 import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 
+export interface ThreatCoreCounts {
+  safe: number;
+  suspicious: number;
+  highRisk: number;
+}
+
 export interface ThreatCoreCanvasProps {
-  /** Visual framing preset: hero backdrop, dashboard command deck, or compact live scan indicator. */
-  mode?: "hero" | "command" | "scanning";
+  /**
+   * Visual mode matching the cybersecurity design system:
+   * - "hero": 3D particle globe + tilted orbital rings + glowing holographic Shield + wave horizon
+   * - "radar": Concentric Live Threat Radar with sweeping beam, central shield & real-data blips
+   * - "scanning": Dual rotating scan rings + inner reticle for live scan analysis
+   * - "command": Compact 3D neural core
+   */
+  mode?: "hero" | "radar" | "scanning" | "command";
   /** Real threat proportion (0..1) from live scan history; never randomized. */
   threatRatio?: number;
+  /** Real scan counts used strictly to color radar blips proportionally; 0 total => 0 blips. */
+  counts?: ThreatCoreCounts;
   /** Elevates sweep speed slightly while a real scan request is in flight. */
   active?: boolean;
   className?: string;
@@ -37,11 +51,96 @@ function buildFibonacciSphere(count: number): Point3D[] {
   return pts;
 }
 
-const SPHERE_NODES = buildFibonacciSphere(46);
+const HERO_NODES = buildFibonacciSphere(76);
+const CORE_NODES = buildFibonacciSphere(46);
+
+function drawShield(
+  ctx: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  size: number,
+  cyanRGB: string,
+  blueRGB: string,
+  isDark: boolean,
+  withCheck: boolean,
+) {
+  const topY = cy - size * 0.62;
+  const shoulderY = cy - size * 0.36;
+  const midY = cy + size * 0.14;
+  const tipY = cy + size * 0.68;
+  const halfW = size * 0.54;
+
+  const traceShield = (scale = 1) => {
+    const w = halfW * scale;
+    const ty = cy - size * 0.62 * scale;
+    const sy = cy - size * 0.36 * scale;
+    const my = cy + size * 0.14 * scale;
+    const by = cy + size * 0.68 * scale;
+    ctx.beginPath();
+    ctx.moveTo(cx, ty);
+    ctx.bezierCurveTo(cx + w * 0.45, ty + size * 0.08 * scale, cx + w * 0.85, sy, cx + w, sy);
+    ctx.bezierCurveTo(cx + w, my, cx + w * 0.55, by - size * 0.16 * scale, cx, by);
+    ctx.bezierCurveTo(cx - w * 0.55, by - size * 0.16 * scale, cx - w, my, cx - w, sy);
+    ctx.bezierCurveTo(cx - w * 0.85, sy, cx - w * 0.45, ty + size * 0.08 * scale, cx, ty);
+    ctx.closePath();
+  };
+
+  ctx.save();
+  // Soft shield backlight
+  const aura = ctx.createRadialGradient(cx, cy, size * 0.08, cx, cy, size * 1.15);
+  aura.addColorStop(0, `rgba(${cyanRGB}, ${isDark ? 0.36 : 0.22})`);
+  aura.addColorStop(0.6, `rgba(${blueRGB}, ${isDark ? 0.14 : 0.08})`);
+  aura.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = aura;
+  ctx.beginPath();
+  ctx.arc(cx, cy, size * 1.15, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Outer shield glass fill + glowing border
+  traceShield(1);
+  const grad = ctx.createLinearGradient(cx - halfW, topY, cx + halfW, tipY);
+  grad.addColorStop(0, `rgba(${cyanRGB}, ${isDark ? 0.24 : 0.2})`);
+  grad.addColorStop(0.55, `rgba(${blueRGB}, ${isDark ? 0.22 : 0.16})`);
+  grad.addColorStop(1, `rgba(${cyanRGB}, ${isDark ? 0.12 : 0.1})`);
+  ctx.fillStyle = grad;
+  ctx.shadowColor = `rgba(${cyanRGB}, ${isDark ? 0.85 : 0.45})`;
+  ctx.shadowBlur = size * 0.32;
+  ctx.fill();
+
+  ctx.lineWidth = Math.max(1.8, size * 0.038);
+  ctx.strokeStyle = `rgba(${cyanRGB}, ${isDark ? 0.95 : 0.9})`;
+  ctx.stroke();
+
+  // Inner bevel hairline
+  ctx.shadowBlur = 0;
+  traceShield(0.84);
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = `rgba(255, 255, 255, ${isDark ? 0.28 : 0.42})`;
+  ctx.stroke();
+
+  // Central luminous checkmark
+  if (withCheck) {
+    ctx.beginPath();
+    ctx.moveTo(cx - size * 0.21, cy + size * 0.02);
+    ctx.lineTo(cx - size * 0.04, cy + size * 0.19);
+    ctx.lineTo(cx + size * 0.24, cy - size * 0.16);
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.lineWidth = Math.max(2.6, size * 0.075);
+    ctx.strokeStyle = `rgba(${cyanRGB}, 1)`;
+    ctx.shadowColor = `rgba(${cyanRGB}, 0.9)`;
+    ctx.shadowBlur = size * 0.22;
+    ctx.stroke();
+  }
+  ctx.restore();
+  void shoulderY;
+  void midY;
+}
 
 export function ThreatCoreCanvas({
   mode = "command",
   threatRatio = 0,
+  counts,
   active = false,
   className,
 }: ThreatCoreCanvasProps) {
@@ -84,8 +183,8 @@ export function ThreatCoreCanvas({
       if (rect.width <= 0 || rect.height <= 0) return;
       const nx = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
       const ny = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
-      pointerRef.current.targetX = Math.max(-1, Math.min(1, nx)) * 0.28;
-      pointerRef.current.targetY = Math.max(-1, Math.min(1, ny)) * 0.22;
+      pointerRef.current.targetX = Math.max(-1, Math.min(1, nx)) * 0.26;
+      pointerRef.current.targetY = Math.max(-1, Math.min(1, ny)) * 0.2;
     };
 
     const onPointerLeave = () => {
@@ -99,105 +198,247 @@ export function ThreatCoreCanvas({
     let rafId = 0;
     let startTime = performance.now();
 
-    const renderFrame = (now: number) => {
-      const isDark = document.documentElement.classList.contains("dark");
-      const elapsed = reduceMotion ? 0 : (now - startTime) / 1000;
-
-      // Damped pointer tilt
-      const p = pointerRef.current;
-      p.x += (p.targetX - p.x) * 0.06;
-      p.y += (p.targetY - p.y) * 0.06;
-
-      ctx.clearRect(0, 0, width, height);
-
+    const drawScanning = (elapsed: number, isDark: boolean, cyanRGB: string, tealRGB: string) => {
       const cx = width * 0.5;
       const cy = height * 0.5;
-      const minDim = Math.min(width, height);
-      const radiusScale = mode === "scanning" ? 0.36 : mode === "hero" ? 0.37 : 0.34;
-      const R = minDim * radiusScale;
+      const R = Math.min(width, height) * 0.36;
 
-      // Palette tokens matching Obsidian Sentinel
-      const cyanRGB = isDark ? "34, 211, 238" : "8, 145, 178";
-      const tealRGB = isDark ? "45, 212, 191" : "13, 148, 136";
-      const warnRGB = isDark ? "245, 158, 11" : "217, 119, 6";
-      const alertRGB = isDark ? "244, 63, 94" : "220, 38, 38";
-
-      // 1. Atmospheric core bloom
-      const glow = ctx.createRadialGradient(cx, cy, R * 0.05, cx, cy, R * 1.45);
-      glow.addColorStop(0, `rgba(${cyanRGB}, ${isDark ? 0.22 : 0.14})`);
-      glow.addColorStop(0.45, `rgba(${tealRGB}, ${isDark ? 0.08 : 0.05})`);
-      glow.addColorStop(1, "rgba(0, 0, 0, 0)");
+      // Ambient radial cyan glow
+      const glow = ctx.createRadialGradient(cx, cy, R * 0.08, cx, cy, R * 1.45);
+      glow.addColorStop(0, `rgba(${cyanRGB}, ${isDark ? 0.28 : 0.16})`);
+      glow.addColorStop(0.55, `rgba(${tealRGB}, ${isDark ? 0.09 : 0.05})`);
+      glow.addColorStop(1, "rgba(0,0,0,0)");
       ctx.fillStyle = glow;
       ctx.beginPath();
       ctx.arc(cx, cy, R * 1.45, 0, Math.PI * 2);
       ctx.fill();
 
-      // 2. Outer calibrated range rings
-      const outerR = R * 1.24;
+      // Subtle dashed baseline ring
       ctx.save();
-      ctx.strokeStyle = `rgba(${cyanRGB}, ${isDark ? 0.14 : 0.18})`;
+      ctx.setLineDash([4, 6]);
+      ctx.strokeStyle = `rgba(${cyanRGB}, ${isDark ? 0.22 : 0.28})`;
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.arc(cx, cy, outerR, 0, Math.PI * 2);
+      ctx.arc(cx, cy, R * 1.16, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Rotating thick outer segmented arcs
+      const a1 = elapsed * 1.45;
+      ctx.strokeStyle = `rgba(${cyanRGB}, ${isDark ? 0.92 : 0.85})`;
+      ctx.lineWidth = 3;
+      ctx.lineCap = "round";
+      ctx.shadowColor = `rgba(${cyanRGB}, 0.75)`;
+      ctx.shadowBlur = 12;
+      ctx.beginPath();
+      ctx.arc(cx, cy, R * 0.96, a1, a1 + Math.PI * 0.65);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(cx, cy, R * 0.96, a1 + Math.PI, a1 + Math.PI * 1.65);
       ctx.stroke();
 
-      // Cardinal ticks on outer ring
-      for (let i = 0; i < 24; i++) {
-        const ang = (i / 24) * Math.PI * 2;
-        const len = i % 6 === 0 ? 7 : 3;
+      // Counter-rotating inner ring
+      const a2 = -elapsed * 1.1;
+      ctx.shadowBlur = 6;
+      ctx.lineWidth = 1.75;
+      ctx.strokeStyle = `rgba(${tealRGB}, ${isDark ? 0.72 : 0.7})`;
+      ctx.beginPath();
+      ctx.arc(cx, cy, R * 0.72, a2, a2 + Math.PI * 0.8);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(cx, cy, R * 0.72, a2 + Math.PI * 1.05, a2 + Math.PI * 1.75);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Pulse wave expanding outward
+      if (!reduceMotion) {
+        const pulse = (elapsed * 0.8) % 1;
+        const pr = R * 0.35 + pulse * R * 0.85;
         ctx.beginPath();
-        ctx.moveTo(cx + Math.cos(ang) * (outerR - len), cy + Math.sin(ang) * (outerR - len));
-        ctx.lineTo(cx + Math.cos(ang) * outerR, cy + Math.sin(ang) * outerR);
-        ctx.strokeStyle = `rgba(${cyanRGB}, ${i % 6 === 0 ? (isDark ? 0.42 : 0.48) : (isDark ? 0.16 : 0.22)})`;
+        ctx.arc(cx, cy, pr, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(${cyanRGB}, ${(1 - pulse) * 0.38})`;
+        ctx.lineWidth = 1.25;
         ctx.stroke();
       }
 
-      // 3. Radar sweep wedge
-      const sweepSpeed = active || mode === "scanning" ? 1.55 : 0.55;
-      const sweepAngle = elapsed * sweepSpeed;
-      const wedgeSpan = Math.PI * 0.36;
-      const wedgeSteps = 14;
-      for (let s = 0; s < wedgeSteps; s++) {
-        const t0 = sweepAngle - (s / wedgeSteps) * wedgeSpan;
-        const t1 = sweepAngle - ((s + 1) / wedgeSteps) * wedgeSpan;
-        const alpha = (1 - s / wedgeSteps) * (active ? 0.16 : 0.09);
+      // Centered magnifying lens reticle
+      const lensR = R * 0.24;
+      ctx.beginPath();
+      ctx.arc(cx - lensR * 0.14, cy - lensR * 0.14, lensR, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${cyanRGB}, ${isDark ? 0.12 : 0.1})`;
+      ctx.fill();
+      ctx.lineWidth = 2.2;
+      ctx.strokeStyle = `rgba(${cyanRGB}, 0.95)`;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(cx + lensR * 0.52, cy + lensR * 0.52);
+      ctx.lineTo(cx + lensR * 1.15, cy + lensR * 1.15);
+      ctx.lineCap = "round";
+      ctx.lineWidth = 2.6;
+      ctx.stroke();
+      ctx.restore();
+    };
+
+    const drawRadar = (elapsed: number, isDark: boolean, cyanRGB: string, safeRGB: string, warnRGB: string, alertRGB: string) => {
+      const cx = width * 0.5;
+      const cy = height * 0.5;
+      const R = Math.min(width, height) * 0.41;
+
+      const glow = ctx.createRadialGradient(cx, cy, R * 0.05, cx, cy, R * 1.15);
+      glow.addColorStop(0, `rgba(${cyanRGB}, ${isDark ? 0.2 : 0.12})`);
+      glow.addColorStop(0.65, `rgba(${cyanRGB}, ${isDark ? 0.05 : 0.03})`);
+      glow.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(cx, cy, R * 1.15, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Concentric radar rings
+      for (const mult of [0.32, 0.56, 0.78, 1]) {
+        ctx.beginPath();
+        ctx.arc(cx, cy, R * mult, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(${cyanRGB}, ${mult === 1 ? (isDark ? 0.28 : 0.34) : (isDark ? 0.14 : 0.18)})`;
+        ctx.lineWidth = mult === 1 ? 1.25 : 1;
+        ctx.stroke();
+      }
+
+      // Crosshairs + diagonals
+      ctx.save();
+      ctx.strokeStyle = `rgba(${cyanRGB}, ${isDark ? 0.11 : 0.15})`;
+      ctx.lineWidth = 1;
+      for (let a = 0; a < 4; a++) {
+        const ang = (a * Math.PI) / 4;
+        ctx.beginPath();
+        ctx.moveTo(cx - Math.cos(ang) * R, cy - Math.sin(ang) * R);
+        ctx.lineTo(cx + Math.cos(ang) * R, cy + Math.sin(ang) * R);
+        ctx.stroke();
+      }
+
+      // Rotating radar sweep wedge
+      const sweepAngle = elapsed * 0.9;
+      const span = Math.PI * 0.42;
+      for (let s = 0; s < 16; s++) {
+        const a0 = sweepAngle - (s / 16) * span;
+        const a1 = sweepAngle - ((s + 1) / 16) * span;
         ctx.beginPath();
         ctx.moveTo(cx, cy);
-        ctx.arc(cx, cy, outerR * 0.99, t1, t0);
+        ctx.arc(cx, cy, R, a1, a0);
         ctx.closePath();
-        ctx.fillStyle = `rgba(${cyanRGB}, ${alpha})`;
+        ctx.fillStyle = `rgba(${cyanRGB}, ${(1 - s / 16) * (isDark ? 0.18 : 0.13)})`;
         ctx.fill();
       }
       ctx.beginPath();
       ctx.moveTo(cx, cy);
-      ctx.lineTo(cx + Math.cos(sweepAngle) * outerR, cy + Math.sin(sweepAngle) * outerR);
-      ctx.strokeStyle = `rgba(${cyanRGB}, ${active ? 0.68 : 0.42})`;
-      ctx.lineWidth = 1.25;
+      ctx.lineTo(cx + Math.cos(sweepAngle) * R, cy + Math.sin(sweepAngle) * R);
+      ctx.strokeStyle = `rgba(${cyanRGB}, ${isDark ? 0.8 : 0.7})`;
+      ctx.lineWidth = 1.6;
       ctx.stroke();
 
-      // Active scanning pulse ring
-      if ((active || mode === "scanning") && !reduceMotion) {
-        const pulseT = (elapsed * 0.75) % 1;
-        const pulseR = R * 0.25 + pulseT * (outerR - R * 0.25);
-        ctx.beginPath();
-        ctx.arc(cx, cy, pulseR, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(${tealRGB}, ${(1 - pulseT) * 0.45})`;
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
+      // Real-data blips (zero blips when total === 0)
+      const total = counts ? counts.safe + counts.suspicious + counts.highRisk : 0;
+      if (total > 0 && counts) {
+        const blipCap = Math.min(18, total);
+        const hiCount = Math.round((counts.highRisk / total) * blipCap);
+        const suspCount = Math.round((counts.suspicious / total) * blipCap);
+        const blipColors: string[] = [];
+        for (let i = 0; i < blipCap; i++) {
+          if (i < hiCount) blipColors.push(alertRGB);
+          else if (i < hiCount + suspCount) blipColors.push(warnRGB);
+          else blipColors.push(safeRGB);
+        }
+        blipColors.forEach((rgb, i) => {
+          const ang = i * 2.39996 + 0.4;
+          const dist = R * (0.4 + ((i * 37) % 52) / 100);
+          const bx = cx + Math.cos(ang) * dist;
+          const by = cy + Math.sin(ang) * dist;
+          const angDiff = Math.abs((((sweepAngle - ang) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2));
+          const highlight = angDiff < 0.65 ? 1 : 0.48;
+          ctx.beginPath();
+          ctx.arc(bx, by, 6.5 * highlight, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${rgb}, ${(0.22 * highlight).toFixed(2)})`;
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(bx, by, 3, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${rgb}, ${Math.min(1, 0.55 + 0.45 * highlight).toFixed(2)})`;
+          ctx.fill();
+        });
       }
       ctx.restore();
 
-      // 4. 3D Lattice projection
-      const speedY = active || mode === "scanning" ? 0.48 : 0.22;
+      // Center holographic shield
+      drawShield(ctx, cx, cy, R * 0.34, cyanRGB, "59, 130, 246", isDark, true);
+    };
+
+    const drawGlobeHeroOrCommand = (
+      elapsed: number,
+      isDark: boolean,
+      cyanRGB: string,
+      tealRGB: string,
+      blueRGB: string,
+      warnRGB: string,
+      alertRGB: string,
+    ) => {
+      const isHero = mode === "hero";
+      const cx = width * 0.5;
+      const cy = isHero ? height * 0.46 : height * 0.5;
+      const minDim = Math.min(width, height);
+      const R = minDim * (isHero ? 0.36 : 0.34);
+
+      const p = pointerRef.current;
+      p.x += (p.targetX - p.x) * 0.06;
+      p.y += (p.targetY - p.y) * 0.06;
+
+      // Flowing cyan particle wave floor on Hero mode
+      if (isHero) {
+        const rows = 5;
+        const cols = 38;
+        const baseY = height * 0.84;
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const nx = c / (cols - 1);
+            const x = nx * width;
+            const wave = Math.sin(nx * 6.5 + elapsed * 0.9 + r * 0.7) * 10 + Math.cos(nx * 3.2 - elapsed * 0.5) * 6;
+            const y = baseY + r * 7 + wave;
+            const edgeFade = Math.sin(nx * Math.PI);
+            const alpha = edgeFade * (1 - r / rows) * (isDark ? 0.48 : 0.3);
+            ctx.beginPath();
+            ctx.arc(x, y, 1.35, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${cyanRGB}, ${alpha.toFixed(3)})`;
+            ctx.fill();
+          }
+        }
+      }
+
+      // Atmospheric sphere bloom
+      const glow = ctx.createRadialGradient(cx, cy, R * 0.06, cx, cy, R * 1.5);
+      glow.addColorStop(0, `rgba(${cyanRGB}, ${isDark ? 0.28 : 0.16})`);
+      glow.addColorStop(0.5, `rgba(${blueRGB}, ${isDark ? 0.13 : 0.07})`);
+      glow.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(cx, cy, R * 1.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Outer faint halo ring
+      ctx.beginPath();
+      ctx.arc(cx, cy, R * 1.18, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(${cyanRGB}, ${isDark ? 0.16 : 0.2})`;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // 3D sphere rotation
+      const speedY = active ? 0.45 : isHero ? 0.19 : 0.24;
       const rotY = elapsed * speedY + p.x;
-      const rotX = 0.28 + Math.sin(elapsed * 0.3) * 0.08 - p.y;
+      const rotX = 0.26 + Math.sin(elapsed * 0.3) * 0.06 - p.y;
       const cosY = Math.cos(rotY);
       const sinY = Math.sin(rotY);
       const cosX = Math.cos(rotX);
       const sinX = Math.sin(rotX);
-
       const fov = 3.1;
-      const projected = SPHERE_NODES.map((pt) => {
+
+      const nodes = isHero ? HERO_NODES : CORE_NODES;
+      const projected = nodes.map((pt) => {
         const x1 = pt.x * cosY - pt.z * sinY;
         const z1 = pt.x * sinY + pt.z * cosY;
         const y2 = pt.y * cosX - z1 * sinX;
@@ -209,13 +450,13 @@ export function ThreatCoreCanvas({
           x3: x1,
           y3: y2,
           z3: z2,
-          perspective,
           ring: pt.ring,
         };
       });
 
-      // Synaptic links between neighboring 3D nodes
-      const maxDistSq = 0.62 * 0.62;
+      // Synaptic links
+      const linkDist = isHero ? 0.5 : 0.62;
+      const maxDistSq = linkDist * linkDist;
       ctx.lineWidth = 0.85;
       for (let i = 0; i < projected.length; i++) {
         const a = projected[i]!;
@@ -227,9 +468,9 @@ export function ThreatCoreCanvas({
           const dSq = dx * dx + dy * dy + dz * dz;
           if (dSq < maxDistSq) {
             const depthAvg = (a.z3 + b.z3) * 0.5;
-            const distFactor = 1 - Math.sqrt(dSq) / 0.62;
+            const distFactor = 1 - Math.sqrt(dSq) / linkDist;
             const depthAlpha = Math.max(0.06, (depthAvg + 1.2) * 0.5);
-            const alpha = distFactor * depthAlpha * (isDark ? 0.34 : 0.38);
+            const alpha = distFactor * depthAlpha * (isDark ? 0.32 : 0.35);
             ctx.strokeStyle = `rgba(${cyanRGB}, ${alpha.toFixed(3)})`;
             ctx.beginPath();
             ctx.moveTo(a.sx, a.sy);
@@ -239,68 +480,97 @@ export function ThreatCoreCanvas({
         }
       }
 
-      // Draw tilted orbital ring (3D projected ellipse)
-      ctx.save();
-      ctx.beginPath();
-      const ringSegs = 64;
-      for (let i = 0; i <= ringSegs; i++) {
-        const t = (i / ringSegs) * Math.PI * 2;
-        const rx = Math.cos(t) * 1.12;
-        const ry = Math.sin(t) * 0.36;
-        const rz = Math.sin(t) * 1.06;
-        const x1 = rx * cosY - rz * sinY;
-        const z1 = rx * sinY + rz * cosY;
-        const y2 = ry * cosX - z1 * sinX;
-        const z2 = ry * sinX + z1 * cosX;
-        const persp = fov / (fov - z2);
-        const sx = cx + x1 * R * persp;
-        const sy = cy + y2 * R * persp;
-        if (i === 0) ctx.moveTo(sx, sy);
-        else ctx.lineTo(sx, sy);
-      }
-      ctx.strokeStyle = `rgba(${tealRGB}, ${isDark ? 0.28 : 0.32})`;
-      ctx.lineWidth = 1;
-      ctx.stroke();
-      ctx.restore();
+      // Tilted orbital rings
+      const drawOrbit = (tilt: number, scaleR: number, rgb: string, alpha: number) => {
+        ctx.save();
+        ctx.beginPath();
+        const segs = 72;
+        for (let i = 0; i <= segs; i++) {
+          const t = (i / segs) * Math.PI * 2;
+          const rx = Math.cos(t) * scaleR;
+          const ry = Math.sin(t) * tilt;
+          const rz = Math.sin(t) * scaleR;
+          const x1 = rx * cosY - rz * sinY;
+          const z1 = rx * sinY + rz * cosY;
+          const y2 = ry * cosX - z1 * sinX;
+          const z2 = ry * sinX + z1 * cosX;
+          const persp = fov / (fov - z2);
+          const sx = cx + x1 * R * persp;
+          const sy = cy + y2 * R * persp;
+          if (i === 0) ctx.moveTo(sx, sy);
+          else ctx.lineTo(sx, sy);
+        }
+        ctx.strokeStyle = `rgba(${rgb}, ${alpha})`;
+        ctx.lineWidth = 1.15;
+        ctx.stroke();
+        ctx.restore();
+      };
 
-      // Sort nodes back-to-front so front nodes render crisply over back nodes
+      drawOrbit(0.35, 1.14, cyanRGB, isDark ? 0.34 : 0.38);
+      if (isHero) drawOrbit(-0.32, 1.22, blueRGB, isDark ? 0.24 : 0.28);
+
+      // Back half of sphere nodes
       const sorted = [...projected].sort((a, b) => a.z3 - b.z3);
       for (const node of sorted) {
-        const depthNorm = (node.z3 + 1) * 0.5; // 0 (back) .. 1 (front)
-        const alpha = 0.24 + depthNorm * 0.72;
-        const size = (1.6 + depthNorm * 2.0) * (mode === "scanning" ? 0.85 : 1);
-
-        // Proportional semantic coloring strictly driven by real threatRatio
+        if (isHero && node.z3 >= 0.05) continue;
+        const depthNorm = (node.z3 + 1) * 0.5;
+        const alpha = 0.22 + depthNorm * 0.68;
+        const size = 1.5 + depthNorm * 1.9;
         let rgb = cyanRGB;
-        if (clampedThreat > 0 && node.ring < clampedThreat * 0.75) {
+        if (clampedThreat > 0 && node.ring < clampedThreat * 0.72) {
           rgb = clampedThreat >= 0.45 ? alertRGB : warnRGB;
-        } else if (node.ring > 0.72) {
+        } else if (node.ring > 0.66) {
           rgb = tealRGB;
         }
-
-        if (depthNorm > 0.65) {
-          ctx.beginPath();
-          ctx.arc(node.sx, node.sy, size * 2.3, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(${rgb}, ${(alpha * 0.2).toFixed(3)})`;
-          ctx.fill();
-        }
-
         ctx.beginPath();
         ctx.arc(node.sx, node.sy, size, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(${rgb}, ${alpha.toFixed(3)})`;
         ctx.fill();
       }
 
-      // Inner core focal shield node
-      ctx.beginPath();
-      ctx.arc(cx, cy, mode === "scanning" ? 4.5 : 5.5, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${cyanRGB}, ${isDark ? 0.92 : 0.85})`;
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(cx, cy, mode === "scanning" ? 11 : 14, 0, Math.PI * 2);
-      ctx.strokeStyle = `rgba(${cyanRGB}, 0.35)`;
-      ctx.lineWidth = 1;
-      ctx.stroke();
+      // Holographic Shield centerpiece inside Hero globe
+      if (isHero) {
+        drawShield(ctx, cx, cy, R * 0.62, cyanRGB, blueRGB, isDark, true);
+      }
+
+      // Front half of sphere nodes (passes in front of shield for true 3D depth)
+      for (const node of sorted) {
+        if (!isHero) break;
+        if (node.z3 < 0.05) continue;
+        const depthNorm = (node.z3 + 1) * 0.5;
+        const alpha = 0.28 + depthNorm * 0.68;
+        const size = 1.7 + depthNorm * 2.1;
+        const rgb = node.ring > 0.66 ? tealRGB : cyanRGB;
+        ctx.beginPath();
+        ctx.arc(node.sx, node.sy, size * 2.1, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${rgb}, ${(alpha * 0.22).toFixed(3)})`;
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(node.sx, node.sy, size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${rgb}, ${alpha.toFixed(3)})`;
+        ctx.fill();
+      }
+    };
+
+    const renderFrame = (now: number) => {
+      const isDark = document.documentElement.classList.contains("dark");
+      const elapsed = reduceMotion ? 0 : (now - startTime) / 1000;
+      ctx.clearRect(0, 0, width, height);
+
+      const cyanRGB = isDark ? "0, 229, 255" : "8, 145, 178";
+      const tealRGB = isDark ? "45, 212, 191" : "13, 148, 136";
+      const blueRGB = isDark ? "59, 130, 246" : "37, 99, 235";
+      const safeRGB = isDark ? "34, 197, 94" : "22, 163, 74";
+      const warnRGB = isDark ? "245, 158, 11" : "217, 119, 6";
+      const alertRGB = isDark ? "239, 68, 68" : "220, 38, 38";
+
+      if (mode === "scanning") {
+        drawScanning(elapsed, isDark, cyanRGB, tealRGB);
+      } else if (mode === "radar") {
+        drawRadar(elapsed, isDark, cyanRGB, safeRGB, warnRGB, alertRGB);
+      } else {
+        drawGlobeHeroOrCommand(elapsed, isDark, cyanRGB, tealRGB, blueRGB, warnRGB, alertRGB);
+      }
     };
 
     const loop = (now: number) => {
@@ -332,7 +602,7 @@ export function ThreatCoreCanvas({
       canvas.removeEventListener("pointerleave", onPointerLeave);
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [mode, threatRatio, active]);
+  }, [mode, threatRatio, counts, active]);
 
   return (
     <canvas

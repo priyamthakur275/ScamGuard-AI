@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
-import { ShieldAlert } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { InstallAppButton } from "@/components/layout/install-app-button";
 import { useLanguage } from "@/lib/i18n/language-context";
@@ -27,10 +27,12 @@ export function PublicShell({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <header className="sticky top-0 z-50 flex h-[4.25rem] items-center justify-between gap-4 border-b border-border bg-background/85 px-5 backdrop-blur-xl md:px-10">
         <Link href="/" className="flex items-center gap-2.5">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-primary/35 bg-primary/10">
-            <ShieldAlert className="h-4.5 w-4.5 text-primary" />
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-primary/40 bg-primary/10 shadow-[0_0_18px_-4px_rgba(0,229,255,0.45)]">
+            <ShieldCheck className="h-4.5 w-4.5 text-primary" />
           </span>
-          <span className="font-display text-lg font-bold tracking-tight">ScamGuard</span>
+          <span className="font-display text-lg font-bold tracking-tight">
+            ScamGuard <span className="text-primary">AI</span>
+          </span>
         </Link>
         <nav className="flex items-center gap-3 text-sm md:gap-5">
           {NAV.map((n) => {

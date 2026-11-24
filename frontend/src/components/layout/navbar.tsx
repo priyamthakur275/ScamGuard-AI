@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu, ShieldAlert } from "lucide-react";
+import { Menu, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/lib/auth/auth-context";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { ServerStatus } from "@/components/layout/server-status";
@@ -21,7 +21,7 @@ export function Navbar({ onMenuClick }: NavbarProps) {
       className="sticky top-0 z-30 flex h-[4.5rem] items-center justify-between border-b border-border bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/70 md:px-8"
     >
       <div className="flex items-center gap-3">
-        <span className="hidden text-sm text-muted-foreground md:block">Workspace <span className="mx-3 text-border">/</span><span className="capitalize text-foreground">{section}</span></span>
+        <span className="hidden whitespace-nowrap text-sm text-muted-foreground md:block">Workspace <span className="mx-3 text-border">/</span><span className="capitalize text-foreground">{section}</span></span>
         <Button
           variant="ghost"
           size="icon"
@@ -32,8 +32,10 @@ export function Navbar({ onMenuClick }: NavbarProps) {
           <Menu className="h-5 w-5" />
         </Button>
         <div className="flex items-center gap-2 md:hidden">
-          <ShieldAlert className="h-5 w-5 text-primary" />
-          <span className="font-semibold tracking-tight">ScamGuard</span>
+          <ShieldCheck className="h-5 w-5 text-primary" />
+          <span className="font-display font-bold tracking-tight">
+            ScamGuard <span className="text-primary">AI</span>
+          </span>
         </div>
       </div>
 

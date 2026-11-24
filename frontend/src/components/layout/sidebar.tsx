@@ -3,10 +3,26 @@
 import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, History, LayoutDashboard, LogOut, ScanSearch, Settings, ShieldAlert, X, Wrench, BookOpen, TrendingUp, FlaskConical } from "lucide-react";
+import {
+  BarChart3,
+  Bot,
+  BookOpen,
+  FlaskConical,
+  History,
+  LayoutDashboard,
+  LogOut,
+  ScanSearch,
+  Settings,
+  ShieldAlert,
+  ShieldCheck,
+  TrendingUp,
+  Wrench,
+  X,
+} from "lucide-react";
 import { useDialogFocus } from "@/hooks/use-dialog-focus";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth/auth-context";
+import { useCopilot } from "@/components/copilot/copilot-provider";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -20,8 +36,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const panel = useRef<HTMLElement>(null);
   useDialogFocus(isOpen, panel, onClose);
   const { user, logout } = useAuth();
+  const { setOpen: openCopilot } = useCopilot();
 
-  // Only close sidebar when actually navigating to a DIFFERENT route
   const prevPathRef = useRef(pathname);
   useEffect(() => {
     if (prevPathRef.current !== pathname) {
@@ -30,7 +46,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     }
   }, [pathname, onClose]);
 
-  // Handle Escape key and body scroll lock when mobile sidebar is open
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -56,7 +71,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       title: "Operations",
       items: [
         { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
-        { href: "/analyze", label: "Investigate", icon: ScanSearch },
+        { href: "/analyze", label: "Scan Tool", icon: ScanSearch },
         { href: "/history", label: "History", icon: History },
         { href: "/analytics", label: "Analytics", icon: BarChart3 },
       ],
@@ -64,9 +79,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     {
       title: "Intelligence & Tools",
       items: [
+        { href: "/trends", label: "Threat Trends", icon: TrendingUp },
         { href: "/tools", label: "Safety Tools", icon: Wrench },
-        { href: "/trends", label: "Scam Trends", icon: TrendingUp },
-        { href: "/flashcards", label: "Flashcards", icon: BookOpen },
+        { href: "/flashcards", label: "Playbooks", icon: BookOpen },
         { href: "/cross-domain", label: "Cross-domain study", icon: FlaskConical },
       ],
     },
@@ -81,7 +96,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   return (
     <>
-      {/* Mobile Backdrop */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -96,29 +110,29 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         )}
       </AnimatePresence>
 
-      {/* Sidebar Navigation */}
-      <aside ref={panel} aria-label="Workspace navigation"
+      <aside
+        ref={panel}
+        aria-label="Workspace navigation"
         className={cn(
-          "sg-sidebar fixed inset-y-0 left-0 z-50 flex w-60 flex-col border-r border-border bg-card transition-transform duration-300 ease-in-out md:sticky md:top-0 md:h-screen md:translate-x-0 md:bg-background",
-          isOpen ? "translate-x-0" : "-translate-x-full invisible md:visible pointer-events-none md:pointer-events-auto"
+          "sg-sidebar fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-border bg-card transition-transform duration-300 ease-in-out md:sticky md:top-0 md:h-screen md:translate-x-0 md:bg-background",
+          isOpen ? "translate-x-0" : "-translate-x-full invisible md:visible pointer-events-none md:pointer-events-auto",
         )}
       >
-        <div className="flex h-[4.5rem] items-center justify-between border-b border-border px-6">
+        <div className="flex h-[4.5rem] items-center justify-between border-b border-border px-5">
           <Link href="/dashboard" className="group flex items-center gap-2.5" onClick={onClose}>
-            <div className="flex h-9 w-9 items-center justify-center rounded-sm border border-primary/30 bg-primary/10 text-primary transition-colors duration-150 group-hover:bg-primary group-hover:text-primary-foreground">
-              <ShieldAlert className="h-5 w-5" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-primary/40 bg-primary/10 text-primary shadow-[0_0_18px_-4px_rgba(0,229,255,0.45)] transition-colors duration-150 group-hover:bg-primary group-hover:text-primary-foreground">
+              <ShieldCheck className="h-5 w-5" />
             </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-semibold leading-none tracking-tight text-foreground">ScamGuard</span>
-            </div>
+            <span className="font-display text-base font-bold leading-none tracking-tight text-foreground">
+              ScamGuard <span className="text-primary">AI</span>
+            </span>
           </Link>
           <Button variant="ghost" size="icon" className="md:hidden" onClick={onClose} aria-label="Close menu">
             <X className="h-5 w-5" />
           </Button>
         </div>
 
-        <div className="pt-4" />
-        <nav className="flex-1 space-y-5 overflow-y-auto px-3 pb-6">
+        <nav className="flex-1 space-y-5 overflow-y-auto px-3 pb-4 pt-4">
           {navGroups.map((group) => (
             <div key={group.title} className="space-y-1">
               <p className="px-3.5 pb-1 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/75">
@@ -133,13 +147,12 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                     href={href}
                     onClick={onClose}
                     className={cn(
-                      "relative flex items-center gap-3 rounded-sm px-3.5 py-2 text-sm transition-colors duration-150 ease-out",
+                      "relative flex items-center gap-3 rounded-lg px-3.5 py-2 text-sm transition-colors duration-150 ease-out",
                       isActive
-                        ? "bg-primary/10 font-medium text-primary shadow-[inset_0_0_0_1px_rgba(34,211,238,0.08)]"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                        ? "font-medium text-foreground"
+                        : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
                     )}
                   >
-                    {isActive && <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-primary" />}
                     <Icon className="h-4 w-4" aria-hidden="true" />
                     {label}
                   </Link>
@@ -149,7 +162,25 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           ))}
         </nav>
 
-        <div className="border-t border-border p-3">
+        {/* Reference Panel 2 Bottom AI Assistant Card -> opens live Copilot */}
+        <div className="space-y-2 border-t border-border p-3">
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              openCopilot(true);
+            }}
+            className="flex w-full items-center gap-3 rounded-xl border border-primary/30 bg-primary/10 p-3 text-left transition-colors hover:border-primary/55 hover:bg-primary/15"
+          >
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-primary/40 bg-background/70 text-primary shadow-[0_0_16px_-4px_rgba(0,229,255,0.5)]">
+              <Bot className="h-5 w-5" aria-hidden="true" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold text-foreground">AI Assistant</p>
+              <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">Get real-time scam safety guidance</p>
+            </div>
+          </button>
+
           <Button
             variant="ghost"
             className="w-full justify-start gap-3 text-muted-foreground hover:text-destructive"

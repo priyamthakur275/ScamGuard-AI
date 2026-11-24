@@ -55,43 +55,57 @@ export function ScanProgress({ channel, label }: { channel: string; label?: stri
   }, [steps.length]);
 
   return (
-    <div className="scanner-panel sg-scan-beam px-6 py-5" role="status" aria-live="polite">
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-        <div className="mx-auto h-28 w-28 shrink-0 sm:mx-0">
+    <div className="scanner-panel sg-scan-beam px-6 py-8" role="status" aria-live="polite">
+      <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
+        <div className="h-36 w-36">
           <ThreatCoreCanvas mode="scanning" active />
         </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
-            <div>
-              <p className="console-kicker">Active Analysis · {channel.toUpperCase()}</p>
-              <p className="mt-0.5 font-medium text-foreground">Analyzing evidence…</p>
-            </div>
-            <div className="flex items-center gap-3 font-mono text-xs text-muted-foreground">
-              {label && <span>{label}</span>}
-              <span className="tabular-nums text-primary">{elapsed.toFixed(1)}s</span>
-            </div>
-          </div>
-          <ol className="mt-3.5 space-y-2">
-            {steps.map((s, i) => (
-              <li key={s} className={`flex items-center gap-3 text-sm transition-opacity duration-200 ${i > step ? "opacity-40" : "opacity-100"}`}>
-                {i < step ? (
-                  <Check className="h-4 w-4 shrink-0 text-risk-low" aria-hidden="true" />
-                ) : i === step ? (
-                  <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" aria-hidden="true" />
-                ) : (
-                  <span className="h-4 w-4 shrink-0 rounded-full border border-border" aria-hidden="true" />
-                )}
-                <span>{s}</span>
-              </li>
-            ))}
-          </ol>
-          {elapsed > 8 && (
-            <p className="mt-3 text-xs text-muted-foreground">
-              The free server sleeps when idle and can take up to a minute to wake the first time. Your scan will finish on its own.
-            </p>
-          )}
+        <div className="mt-2 flex items-center gap-2 font-mono text-xs text-primary">
+          <span>ACTIVE PIPELINE · {channel.toUpperCase()}</span>
+          {label && <span>· {label}</span>}
+          <span className="tabular-nums">· {elapsed.toFixed(1)}s</span>
         </div>
+        <h2 className="mt-2 text-2xl font-bold tracking-tight text-foreground">Scanning &amp; Analyzing…</h2>
+        <p className="mt-1 text-sm text-muted-foreground">{steps[step] ?? "Processing evidence…"}</p>
       </div>
+
+      {/* Horizontal connected progress stepper matching Reference Panel 3 */}
+      <ol className="mx-auto mt-7 grid max-w-3xl grid-cols-1 gap-3 sm:grid-cols-4 sm:gap-2">
+        {steps.slice(0, 4).map((s, i) => {
+          const done = i < step;
+          const current = i === step;
+          return (
+            <li key={s} className="relative flex items-center gap-2.5 sm:flex-col sm:items-center sm:text-center">
+              <span
+                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs transition-colors ${
+                  done
+                    ? "border-safe/60 bg-safe/15 text-safe"
+                    : current
+                    ? "border-primary bg-primary/20 text-primary shadow-[0_0_16px_-2px_rgba(0,229,255,0.75)]"
+                    : "border-border bg-muted/40 text-muted-foreground"
+                }`}
+              >
+                {done ? (
+                  <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                ) : current ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                ) : (
+                  <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />
+                )}
+              </span>
+              <span className={`text-xs ${current ? "font-medium text-primary" : done ? "text-foreground" : "text-muted-foreground"}`}>
+                {s}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+
+      {elapsed > 8 && (
+        <p className="mt-5 text-center text-xs text-muted-foreground">
+          The free server sleeps when idle and can take up to a minute to wake the first time. Your scan will finish on its own.
+        </p>
+      )}
     </div>
   );
 }

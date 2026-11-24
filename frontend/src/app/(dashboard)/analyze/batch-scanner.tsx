@@ -104,6 +104,13 @@ export const BatchScanner = memo(function BatchScanner() {
     }
   }, [toast]);
 
+  const handleReset = useCallback(() => {
+    setItems([]);
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, []);
+
   return (
     <div className="flex flex-col gap-8">
       <ScanTabs onScan={handleScan} isScanning={isScanning} />
@@ -114,7 +121,6 @@ export const BatchScanner = memo(function BatchScanner() {
 
       {items.some((i) => i.status === "done" || i.status === "error") && (
         <div className="space-y-6">
-          <h2 className="text-xl font-semibold tracking-tight border-b pb-2">Results</h2>
           <div className="flex flex-col gap-8">
             <AnimatePresence>
               {items.map((item) => {
@@ -123,25 +129,22 @@ export const BatchScanner = memo(function BatchScanner() {
                 }
 
                 return (
-                  <motion.div 
-                    key={item.id} 
+                  <motion.div
+                    key={item.id}
                     className="flex flex-col gap-3"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ type: "spring", stiffness: 300, damping: 24 }}
                   >
-                    <div className="text-sm font-medium text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-md inline-block w-fit">
-                      Input: {item.file ? item.file.name : item.text ? (item.text.length > 50 ? item.text.substring(0, 50) + "..." : item.text) : "Scanned message"}
-                    </div>
-
                     {item.status === "error" && (
                       <Alert variant="error">{item.error || "This item could not be scanned."}</Alert>
                     )}
 
                     {item.status === "done" && item.result && (
-                      <VerdictCard 
-                        result={item.result} 
-                        onFeedback={(isAccurate) => handleFeedback(item.id, item.result!.id, isAccurate)} 
+                      <VerdictCard
+                        result={item.result}
+                        onScanAnother={handleReset}
+                        onFeedback={(isAccurate) => handleFeedback(item.id, item.result!.id, isAccurate)}
                       />
                     )}
                   </motion.div>

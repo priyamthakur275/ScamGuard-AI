@@ -4,11 +4,17 @@ import { useCallback, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import {
-  Activity,
   AlertTriangle,
   ArrowUpRight,
   CheckCircle2,
   Eye,
+  File,
+  Image as ImageIcon,
+  Link as LinkIcon,
+  Mail,
+  MessageSquareText,
+  Mic,
+  QrCode,
   Radio,
   RefreshCw,
   ScanSearch,
@@ -32,15 +38,21 @@ import { PhoneLookup } from "@/components/dashboard/phone-lookup";
 
 const ChartSkeleton = () => <Skeleton className="h-64 w-full" />;
 
-const ThreatDistributionPieChart = dynamic(
-  () => import("@/components/analytics/threat-distribution-pie-chart").then((m) => m.ThreatDistributionPieChart),
-  { ssr: false, loading: ChartSkeleton },
-);
-
 const RiskTrendChart = dynamic(
   () => import("@/components/analytics/risk-trend-chart").then((m) => m.RiskTrendChart),
   { ssr: false, loading: ChartSkeleton },
 );
+
+function displayEntryText(entry: AnalysisResult): string {
+  const urlMeta = entry.metadata?.url_intelligence as { original_url?: string } | undefined;
+  if (urlMeta?.original_url) return urlMeta.original_url;
+  if (entry.text.startsWith("URL Target:")) {
+    const stripped = entry.text.slice("URL Target:".length).trim();
+    const idx = stripped.indexOf(" Observed URL signals:");
+    return idx >= 0 ? stripped.slice(0, idx).trim() : stripped;
+  }
+  return entry.text;
+}
 
 function isHighRisk(entry: AnalysisResult): boolean {
   return (
@@ -48,6 +60,17 @@ function isHighRisk(entry: AnalysisResult): boolean {
     entry.threat_level === "critical" ||
     (!entry.threat_level && entry.risk_level === "high")
   );
+}
+
+function ChannelIcon({ inputType }: { inputType?: string | null }) {
+  const key = (inputType ?? "TEXT").toUpperCase();
+  if (key === "URL") return <LinkIcon className="h-4 w-4 text-primary" aria-hidden="true" />;
+  if (key === "EMAIL") return <Mail className="h-4 w-4 text-primary" aria-hidden="true" />;
+  if (key === "IMAGE") return <ImageIcon className="h-4 w-4 text-primary" aria-hidden="true" />;
+  if (key === "VOICE") return <Mic className="h-4 w-4 text-primary" aria-hidden="true" />;
+  if (key === "PDF") return <File className="h-4 w-4 text-primary" aria-hidden="true" />;
+  if (key === "QR") return <QrCode className="h-4 w-4 text-primary" aria-hidden="true" />;
+  return <MessageSquareText className="h-4 w-4 text-primary" aria-hidden="true" />;
 }
 
 export default function DashboardPage() {
@@ -104,23 +127,18 @@ export default function DashboardPage() {
   const suspiciousCount = Math.max(0, flaggedCount - highRiskCount);
   const detectionRate = totalScans > 0 ? flaggedCount / totalScans : 0;
 
+  const safePct = totalScans > 0 ? Math.round((safeCount / totalScans) * 100) : 0;
+  const suspiciousPct = totalScans > 0 ? Math.round((suspiciousCount / totalScans) * 100) : 0;
+  const highPct = totalScans > 0 ? Math.round((highRiskCount / totalScans) * 100) : 0;
+
   const topCategoryRaw = summary
     ? Object.entries(summary.category_distribution).sort((a, b) => b[1] - a[1])[0]?.[0]
     : undefined;
   const topCategory = topCategoryRaw ? scamCategoryLabel(topCategoryRaw) : null;
 
-  const posture =
-    totalScans === 0
-      ? { label: "Standby · No Scans Yet", cls: "border-border bg-muted/40 text-muted-foreground", dot: "bg-muted-foreground" }
-      : highRiskCount > 0
-      ? { label: "Elevated Alert · High-Risk Threats", cls: "border-destructive/35 bg-destructive/10 text-destructive", dot: "bg-destructive" }
-      : suspiciousCount > 0
-      ? { label: "Caution · Suspicious Activity", cls: "border-caution/35 bg-caution/10 text-caution", dot: "bg-caution" }
-      : { label: "Nominal · No Threats Flagged", cls: "border-safe/35 bg-safe/10 text-safe", dot: "bg-safe" };
-
   const allHighPriority = entries.filter(isHighRisk);
   const highPriority = allHighPriority.slice(0, 5);
-  const recentEntries = entries.slice(0, 8);
+  const recentEntries = entries.slice(0, 6);
 
   const indicatorCounts = new Map<string, number>();
   entries.forEach((entry) => {
@@ -133,19 +151,54 @@ export default function DashboardPage() {
     .sort((a, b) => b[1] - a[1])
     .slice(0, 6);
 
-  const safePct = totalScans > 0 ? (safeCount / totalScans) * 100 : 0;
-  const suspiciousPct = totalScans > 0 ? (suspiciousCount / totalScans) * 100 : 0;
-  const highPct = totalScans > 0 ? (highRiskCount / totalScans) * 100 : 0;
+  const kpiCards = [
+    {
+      label: "Total Scans",
+      value: totalScans.toLocaleString("en-IN"),
+      badge: totalScans > 0 ? `${formatPercent(detectionRate)} flagged` : "No scans yet",
+      badgeCls: "text-primary",
+      icon: ScanSearch,
+      iconCls: "border-primary/30 bg-primary/10 text-primary",
+      wideMobile: false,
+    },
+    {
+      label: "Safe",
+      value: safeCount.toLocaleString("en-IN"),
+      badge: `${safePct}% legitimate`,
+      badgeCls: "text-safe",
+      icon: CheckCircle2,
+      iconCls: "border-safe/30 bg-safe/10 text-safe",
+      wideMobile: false,
+    },
+    {
+      label: "Suspicious",
+      value: suspiciousCount.toLocaleString("en-IN"),
+      badge: `${suspiciousPct}% caution`,
+      badgeCls: "text-caution",
+      icon: AlertTriangle,
+      iconCls: "border-caution/30 bg-caution/10 text-caution",
+      wideMobile: false,
+    },
+    {
+      label: "High Risk",
+      value: highRiskCount.toLocaleString("en-IN"),
+      badge: `${highPct}% critical/high`,
+      badgeCls: "text-destructive",
+      icon: ShieldAlert,
+      iconCls: "border-destructive/30 bg-destructive/10 text-destructive",
+      wideMobile: false,
+    },
+  ];
 
   return (
-    <div className="sg-page flex flex-col gap-7">
-      {/* Top Bar */}
+    <div className="sg-page flex flex-col gap-6">
+      {/* Header matching Reference Panel 2 */}
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
           <p className="console-kicker mb-1.5">Threat Operations Center</p>
-          <h1 className="text-3xl font-bold tracking-tight md:text-4xl">Threat overview</h1>
+          <h1 className="text-3xl font-bold tracking-tight md:text-4xl">Threat Overview</h1>
           <p className="mt-1.5 max-w-2xl text-sm leading-6 text-muted-foreground">
-            Real-time workspace posture, high-severity detections, and recurring fraud indicators.
+            Real-time insights into detected scams and risks across your workspace.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2.5">
@@ -160,7 +213,7 @@ export default function DashboardPage() {
           </Button>
           <Link href="/analyze" className={buttonVariants({ size: "md" })}>
             <ScanSearch className="h-4 w-4" aria-hidden="true" />
-            New investigation
+            New Scan
           </Link>
         </div>
       </div>
@@ -176,145 +229,192 @@ export default function DashboardPage() {
         </Alert>
       )}
 
-      {/* Command Deck Centerpiece */}
+      {/* 4 KPI Cards Row (Reference Panel 2) */}
       {isLoading ? (
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.28fr)_minmax(0,0.72fr)]">
-          <Skeleton className="h-72 w-full" />
-          <Skeleton className="h-72 w-full" />
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-28 w-full" />
+          ))}
         </div>
       ) : (
         <motion.section
-          aria-label="Threat intelligence command deck"
-          initial={{ opacity: 0, y: 8 }}
+          aria-label="Threat summary metrics"
+          initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.25 }}
-          className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.28fr)_minmax(0,0.72fr)]"
+          transition={{ duration: 0.22 }}
+          className="grid grid-cols-2 gap-4 lg:grid-cols-4"
         >
-          {/* Left: Posture & Telemetry Readout */}
-          <Card className="console-panel flex flex-col justify-between p-6">
-            <div>
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
-                <div className="flex items-center gap-2.5">
-                  <span className={cn("inline-flex items-center gap-2 rounded-full border px-3 py-1 font-mono text-xs font-medium", posture.cls)}>
-                    <span className={cn("h-1.5 w-1.5 rounded-full", posture.dot)} aria-hidden="true" />
-                    {posture.label}
-                  </span>
+          {kpiCards.map((card) => {
+            const Icon = card.icon;
+            return (
+              <Card key={card.label} className="console-panel p-4 sm:p-5">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="font-sans text-2xl font-bold tabular-nums tracking-tight text-foreground sm:text-3xl">
+                      {card.value}
+                    </p>
+                    <p className="mt-1 text-xs font-medium text-muted-foreground">{card.label}</p>
+                  </div>
+                  <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border", card.iconCls)}>
+                    <Icon className="h-4 w-4" aria-hidden="true" />
+                  </div>
                 </div>
-                {summary && summary.total_scans > 0 && (
-                  <span className="font-mono text-xs text-muted-foreground">
-                    Avg Threat Score:{" "}
-                    <strong className="text-foreground">{formatPercent(summary.average_threat_score)}</strong>
-                  </span>
-                )}
-              </div>
+                <p className={cn("mt-3 font-mono text-[11px] font-medium", card.badgeCls)}>{card.badge}</p>
+              </Card>
+            );
+          })}
+        </motion.section>
+      )}
 
-              <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
-                {[
-                  { label: "Total scans", value: String(totalScans), sub: "Analyzed", icon: ScanSearch, cls: "text-primary", wideMobile: false },
-                  { label: "Safe", value: String(safeCount), sub: "Legitimate", icon: CheckCircle2, cls: "text-safe", wideMobile: false },
-                  { label: "Suspicious", value: String(suspiciousCount), sub: "Caution", icon: AlertTriangle, cls: "text-caution", wideMobile: false },
-                  { label: "High risk", value: String(highRiskCount), sub: "Critical / High", icon: ShieldAlert, cls: "text-destructive", wideMobile: false },
-                  { label: "Flagged rate", value: formatPercent(detectionRate), sub: `${flaggedCount} of ${totalScans}`, icon: Activity, cls: "text-primary", wideMobile: true },
-                ].map((m) => {
-                  const Icon = m.icon;
-                  return (
-                    <div
-                      key={m.label}
-                      className={cn(
-                        "rounded-xl border border-border bg-background/60 p-3.5 transition-colors hover:border-primary/30",
-                        m.wideMobile && "col-span-2 sm:col-span-1",
-                      )}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-[11px] font-medium text-muted-foreground">{m.label}</span>
-                        <Icon className={cn("h-3.5 w-3.5", m.cls)} aria-hidden="true" />
-                      </div>
-                      <p className="mt-2 font-sans text-2xl font-bold tabular-nums text-foreground">{m.value}</p>
-                      <p className="mt-0.5 text-[11px] text-muted-foreground">{m.sub}</p>
-                    </div>
-                  );
-                })}
+      {/* Middle Row: Live Threat Radar (left) + Glowing Cyan Threat Trend (right) */}
+      {isLoading ? (
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
+          <Skeleton className="h-80 w-full" />
+          <Skeleton className="h-80 w-full" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
+          {/* Live Threat Radar */}
+          <Card className="console-panel flex flex-col justify-between p-5">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Radio className="h-4 w-4 text-primary" aria-hidden="true" />
+                <CardTitle className="text-base font-semibold">Live Threat Radar</CardTitle>
               </div>
-            </div>
-
-            {/* Proportional Breakdown Bar (strictly actual data) */}
-            <div className="mt-6 border-t border-border pt-4">
-              <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-xs">
-                <span className="font-medium text-foreground">Workspace severity mix</span>
-                <span className="font-mono text-[11px] text-muted-foreground">
-                  {totalScans > 0
-                    ? `${Math.round(safePct)}% safe · ${Math.round(suspiciousPct)}% suspicious · ${Math.round(highPct)}% high risk`
-                    : "Run your first investigation to populate live telemetry"}
-                </span>
-              </div>
-              <div className="flex h-2 w-full overflow-hidden rounded-full bg-muted" role="img" aria-label="Severity distribution bar">
-                {totalScans > 0 && (
-                  <>
-                    <div className="bg-safe transition-all duration-500" style={{ width: `${safePct}%` }} />
-                    <div className="bg-caution transition-all duration-500" style={{ width: `${suspiciousPct}%` }} />
-                    <div className="bg-destructive transition-all duration-500" style={{ width: `${highPct}%` }} />
-                  </>
-                )}
-              </div>
-            </div>
-          </Card>
-
-          {/* Right: Live 3D Threat Core Centerpiece */}
-          <Card className="console-panel relative flex flex-col justify-between overflow-hidden p-5">
-            <div className="flex items-center justify-between font-mono text-[11px] text-muted-foreground">
-              <span className="inline-flex items-center gap-1.5 text-primary">
-                <Radio className="h-3.5 w-3.5" aria-hidden="true" />
-                THREAT CORE · ACTIVE
+              <span className="font-mono text-[11px] text-muted-foreground">
+                {topCategory ? `Top: ${topCategory}` : "Monitoring"}
               </span>
-              <span className="tabular-nums">{formatPercent(detectionRate)} FLAGGED</span>
             </div>
 
-            <div className="relative my-2 h-52 w-full">
-              <ThreatCoreCanvas mode="command" threatRatio={detectionRate} />
+            <div className="my-2 h-56 w-full">
+              <ThreatCoreCanvas
+                mode="radar"
+                threatRatio={detectionRate}
+                counts={{ safe: safeCount, suspicious: suspiciousCount, highRisk: highRiskCount }}
+              />
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-xs">
-              <span className="text-muted-foreground">
-                Top vector:{" "}
-                <strong className="font-medium text-foreground">
-                  {topCategory ?? "None detected"}
-                </strong>
-              </span>
+              <div className="flex flex-wrap items-center gap-3 font-mono text-[11px] text-muted-foreground">
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-safe" aria-hidden="true" />
+                  {safeCount} safe
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-caution" aria-hidden="true" />
+                  {suspiciousCount} suspicious
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-destructive" aria-hidden="true" />
+                  {highRiskCount} high risk
+                </span>
+              </div>
               <Link href="/analytics" className="inline-flex items-center gap-1 font-medium text-primary hover:underline">
                 Analytics
                 <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
               </Link>
             </div>
           </Card>
-        </motion.section>
+
+          {/* Threat Trend */}
+          {entries.length > 0 ? (
+            <RiskTrendChart entries={entries.slice(0, 30)} />
+          ) : (
+            <Card className="console-panel flex flex-col justify-center p-6">
+              <EmptyState
+                icon={ScanSearch}
+                title="No scan trend yet"
+                description="Run your first scan to plot live threat likelihood over recent activity."
+                actionHref="/analyze"
+                actionLabel="Run first scan"
+              />
+            </Card>
+          )}
+        </div>
       )}
 
-      {/* Priority Findings & Analytics & Recent Activity */}
-      {isLoading ? (
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-          <Skeleton className="h-72 w-full" />
-          <Skeleton className="h-72 w-full" />
-        </div>
-      ) : (
-        <>
+      {/* Recent Scan Activity (Reference Panel 2 Bottom) */}
+      {!isLoading && (
+        <Card className="console-panel min-w-0 overflow-hidden">
+          <CardHeader className="flex-row items-center justify-between gap-3 border-b border-border bg-card/60">
+            <div className="min-w-0">
+              <CardTitle className="text-lg">Recent Scan Activity</CardTitle>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Latest messages, links, emails, and files inspected in your workspace.
+              </p>
+            </div>
+            <Link href="/history" className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-xs font-medium text-primary hover:underline">
+              View All
+              <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
+            </Link>
+          </CardHeader>
+          <CardContent className="p-0">
+            {recentEntries.length === 0 ? (
+              <EmptyState
+                icon={ScanSearch}
+                title="No activity yet"
+                description="Analyze your first message, link, or screenshot to populate your activity stream."
+                actionHref="/analyze"
+                actionLabel="Analyze a message"
+              />
+            ) : (
+              <ul className="divide-y divide-border">
+                {recentEntries.map((entry) => (
+                  <li
+                    key={entry.id}
+                    className="flex flex-col gap-3 px-4 py-3.5 transition-colors hover:bg-muted/35 md:flex-row md:items-center md:justify-between md:px-6"
+                  >
+                    <div className="flex min-w-0 flex-1 items-center gap-3">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-background/70">
+                        <ChannelIcon inputType={entry.input_type} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-foreground">{truncate(displayEntryText(entry), 84)}</p>
+                        <p className="mt-0.5 truncate font-mono text-[11px] text-muted-foreground">
+                          {verdictLabel(entry.verdict)}
+                          {entry.scam_category ? ` · ${scamCategoryLabel(entry.scam_category)}` : ""}
+                          {" · Score "}
+                          {formatPercent(entry.threat_score)}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex shrink-0 items-center justify-between gap-3 md:justify-end">
+                      <ThreatBadge threatLevel={entry.threat_level} riskLevel={entry.risk_level} />
+                      <span className="hidden font-mono text-xs text-muted-foreground xl:inline">
+                        {formatDate(entry.created_at)}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="whitespace-nowrap text-primary hover:text-primary"
+                        onClick={() => setSelectedFinding(entry)}
+                      >
+                        <Eye className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
+                        Inspect
+                      </Button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Priority Findings + Recurring Indicators & Phone Lookup */}
+      {!isLoading && (
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.28fr)_minmax(0,0.72fr)]">
           <Card className="console-panel min-w-0 overflow-hidden">
-            <CardHeader className="flex-col gap-2 border-b border-border bg-card/60 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <CardTitle className="text-lg">Priority findings</CardTitle>
+            <CardHeader className="flex-row items-center justify-between gap-3 border-b border-border bg-card/60">
+              <div className="min-w-0">
+                <CardTitle className="text-lg">Priority Findings</CardTitle>
                 <p className="mt-0.5 text-xs text-muted-foreground">
-                  High and critical detections requiring verification or reporting.
+                  High and critical risk items requiring review or reporting.
                 </p>
               </div>
-              <div className="flex items-center gap-3">
-                <span className="font-mono text-xs text-muted-foreground">
-                  {allHighPriority.length > highPriority.length
-                    ? `Showing ${highPriority.length} of ${allHighPriority.length}`
-                    : `${allHighPriority.length} high-risk ${allHighPriority.length === 1 ? "finding" : "findings"}`}
-                </span>
-                <Link href="/history" className="text-xs font-medium text-primary hover:underline">
-                  All history
-                </Link>
-              </div>
+              <span className="shrink-0 font-mono text-xs text-muted-foreground">
+                {allHighPriority.length} high-risk
+              </span>
             </CardHeader>
             <CardContent className="p-0">
               {highPriority.length === 0 ? (
@@ -327,188 +427,56 @@ export default function DashboardPage() {
                 />
               ) : (
                 <ul className="divide-y divide-border">
-                  {highPriority.map((entry, idx) => (
-                    <motion.li
+                  {highPriority.map((entry) => (
+                    <li
                       key={entry.id}
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.2, delay: idx * 0.04 }}
-                      className="flex flex-col gap-3 border-l-2 border-l-destructive/75 px-4 py-4 transition-colors hover:bg-muted/35 sm:flex-row sm:items-center sm:gap-4 sm:px-6"
+                      className="flex items-center justify-between gap-3 border-l-2 border-l-destructive/80 px-4 py-3.5 transition-colors hover:bg-muted/30 sm:px-5"
                     >
-                      <div className="flex min-w-0 flex-1 items-start gap-3">
-                        <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-destructive/30 bg-destructive/10 text-destructive">
-                          <AlertTriangle className="h-4 w-4" aria-hidden="true" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium text-foreground">
-                            {truncate(entry.text, 92)}
-                          </p>
-                          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[11px] text-muted-foreground">
-                            <span className="text-foreground/90">{verdictLabel(entry.verdict)}</span>
-                            {entry.scam_category && (
-                              <>
-                                <span>·</span>
-                                <span>{scamCategoryLabel(entry.scam_category)}</span>
-                              </>
-                            )}
-                            {entry.input_type && (
-                              <>
-                                <span>·</span>
-                                <span className="uppercase">{entry.input_type}</span>
-                              </>
-                            )}
-                            <span>·</span>
-                            <span>Score {formatPercent(entry.threat_score)}</span>
-                            <span>·</span>
-                            <span>{formatDate(entry.created_at)}</span>
-                          </div>
-                        </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-foreground">{truncate(entry.text, 76)}</p>
+                        <p className="mt-0.5 font-mono text-[11px] text-muted-foreground">
+                          {entry.scam_category ? scamCategoryLabel(entry.scam_category) : verdictLabel(entry.verdict)} ·{" "}
+                          {formatPercent(entry.threat_score)} · {formatDate(entry.created_at)}
+                        </p>
                       </div>
-                      <div className="flex shrink-0 items-center justify-between gap-2.5 sm:justify-end">
-                        <ThreatBadge threatLevel={entry.threat_level} riskLevel={entry.risk_level} />
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setSelectedFinding(entry)}
-                          aria-label="Inspect finding"
-                        >
-                          <Eye className="h-3.5 w-3.5" aria-hidden="true" />
-                          Inspect
-                        </Button>
-                      </div>
-                    </motion.li>
+                      <Button variant="outline" size="sm" className="shrink-0 whitespace-nowrap" onClick={() => setSelectedFinding(entry)}>
+                        Inspect
+                      </Button>
+                    </li>
                   ))}
                 </ul>
               )}
             </CardContent>
           </Card>
 
-          {/* Threat Analytics — strictly rendered from real data */}
-          {summary && summary.total_scans > 0 && (
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-base font-semibold tracking-tight text-foreground">Threat analytics</h2>
-                  <p className="text-xs text-muted-foreground">
-                    Distribution and recent trajectory computed from your saved scans.
-                  </p>
-                </div>
-                <Link
-                  href="/analytics"
-                  className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-                >
-                  Full analytics
-                  <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
-                </Link>
-              </div>
-              <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-                <ThreatDistributionPieChart distribution={summary.verdict_distribution} />
-                <RiskTrendChart entries={entries.slice(0, 30)} />
-              </div>
-            </div>
-          )}
-
-          {/* Recent Scan Activity + Recurring Indicators + Phone Lookup */}
-          <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.65fr)]">
-            <Card className="console-panel min-w-0 overflow-hidden">
-              <CardHeader className="flex-row items-center justify-between gap-3 border-b border-border bg-card/60">
-                <div className="min-w-0">
-                  <CardTitle className="text-lg">Recent scan activity</CardTitle>
-                  <p className="mt-0.5 text-xs text-muted-foreground">Latest messages, URLs, and artifacts inspected.</p>
-                </div>
-                <Link href="/history" className="shrink-0 whitespace-nowrap text-xs font-medium text-primary hover:underline">
-                  View all
-                </Link>
+          <div className="flex min-w-0 flex-col gap-5">
+            <Card className="console-panel min-w-0">
+              <CardHeader className="border-b border-border bg-card/60">
+                <CardTitle className="text-lg">Recurring Indicators</CardTitle>
               </CardHeader>
-              <CardContent className="p-0">
-                {recentEntries.length === 0 ? (
-                  <EmptyState
-                    icon={ScanSearch}
-                    title="No activity yet"
-                    description="Analyze your first message, link, or screenshot to populate your feed."
-                    actionHref="/analyze"
-                    actionLabel="Analyze a message"
-                  />
+              <CardContent className="pt-4">
+                {recurringIndicators.length === 0 ? (
+                  <p className="text-sm leading-6 text-muted-foreground">
+                    No recurring URLs, phone numbers, or UPI IDs have appeared across multiple scans yet.
+                  </p>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
-                      <thead>
-                        <tr className="border-b border-border text-muted-foreground">
-                          <th className="px-3 py-2.5 font-medium sm:px-4">Target / Input</th>
-                          <th className="hidden whitespace-nowrap px-2.5 py-2.5 font-medium sm:table-cell">Verdict</th>
-                          <th className="whitespace-nowrap px-2.5 py-2.5 font-medium">Risk</th>
-                          <th className="hidden whitespace-nowrap px-2.5 py-2.5 font-medium xl:table-cell">Date</th>
-                          <th className="whitespace-nowrap px-3 py-2.5 text-right font-medium sm:px-4">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border">
-                        {recentEntries.map((entry) => (
-                          <tr key={entry.id} className="transition-colors hover:bg-muted/30">
-                            <td className="max-w-[160px] px-3 py-3 sm:max-w-[200px] sm:px-4 xl:max-w-[215px]">
-                              <p className="truncate font-medium text-foreground">
-                                {truncate(entry.text, 56)}
-                              </p>
-                              <p className="mt-0.5 truncate font-mono text-[11px] uppercase text-muted-foreground">
-                                {entry.input_type ?? "TEXT"}
-                                {entry.scam_category ? ` · ${scamCategoryLabel(entry.scam_category)}` : ""}
-                                {" · "}
-                                {formatPercent(entry.threat_score)}
-                              </p>
-                            </td>
-                            <td className="hidden whitespace-nowrap px-2.5 py-3 text-xs font-medium text-foreground sm:table-cell">
-                              {verdictLabel(entry.verdict)}
-                            </td>
-                            <td className="whitespace-nowrap px-2.5 py-3">
-                              <ThreatBadge threatLevel={entry.threat_level} riskLevel={entry.risk_level} />
-                            </td>
-                            <td className="hidden whitespace-nowrap px-2.5 py-3 font-mono text-xs text-muted-foreground xl:table-cell">
-                              {formatDate(entry.created_at)}
-                            </td>
-                            <td className="whitespace-nowrap px-3 py-3 text-right sm:px-4">
-                              <Button variant="ghost" size="sm" className="whitespace-nowrap" onClick={() => setSelectedFinding(entry)}>
-                                Details
-                              </Button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  <div className="space-y-2.5">
+                    {recurringIndicators.map(([indicator, count]) => (
+                      <div
+                        key={indicator}
+                        className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/30 px-3 py-2"
+                      >
+                        <span className="truncate font-mono text-xs text-foreground">{indicator}</span>
+                        <span className="shrink-0 font-mono text-xs font-medium text-primary">{count}×</span>
+                      </div>
+                    ))}
                   </div>
                 )}
               </CardContent>
             </Card>
-
-            <div className="flex min-w-0 flex-col gap-5">
-              <Card className="console-panel min-w-0">
-                <CardHeader className="border-b border-border bg-card/60">
-                  <CardTitle className="text-lg">Recurring indicators</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-4">
-                  {recurringIndicators.length === 0 ? (
-                    <p className="text-sm leading-6 text-muted-foreground">
-                      No recurring URLs, phone numbers, or UPI IDs have appeared across multiple scans yet.
-                    </p>
-                  ) : (
-                    <div className="space-y-2.5">
-                      {recurringIndicators.map(([indicator, count]) => (
-                        <div
-                          key={indicator}
-                          className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/30 px-3 py-2"
-                        >
-                          <span className="truncate font-mono text-xs text-foreground">{indicator}</span>
-                          <span className="shrink-0 font-mono text-xs font-medium text-primary">
-                            {count}×
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-              <PhoneLookup />
-            </div>
+            <PhoneLookup />
           </div>
-        </>
+        </div>
       )}
 
       {/* Animated Finding Inspector Modal */}
