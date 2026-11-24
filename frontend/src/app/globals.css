@@ -646,21 +646,35 @@ h1, .dark main h1, .dark .sg-page h1 { background: none !important; -webkit-back
 .sg-button.bg-primary::after, .dark .sg-button.bg-primary::after { display: none !important; }
 .sg-button.bg-primary, .dark .sg-button.bg-primary,
 .sg-button.bg-primary:hover, .dark .sg-button.bg-primary:hover { box-shadow: none !important; transform: none !important; }
+.dark {
+  --background: 222 52% 5%;
+  --foreground: 210 40% 96%;
+  --card: 220 44% 9%;
+  --card-foreground: 210 40% 96%;
+  --border: 215 32% 18%;
+  --muted: 218 40% 12%;
+  --muted-foreground: 214 22% 68%;
+}
 .dark .sg-card, .dark .console-panel {
   background: hsl(var(--card)) !important;
   border-color: hsl(var(--border)) !important;
-  box-shadow: 0 1px 2px hsl(224 64% 2% / .45), inset 0 1px 0 hsl(var(--primary) / .06) !important;
+  box-shadow: 0 1px 2px hsl(224 64% 2% / .45), inset 0 1px 0 hsl(var(--primary) / .08) !important;
   backdrop-filter: none !important;
   animation: none !important;
 }
 .dark .sg-card:hover, .dark .console-panel:hover {
-  border-color: hsl(var(--primary) / .28) !important;
+  border-color: hsl(var(--primary) / .32) !important;
 }
 .console-panel, .dark .hero-preview, .dark .rounded-full.border { box-shadow: 0 1px 2px hsl(0 0% 0% / .08) !important; backdrop-filter: none !important; animation: none !important; }
 .dark .rounded-full.border:hover { box-shadow: none !important; }
 .dark .sg-sidebar nav a[aria-current=page] { box-shadow: inset 2px 0 0 hsl(var(--primary)) !important; }
 .dark .scanner-tabs button[aria-pressed=true] { box-shadow: none !important; }
-.dark body { background-image: none !important; }
+.dark body {
+  background-image:
+    radial-gradient(56rem 24rem at 82% -8%, hsl(var(--primary) / .08), transparent 62%),
+    radial-gradient(hsl(var(--primary) / .06) 1px, transparent 1px) !important;
+  background-size: auto, 32px 32px !important;
+}
 .dark .recharts-surface { filter: none !important; }
 .sg-button.bg-primary, .dark .sg-button.bg-primary { background-image: none !important; background-color: hsl(var(--primary)) !important; }
 header, .dark header { box-shadow: none !important; }

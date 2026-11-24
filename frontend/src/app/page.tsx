@@ -114,6 +114,14 @@ export default function HomePage() {
             animate="visible"
             variants={containerVariants}
           >
+            <motion.div
+              variants={itemVariants}
+              className="mb-5 inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-3.5 py-1 font-mono text-xs font-medium text-primary"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-risk-low" aria-hidden="true" />
+              AI Threat Intelligence · Zero-Storage Quick Check
+            </motion.div>
+
             <motion.h1
               variants={itemVariants}
               className="mb-6 max-w-3xl font-display text-4xl font-bold leading-tight tracking-tight sm:text-5xl"
@@ -142,6 +150,24 @@ export default function HomePage() {
             </motion.p>
           </motion.div>
           <HeroXray />
+        </section>
+
+        {/* Verified Benchmark Telemetry Strip */}
+        <section aria-label="Verified model benchmarks" className="border-y border-border bg-card/50">
+          <div className="mx-auto grid max-w-6xl grid-cols-2 divide-x divide-y divide-border sm:grid-cols-4 sm:divide-y-0">
+            {[
+              { value: "97.5%", label: "F1 Score", sub: "1,874 held-out Indian msgs" },
+              { value: "97.2%", label: "Evasion Recall", sub: "Homoglyphs, leetspeak & URLs" },
+              { value: "0.67 ms", label: "CPU Latency", sub: "Real-time scoring per message" },
+              { value: "885+", label: "Automated Tests", sub: "Backend, ML & Frontend CI" },
+            ].map((item) => (
+              <div key={item.label} className="px-6 py-5">
+                <p className="font-mono text-2xl font-semibold tabular-nums tracking-tight text-foreground">{item.value}</p>
+                <p className="mt-0.5 text-xs font-medium text-primary">{item.label}</p>
+                <p className="mt-0.5 text-[11px] text-muted-foreground">{item.sub}</p>
+              </div>
+            ))}
+          </div>
         </section>
 
         <QuickCheck />
