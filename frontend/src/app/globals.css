@@ -637,9 +637,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 }
 
 
-/* ---- Practical finish: flat, calm, readable (presentation only) ------ */
-/* Overrides the decorative layers above: no animated backgrounds, glow,  */
-/* gradient text, sheen or blur. Colours, spacing and layout are kept.    */
+/* ---- Practical finish: calm, serious dark cybersecurity SaaS ---------- */
+/* Clean surfaces, crisp borders, restrained cyan accents, high legibility. */
 .hero-glow, .hero-glow::before, .hero-glow::after,
 .signal-aurora::before, .verdict-heading::before { display: none !important; animation: none !important; }
 .dark h1, .dark .console-kicker { text-shadow: none !important; }
@@ -647,7 +646,17 @@ h1, .dark main h1, .dark .sg-page h1 { background: none !important; -webkit-back
 .sg-button.bg-primary::after, .dark .sg-button.bg-primary::after { display: none !important; }
 .sg-button.bg-primary, .dark .sg-button.bg-primary,
 .sg-button.bg-primary:hover, .dark .sg-button.bg-primary:hover { box-shadow: none !important; transform: none !important; }
-.console-panel, .dark .console-panel, .dark .hero-preview, .dark .rounded-full.border { box-shadow: 0 1px 2px hsl(0 0% 0% / .08) !important; backdrop-filter: none !important; animation: none !important; }
+.dark .sg-card, .dark .console-panel {
+  background: hsl(var(--card)) !important;
+  border-color: hsl(var(--border)) !important;
+  box-shadow: 0 1px 2px hsl(224 64% 2% / .45), inset 0 1px 0 hsl(var(--primary) / .06) !important;
+  backdrop-filter: none !important;
+  animation: none !important;
+}
+.dark .sg-card:hover, .dark .console-panel:hover {
+  border-color: hsl(var(--primary) / .28) !important;
+}
+.console-panel, .dark .hero-preview, .dark .rounded-full.border { box-shadow: 0 1px 2px hsl(0 0% 0% / .08) !important; backdrop-filter: none !important; animation: none !important; }
 .dark .rounded-full.border:hover { box-shadow: none !important; }
 .dark .sg-sidebar nav a[aria-current=page] { box-shadow: inset 2px 0 0 hsl(var(--primary)) !important; }
 .dark .scanner-tabs button[aria-pressed=true] { box-shadow: none !important; }

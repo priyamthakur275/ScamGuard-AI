@@ -7,10 +7,14 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     'security is an important non-functional requirement' statement.
     """
 
+    _DOCS_PATHS = ("/docs", "/redoc", "/openapi.json")
+
     async def dispatch(self, request: Request, call_next):
         response = await call_next(request)
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains"
+        if not request.url.path.startswith(self._DOCS_PATHS):
+            response.headers["Content-Security-Policy"] = "default-src 'self'"
         return response

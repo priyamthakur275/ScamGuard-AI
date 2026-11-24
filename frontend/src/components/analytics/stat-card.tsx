@@ -9,15 +9,16 @@ import { cn } from "@/lib/utils";
 interface StatCardProps {
   label: string;
   value: string;
+  subtitle?: string;
   icon: LucideIcon;
   accent?: "default" | "success" | "warning" | "destructive";
 }
 
 const accentClasses = {
-  default: "bg-primary/10 text-primary",
-  success: "bg-risk-low/10 text-risk-low",
-  warning: "bg-risk-medium/10 text-risk-medium",
-  destructive: "bg-risk-high/10 text-risk-high",
+  default: "bg-primary/10 text-primary border-primary/20",
+  success: "bg-risk-low/10 text-risk-low border-risk-low/20",
+  warning: "bg-risk-medium/10 text-risk-medium border-risk-medium/20",
+  destructive: "bg-risk-high/10 text-risk-high border-risk-high/20",
 };
 
 function Counter({ value }: { value: string }) {
@@ -47,16 +48,17 @@ function Counter({ value }: { value: string }) {
   return <motion.span aria-label={value}>{display}</motion.span>;
 }
 
-export function StatCard({ label, value, icon: Icon, accent = "default" }: StatCardProps) {
+export function StatCard({ label, value, subtitle, icon: Icon, accent = "default" }: StatCardProps) {
   return (
-    <Card className="group relative overflow-hidden border border-border bg-card">
+    <Card className="console-panel group relative overflow-hidden border border-border bg-card transition-colors duration-150 hover:border-primary/35">
       <CardContent className="flex items-center gap-4 p-5">
-        <div className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-transparent", accentClasses[accent])}>
+        <div className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-md border", accentClasses[accent])}>
           <Icon className="h-5 w-5" aria-hidden="true" />
         </div>
-        <div>
-          <p className="text-xs font-medium text-muted-foreground">{label}</p>
-          <p className="font-sans text-2xl font-semibold text-foreground"><Counter value={value} /></p>
+        <div className="min-w-0">
+          <p className="truncate text-xs font-medium text-muted-foreground">{label}</p>
+          <p className="font-sans text-2xl font-semibold tabular-nums text-foreground"><Counter value={value} /></p>
+          {subtitle && <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{subtitle}</p>}
         </div>
       </CardContent>
     </Card>

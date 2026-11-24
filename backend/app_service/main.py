@@ -135,20 +135,10 @@ async def lifespan(app: FastAPI):
         keep_alive_task.cancel()
 
 
-app = FastAPI(title=settings.APP_NAME, debug=settings.DEBUG, lifespan=lifespan)
+app = FastAPI(title=settings.APP_NAME, version="2.0.0", debug=settings.DEBUG, lifespan=lifespan)
 
 if HAS_PROMETHEUS:
     Instrumentator().instrument(app).expose(app)
-
-@app.middleware("http")
-async def add_security_headers(request: Request, call_next):
-    response = await call_next(request)
-    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
-    response.headers["X-Frame-Options"] = "DENY"
-    response.headers["X-XSS-Protection"] = "1; mode=block"
-    response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["Content-Security-Policy"] = "default-src 'self'"
-    return response
 
 # --- Rate limiting -----------------------------------------------------
 app.state.limiter = limiter
@@ -171,7 +161,7 @@ app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins_list,
-    allow_origin_regex=r"https://.*\.vercel\.app|http://localhost:\d+",
+    allow_origin_regex=r"https://.*\.(vercel\.app|onrender\.com)|http://(localhost|127\.0\.0\.1):\d+",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -187,6 +177,31 @@ app.add_middleware(SelectiveGZipMiddleware, minimum_size=1000)
 
 # --- Global exception handling --------------------------------------------
 register_exception_handlers(app)
+
+
+# --- Root & top-level health endpoints ------------------------------------
+@app.get("/", tags=["system"])
+@limiter.exempt
+def root() -> dict:
+    return {
+        "service": "ScamGuard AI",
+        "status": "ok",
+        "version": "2.0.0",
+        "api_prefix": settings.API_V1_PREFIX,
+        "health": f"{settings.API_V1_PREFIX}/health",
+        "docs": "/docs",
+    }
+
+
+@app.get("/health", tags=["system"])
+@limiter.exempt
+def root_health() -> dict:
+    import os
+
+    if os.environ.get("SCAMGUARD_DB_FALLBACK") == "1":
+        return {"status": "ok", "database": "temporary-fallback"}
+    return {"status": "ok"}
+
 
 # --- Routes ----------------------------------------------------------------
 app.include_router(api_router, prefix=settings.API_V1_PREFIX)

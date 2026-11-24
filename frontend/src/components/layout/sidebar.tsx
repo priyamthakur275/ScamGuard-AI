@@ -51,17 +51,32 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     };
   }, [isOpen, onClose]);
 
-  const navItems = [
-    { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
-    { href: "/analyze", label: "Investigate", icon: ScanSearch },
-    { href: "/history", label: "History", icon: History },
-    { href: "/analytics", label: "Analytics", icon: BarChart3 },
-    { href: "/tools", label: "Safety Tools", icon: Wrench },
-    { href: "/trends", label: "Scam Trends", icon: TrendingUp },
-    { href: "/flashcards", label: "Flashcards", icon: BookOpen },
-    { href: "/cross-domain", label: "Cross-domain study", icon: FlaskConical },
-    { href: "/settings", label: "Settings", icon: Settings },
-    ...(user?.role === "admin" ? [{ href: "/admin", label: "Admin Console", icon: ShieldAlert }] : []),
+  const navGroups = [
+    {
+      title: "Operations",
+      items: [
+        { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
+        { href: "/analyze", label: "Investigate", icon: ScanSearch },
+        { href: "/history", label: "History", icon: History },
+        { href: "/analytics", label: "Analytics", icon: BarChart3 },
+      ],
+    },
+    {
+      title: "Intelligence & Tools",
+      items: [
+        { href: "/tools", label: "Safety Tools", icon: Wrench },
+        { href: "/trends", label: "Scam Trends", icon: TrendingUp },
+        { href: "/flashcards", label: "Flashcards", icon: BookOpen },
+        { href: "/cross-domain", label: "Cross-domain study", icon: FlaskConical },
+      ],
+    },
+    {
+      title: "System",
+      items: [
+        { href: "/settings", label: "Settings", icon: Settings },
+        ...(user?.role === "admin" ? [{ href: "/admin", label: "Admin Console", icon: ShieldAlert }] : []),
+      ],
+    },
   ];
 
   return (
@@ -102,29 +117,36 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           </Button>
         </div>
 
-        <div className="pt-5" />
-        <nav className="flex-1 space-y-1 overflow-y-auto px-3 pb-6">
-          {navItems.map(({ href, label, icon: Icon }) => {
-            const isActive = pathname === href || pathname.startsWith(`${href}/`);
-            return (
-              <Link
-                key={href}
-                aria-current={isActive ? "page" : undefined}
-                href={href}
-                onClick={onClose}
-                className={cn(
-                  "relative flex items-center gap-3 rounded-sm px-3.5 py-2.5 text-sm transition-colors duration-150 ease-out",
-                  isActive
-                    ? "bg-primary/10 font-medium text-primary shadow-[inset_0_0_0_1px_rgba(34,211,238,0.08)]"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                )}
-              >
-                {isActive && <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-primary" />}
-                <Icon className="h-4 w-4" aria-hidden="true" />
-                {label}
-              </Link>
-            );
-          })}
+        <div className="pt-4" />
+        <nav className="flex-1 space-y-5 overflow-y-auto px-3 pb-6">
+          {navGroups.map((group) => (
+            <div key={group.title} className="space-y-1">
+              <p className="px-3.5 pb-1 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/75">
+                {group.title}
+              </p>
+              {group.items.map(({ href, label, icon: Icon }) => {
+                const isActive = pathname === href || pathname.startsWith(`${href}/`);
+                return (
+                  <Link
+                    key={href}
+                    aria-current={isActive ? "page" : undefined}
+                    href={href}
+                    onClick={onClose}
+                    className={cn(
+                      "relative flex items-center gap-3 rounded-sm px-3.5 py-2 text-sm transition-colors duration-150 ease-out",
+                      isActive
+                        ? "bg-primary/10 font-medium text-primary shadow-[inset_0_0_0_1px_rgba(34,211,238,0.08)]"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                    )}
+                  >
+                    {isActive && <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-primary" />}
+                    <Icon className="h-4 w-4" aria-hidden="true" />
+                    {label}
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
         </nav>
 
         <div className="border-t border-border p-3">
