@@ -246,7 +246,9 @@ slightly from Table~\ref{tab:main}.
   where TF-IDF LR reaches \tLrCrossFull\%. In this seed, pre-training removes most of the domain gap that motivated local data
   in~\cite{scamguard1}.
 \item \emph{Cost.} About \tXlMs{} ms per message on the GPU. That is acceptable as a second stage for Hindi and
-  Hinglish messages, but too large for the current free CPU deployment.
+  Hinglish messages, but too large for the current free CPU deployment. Trimming XLM-R's vocabulary to the tokens
+  seen in training keeps English F1 (97.2) but lowers real-Hindi F1 from 85.3 to 78.7 (seed 42), because real
+  messages contain tokens that the mostly synthetic Hindi training text lacks.
 \end{itemize}
 \emph{Seeds.} Table~\ref{tab:tr} is seed 42. Over three seeds (42, 123, 2026), XLM-R averages \sXlRHMean{} $\pm$
 \sXlRHSd{} F1 on real Hindi (worst seed \sXlRHMin), with \sXlRHFprMean\% false alarms. MuRIL averages

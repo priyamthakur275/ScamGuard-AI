@@ -98,7 +98,9 @@ kinds of phrasing; it does not measure accuracy on real traffic. The real-Hindi 
 ## Not done yet (and not claimed)
 
 - **Transformers in production.** XLM-R fixes most of the real-Hindi gap (below), but at about 1 GB it does not fit the
-  free CPU server, so the deployed model is still LR v5.
+  free CPU server, so the deployed model is still LR v5. The serving code is ready and switched off
+  (`indic_model.py`). Shrinking the vocabulary costs 6.6 F1 on real Hindi (research/transformer/COMPACT.md), so the
+  realistic route is the full int8 model on a 2 GB instance.
 - **User pilot.** `docs/v2/PILOT_KIT.md` and `backend/scripts/sus_score.py` are ready; no pilot has been run.
 - **Human-labelled agreement (kappa).** Not done; the label audit from v1 still applies.
 - **Paper.** The v1 paper is submitted to COMP-SIF 2027 (Paper ID 1206) and under review.
