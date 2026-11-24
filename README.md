@@ -1,24 +1,27 @@
 <div align="center">
 
-# ScamGuard
+# 🛡️ ScamGuard
 
-### AI-Based Online Scam and Fraud Detection System
+### AI-powered scam detection for India, with a reason behind every verdict
 
-Detects scams in SMS, WhatsApp text, links, emails, screenshots, PDFs, QR codes and calls, and explains every verdict.
+Paste an SMS, WhatsApp message, email, link, screenshot, PDF, QR code or call recording.
+ScamGuard says whether it is a scam, shows *why*, and tells you exactly what to do next.
 
-[![Live site](https://img.shields.io/badge/Live_site-open-14b8a6?style=for-the-badge)](https://scamguard-frontend-r6t7.onrender.com)
+[![Live site](https://img.shields.io/badge/▶_Try_it_live-scamguard-14b8a6?style=for-the-badge)](https://scamguard-frontend-r6t7.onrender.com)
 [![F1](https://img.shields.io/badge/F1-97.5%25-f59e0b?style=for-the-badge)](backend/ml_training/research/results_v2.md)
 [![Evasion](https://img.shields.io/badge/Recall_under_evasion-97.2%25-22c55e?style=for-the-badge)](backend/ml_training/research/results_v2.md)
-[![Tests](https://img.shields.io/badge/Tests-863_back--end_·_14_front--end-3b82f6?style=for-the-badge)](#tests)
+[![Tests](https://img.shields.io/badge/Tests-885_passing-3b82f6?style=for-the-badge)](#-engineering)
 
 ![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
 ![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?logo=scikitlearn&logoColor=white)
+![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?logo=pytorch&logoColor=white)
+![ONNX](https://img.shields.io/badge/ONNX_Runtime-005CED?logo=onnx&logoColor=white)
 ![Next.js](https://img.shields.io/badge/Next.js_14-000000?logo=nextdotjs&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)
 
-**[Open the live site](https://scamguard-frontend-r6t7.onrender.com)** · paste a message into the quick check, or press **Try the demo account** on the sign-in page.
+**[Open the live site →](https://scamguard-frontend-r6t7.onrender.com)** &nbsp;·&nbsp; no sign-up needed for the quick check, or press **Try the demo account**
 
 </div>
 
@@ -27,161 +30,154 @@ Detects scams in SMS, WhatsApp text, links, emails, screenshots, PDFs, QR codes 
   <img src="docs/screenshots/quick_check.jpg" alt="Quick check result with Scam X-Ray" width="49%">
 </p>
 
-## Project documents
+---
 
-Major Project Phase-2, Department of CSE, B.M.S. College of Engineering, Group 56.
+## ✨ Highlights
 
-| Document | File |
-|---|---|
-| Project report | [docs/report/ScamGuard_Project_Report.pdf](docs/report/ScamGuard_Project_Report.pdf) (LaTeX source in [docs/report](docs/report)) |
-| Presentation | [docs/presentation/ScamGuard_Final_Presentation.pptx](docs/presentation/ScamGuard_Final_Presentation.pptx) |
-| Poster (A3) | [docs/poster/ScamGuard_Poster_A3.pdf](docs/poster/ScamGuard_Poster_A3.pdf) |
-| Conference paper (COMP-SIF 2027, Paper ID 1206) | [docs/paper/ScamGuard_Conference_Paper.pdf](docs/paper/ScamGuard_Conference_Paper.pdf) |
-| Cross-domain study (notebook and Streamlit app) | [research/cross_domain](research/cross_domain) |
+- **97.5% F1 on 1,874 real Indian messages** from scam campaigns the model never saw in training (95% CI 96.8–98.0, ROC-AUC 0.994).
+- **Leak-free evaluation.** Messages are grouped into scam campaigns with MinHash, and whole campaigns go to train or test. A random split would have leaked 793 near-duplicate test messages into training.
+- **Built to resist evasion.** Lookalike letters, hidden characters, `cl1ck`, spaced-out words and `hxxp://` links are undone before scoring. Under a combined attack, recall stays at **97.2%** (the earlier version dropped to 88.4%).
+- **Explains itself.** Scam X-Ray highlights the trap phrases; TrustLens shows the model score next to the evidence for and against.
+- **Helps after the fact.** Golden Hour guides people who already paid: call 1930, report on cybercrime.gov.in and Chakshu, with a ready-made complaint.
+- **Honest research.** Found and fixed a train/serve mismatch in its own production pipeline, built a real Hindi test set, and showed that a fine-tuned **XLM-R lifts real-Hindi F1 from 64.7 to 84.5** (three seeds).
+- **Production engineering.** FastAPI + Next.js, JWT auth with refresh rotation, rate limits, SSRF-safe link analysis, 885 automated tests, CI on every push, and a reproducible results pipeline.
 
-## Results (v2)
+## 🧭 How it works
 
-Deployed system (classifier + intent rules, model v5) on **1,874 real Indian messages from scam campaigns held out of training**:
+```mermaid
+flowchart LR
+    A[Text · link · email<br/>screenshot · PDF · QR · voice] --> B[Extract text<br/>OCR · PDF · QR · speech]
+    B --> C[De-obfuscate<br/>lookalikes · hidden chars · leetspeak]
+    C --> D[Classifier<br/>word + char TF-IDF · logistic regression]
+    C --> E[Intent engine<br/>English · Hindi · Hinglish]
+    D --> F{Risk fusion}
+    E --> F
+    F --> G[Verdict + Scam X-Ray<br/>+ what to do next]
+```
 
-| Accuracy | Precision | Recall | F1 (95% CI) | False-alarm rate | ROC-AUC |
+The classifier gives a probability; the intent engine adds evidence for scam intents (asks for an OTP, fee to receive
+money, arrest threat, new-number emergency …) and subtracts protective signals ("never share your OTP", official
+helplines). Scores between 0.3 and 0.7 are shown as **"Not sure: check before you act"**: that band holds 3.6% of
+messages but a third of all errors.
+
+## 📊 Results
+
+**Main test set**: 1,874 real messages, campaign-held-out.
+
+| Accuracy | Precision | Recall | F1 (95% CI) | False alarms | ROC-AUC |
 |:---:|:---:|:---:|:---:|:---:|:---:|
 | **96.7%** | **97.8%** | **97.1%** | **97.5%** (96.8–98.0) | **3.9%** | **0.994** |
 
-What v2 adds, measured by [`v2_experiments.py`](backend/ml_training/research/v2_experiments.py) ([full tables](backend/ml_training/research/results_v2.md)):
+**Robustness and research findings**
 
-| Test | v1 (as deployed) | v2 |
-|---|:---:|:---:|
-| Real test set, F1 / false alarms | 97.1% / 3.9% | 97.5% / 3.9% |
-| Evasion attack (lookalike letters, zero-width, leetspeak, defanged links): scams caught | 88.4% | **97.2%** |
-| Held-out Hinglish/Hindi set B (synthetic, 36 templates), F1 / false alarms | 85.0% / 12.7% | **100% / 0%** |
-| **Real Hindi messages** (77 unused IMC'25 reports, labelled before scoring), F1 / false alarms | 63.9% / 33.3% | **66.7% / 26.2%** |
-| Scams that contain no link: caught (a "has a link" rule catches 0%) | – | 95.8% |
-| Calibration error (ECE) / latency | – | 0.017 / 0.67 ms per message (CPU) |
+| Experiment | Result |
+|---|---|
+| Combined evasion attack (lookalikes, zero-width, leetspeak, defanged links): scams caught | 88.4% → **97.2%** |
+| Scams with **no link** (a "has a link" rule catches 0%) | **95.8%** caught |
+| Real Hindi messages (77 reports labelled before scoring): TF-IDF vs fine-tuned **XLM-R** | 64.7 → **84.5 ± 4.2** F1 (3 seeds) |
+| Cross-domain: trained on UK SMS, tested on Indian SMS (TF-IDF vs **MuRIL**) | 67.8 → **95.4** F1 (3 seeds) |
+| Same, after adding 10% Indian data to the TF-IDF model | 96.4 F1 |
+| Calibration error (ECE) · latency | 0.017 · 0.67 ms per message on CPU |
 
-**Real Hindi is the open problem.** v2 is 100% on its synthetic Hinglish set but only 66.7% F1 on real Hindi
-messages (not significantly better than v1): real lures ("PM loan yojana, 1% interest, call ...") differ from the
-templates, and genuine Devanagari notices are over-flagged. A fine-tuned **XLM-R reaches 88.9% F1 with 11.9% false alarms**
-on the same real messages (McNemar p = 0.0001), and **MuRIL trained only on UCI SMS scores 97.5% on Indian SMS**
-against 67.8% for TF-IDF ([transformer results](backend/ml_training/research/transformer_results.md)). XLM-R is too
-large for the free server, so the live model is still LR v5.
-
-Notes: the v1 report scored raw text (97.7% F1, 3.2% false alarms); the live v1 app appended a concept summary
-the model was never trained on, which cost about 0.6 F1. v2 removes that mismatch. The Hinglish sets are synthetic
-and written by the same team that wrote the rules, so they show coverage of these phrasings, not real-world
-accuracy. On the English test set v2 and v1 are not significantly different (McNemar p = 0.12).
-See [docs/v2/V2_SUMMARY.md](docs/v2/V2_SUMMARY.md) and the [model card](docs/v2/MODEL_CARD.md).
-
-- **Dataset:** ScamGuard-IN-2026, 11,399 Indian messages with audited labels ([datasheet](backend/ml_training/datasets/scamguard_in_2026/DATASHEET.md)).
-- **No leakage:** the split is by scam campaign, so no near-duplicate of a test message appears in training.
-- **Reproducible:** from `backend/`, `python -m ml_training.research.v2_experiments` regenerates every v2 number in about 40 seconds ([results_v2.md](backend/ml_training/research/results_v2.md)); `run_experiments` regenerates the v1 study ([results.md](backend/ml_training/research/results.md)).
-
-### Cross-domain study
-
-| Logistic Regression | Spam F1 |
-|---|:---:|
-| Trained on UK SMS (UCI), tested on UK SMS | 0.911 |
-| Same model tested on Indian SMS | 0.678 |
-| After adding 143 labelled Indian messages (10%) | 0.964 |
-
-The website's **Cross-domain study** page runs the baseline and adapted models side by side on any message.
+Every number comes from one script: `python -m ml_training.research.v2_experiments` (from `backend/`, about 40 s).
+Full tables: [results_v2.md](backend/ml_training/research/results_v2.md) ·
+[transformer_results.md](backend/ml_training/research/transformer_results.md) ·
+[model card](docs/v2/MODEL_CARD.md) · [v2 summary](docs/v2/V2_SUMMARY.md).
 
 <p align="center"><img src="docs/screenshots/cross_domain_compare.jpg" alt="Baseline vs adapted model on the cross-domain page" width="80%"></p>
 
-## Features
+## 🧰 Features
 
-**Check**
-- **Quick check** on the home page, no account needed and nothing stored.
-- **Telegram bot**: forward a message, get a verdict ([setup](docs/v2/TELEGRAM_SETUP.md)). Also a **browser extension** ([browser-extension](browser-extension)).
-- Robust to disguised words (lookalike letters, hidden characters, "cl1ck", "hxxp"); Hindi and Hinglish warning signs are recognised (accuracy on real Hindi is still limited, see Results).
-- **Investigate** for text, links, emails, screenshots (OCR), PDFs, QR codes and voice calls.
+| | |
+|---|---|
+| **Check** | Quick check without an account · Investigate text, links, emails, screenshots (OCR), PDFs, QR codes and voice calls · Telegram bot · browser extension (Chrome, Edge, Brave) · installable PWA |
+| **Explain** | Scam X-Ray (hook → pressure → ask → cash-out) · TrustLens evidence view · website trust score (domain age, HTTPS, redirects, credential forms) · Copilot grounded in the scan and known Indian scam patterns |
+| **Act** | Golden Hour countdown for victims · one-tap reporting to 1930, cybercrime.gov.in and Chakshu · UPI "before you pay" check · QR payment check · payment-screenshot check |
+| **Track** | Dashboard, history and analytics with PDF/CSV export · scam trends · flashcards |
 
-**Explain**
-- **Scam X-Ray** highlights the trap phrases and maps them to the four stages of a scam: hook, pressure, the ask, cash-out.
-- **TrustLens** shows the model probability and the final risk score side by side, with the evidence for and against.
-- **Website trust score**: domain age, HTTPS, redirects and whether the page asks for passwords, OTPs or card details.
-- **ScamGuard Copilot** answers "is this a scam?" and "I already paid, what now?", grounded in the scan and 42 known Indian scam patterns.
+## 🗂️ Dataset: ScamGuard-IN-2026
 
-**Act**
-- **Golden Hour** help for people who already paid: a one-hour countdown, a call to 1930 and a ready complaint.
-- One-tap reporting to **Chakshu** (Sanchar Saathi), **1930** and **cybercrime.gov.in**.
-- **Safety tools**: QR payment check, UPI "before you pay" check, payment screenshot check, file check and chat timeline.
+- **11,399 messages**: real reports from IMC'25 (CC BY 4.0) and India SMS (MIT), 2025–26 advisories, and clearly
+  flagged synthetic rows (training only).
+- **Audited labels**: 2,922 review decisions; about 1 in 5 reported "scams" turned out to be genuine messages.
+- **4,085 campaigns** from 6,662 real messages, so the train/test split never shares a scam template.
+- Personal data masked. Details in the [datasheet](backend/ml_training/datasets/scamguard_in_2026/DATASHEET.md).
 
-**Track and learn**
-- **Dashboard, History and Analytics** for signed-in users, with PDF and CSV reports.
-- **Scam trends**, **Flashcards**, an installable app (PWA) and a **browser extension** for Chrome, Edge and Brave.
-
-## Architecture
-
-```mermaid
-graph LR
-    U[Browser / PWA / Extension] --> F[Next.js 14 front end]
-    T[Telegram] -->|webhook| B
-    F -->|/backend-api| B[FastAPI back end]
-    B --> D[(PostgreSQL / SQLite)]
-    B --> X[De-obfuscation]
-    X --> M[Classifier + intent rules, English / Hindi / Hinglish]
-    M --> R[(Model registry: LR v5, TF-IDF)]
-    N[Training and cross-domain notebooks] -.-> R
-```
+## 🏗️ Tech stack
 
 | Layer | Technology |
 |---|---|
 | Front end | Next.js 14, React, TypeScript, Tailwind CSS, PWA |
-| Back end | Python, FastAPI, SQLAlchemy, Alembic, JWT with refresh rotation, rate limiting |
-| ML | scikit-learn logistic regression on word + character TF-IDF, intent-based risk engine |
-| Copilot | Google Gemini with built-in fallback answers |
-| Inputs | OCR, PDF parsing, QR decoding, speech-to-text |
-| Research | Jupyter notebook, Streamlit; MuRIL / XLM-R comparison notebook (PyTorch, Colab) |
+| Back end | FastAPI, SQLAlchemy, Alembic, PostgreSQL / SQLite, JWT with refresh rotation, rate limiting |
+| ML | scikit-learn (TF-IDF + logistic regression), intent-based risk engine, ONNX Runtime path for XLM-R |
+| Research | PyTorch + Hugging Face (MuRIL, XLM-R on Colab T4), Jupyter, Streamlit |
+| Inputs | Tesseract OCR, PDF parsing, ZBar QR decoding, speech-to-text |
+| Deployment | Render (auto-deploy from `main`), Docker Compose, GitHub Actions CI |
 
-## Run it locally
+## 🔧 Engineering
 
-Needs **Python 3.10–3.14** and **Node.js 18+**. No database, `.env` file or Docker is required.
+- **885 automated tests**: 870 back end, 15 front end, plus type check and lint; three CI pipelines on every push.
+- **Security**: bcrypt passwords, short-lived JWTs with refresh rotation, self-hosted CAPTCHA, per-route rate limits,
+  server-side link fetching with SSRF protection, 8 MB upload cap.
+- **Privacy**: quick checks and the Telegram bot never store messages; saved scans are visible only to their owner.
+- **Reproducibility**: fixed seeds, pinned scikit-learn, and the paper's numbers are generated from the results files.
 
-```bash
-python run.py      # Windows (or double-click start_all.bat)
-python3 run.py     # macOS / Linux (or ./start.sh)
-```
+## 🚀 Run it locally
 
-The first run installs everything (2–5 minutes), then opens http://localhost:3000. The API runs on http://127.0.0.1:8000 (docs at `/docs`). In VS Code, use **Terminal → Run Task → ScamGuard: Run (backend + frontend)**. See [START_HERE.md](START_HERE.md) for troubleshooting.
-
-Optional full stack with PostgreSQL: `docker compose up --build`.
-
-## Tests
+Needs **Python 3.10–3.14** and **Node.js 18+**. No database, `.env` file or Docker required.
 
 ```bash
-cd backend && python -m pytest -q                              # 863 tests
-cd frontend && npm run typecheck && npm run lint && npm test   # 14 tests
+python3 run.py          # macOS / Linux   (Windows: py run.py)
 ```
 
-## Security and privacy
+The first run installs everything (2–5 minutes) and opens http://localhost:3000 (API docs at
+http://127.0.0.1:8000/docs). Full stack with PostgreSQL: `docker compose up --build`.
+Troubleshooting: [docs/SETUP.md](docs/SETUP.md).
 
-- bcrypt passwords, short-lived JWTs with refresh rotation, self-hosted CAPTCHA and rate limits.
-- Links are opened only on the server, with SSRF protection; uploads are capped at 8 MB.
-- Quick checks are never stored; saved scans are visible only to their owner, who can download or delete them.
+```bash
+cd backend && python -m pytest -q                              # back-end tests
+cd frontend && npm run typecheck && npm run lint && npm test   # front-end checks
+```
 
-## Repository structure
+## 📁 Repository
 
 ```
 backend/
-  app_service/    FastAPI app: API routes, services, database
-  ml_common/      shared preprocessing, features, model registry
-  ml_training/    training pipeline, ScamGuard-IN-2026 dataset, experiments
-  ml_service/     optional separate inference service
-  artifacts/      trained models
-  tests/          back-end tests
-frontend/         Next.js app
-browser-extension/
-research/cross_domain/   cross-domain notebook, data, outputs, Streamlit app
-research/transformer/    MuRIL / XLM-R vs TF-IDF comparison (Colab notebook)
-docs/             report, presentation, poster, paper, screenshots; docs/v2 for v2
-infra/            Dockerfiles and nginx config
-run.py            one-command local run
+  app_service/     FastAPI app: routes, services, auth, database, Telegram webhook
+  ml_common/       preprocessing (incl. de-obfuscation), features, model registry
+  ml_service/      inference: classifier, risk engine, explainers, optional XLM-R path
+  ml_training/     ScamGuard-IN-2026 dataset, training, experiments, results
+  artifacts/       trained models
+  tests/           back-end tests
+frontend/          Next.js app
+browser-extension/ Chrome / Edge / Brave extension
+research/          cross-domain study (notebook + Streamlit) and transformer comparison (Colab)
+docs/              report, slides, poster, papers, model card, setup guide
+infra/             Dockerfiles and nginx config
+run.py             one-command local run
 ```
 
-## Team
+## 📄 Documents
 
 | | |
 |---|---|
-| Author | **Priyam Thakur** (1BM23CS252) · [@priyamthakur275](https://github.com/priyamthakur275) |
-| Team | Bhavya Goyal (1BM23CS063), Samir Chaudhary (1BM23CS294), Sana Subodh (1BM23CS296) |
-| Guide | Dr. Kayarvizhy N, Professor, Department of CSE, B.M.S. College of Engineering, Bengaluru |
+| Project report | [ScamGuard_Project_Report.pdf](docs/report/ScamGuard_Project_Report.pdf) |
+| Conference paper (submitted to COMP-SIF 2027, under review) | [ScamGuard_Conference_Paper.pdf](docs/paper/ScamGuard_Conference_Paper.pdf) |
+| v2 paper draft: evasion robustness, train/serve mismatch, real-Hindi gap | [main.pdf](docs/paper/v2/main.pdf) |
+| Slides · poster | [presentation](docs/presentation/ScamGuard_Final_Presentation.pptx) · [A3 poster](docs/poster/ScamGuard_Poster_A3.pdf) |
+
+## ⚖️ Limitations
+
+Real Hindi is the hardest case: the live TF-IDF model scores 66.7% F1 there, and the XLM-R model that fixes it needs
+a larger server than the free tier, so it ships switched off ([how to enable](backend/ml_service/inference/indic_model.py)).
+The real-Hindi test set has 77 messages, and most Hindi training data is synthetic.
+
+## 👥 Team
+
+Major Project, Department of CSE, **B.M.S. College of Engineering, Bengaluru** (2026)
+
+| | |
+|---|---|
+| Author | **Priyam Thakur** · [@priyamthakur275](https://github.com/priyamthakur275) |
+| Team | Bhavya Goyal · Samir Chaudhary · Sana Subodh |
+| Guide | Dr. Kayarvizhy N, Professor, Department of CSE |
