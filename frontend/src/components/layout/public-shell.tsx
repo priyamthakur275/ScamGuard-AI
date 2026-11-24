@@ -7,6 +7,7 @@ import { ShieldCheck } from "lucide-react";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { InstallAppButton } from "@/components/layout/install-app-button";
 import { useLanguage } from "@/lib/i18n/language-context";
+import { useAuth } from "@/lib/auth/auth-context";
 import type { StringKey } from "@/lib/i18n/strings";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +23,7 @@ const NAV: { href: string; label: StringKey }[] = [
 /** Header + footer for public (no-login) pages. */
 export function PublicShell({ children }: { children: ReactNode }) {
   const { t } = useLanguage();
+  const { isAuthenticated } = useAuth();
   const pathname = usePathname();
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
@@ -53,8 +55,11 @@ export function PublicShell({ children }: { children: ReactNode }) {
           })}
           <InstallAppButton />
           <ThemeToggle />
-          <Link href="/login" className="font-medium text-muted-foreground transition-colors hover:text-foreground">
-            {t("nav.signin")}
+          <Link
+            href={isAuthenticated ? "/dashboard" : "/login"}
+            className="rounded-lg border border-border bg-card/60 px-3.5 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-primary/45 hover:text-primary"
+          >
+            {isAuthenticated ? "Dashboard" : t("nav.signin")}
           </Link>
         </nav>
       </header>

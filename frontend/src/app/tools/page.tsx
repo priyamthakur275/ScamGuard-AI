@@ -24,9 +24,9 @@ const FLAG_STYLE: Record<ToolFlag["level"], { icon: typeof Info; cls: string }> 
   ok: { icon: CheckCircle2, cls: "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" },
 };
 const RISK_STYLE = {
-  high: "border-destructive bg-destructive text-destructive-foreground",
-  medium: "border-amber-500 bg-amber-500 text-black",
-  low: "border-emerald-600 bg-emerald-600 text-white",
+  high: "border-destructive/45 bg-destructive/12 text-foreground shadow-[0_0_28px_-14px_rgba(239,68,68,0.5)]",
+  medium: "border-caution/45 bg-caution/12 text-foreground shadow-[0_0_24px_-14px_rgba(245,158,11,0.45)]",
+  low: "border-safe/45 bg-safe/12 text-foreground shadow-[0_0_24px_-14px_rgba(34,197,94,0.45)]",
 };
 const FACT_LABEL: Record<string, string> = {
   upi_id: "UPI ID", payee_name: "Payee name", amount: "Amount (₹)", note: "Note", file_name: "File", size_bytes: "Size",
@@ -87,7 +87,7 @@ function FilePicker({ accept, label, hint, busy, onFile }: { accept?: string; la
     >
       {busy ? <Loader2 className="h-8 w-8 animate-spin text-primary" /> : <Upload className="h-8 w-8 text-muted-foreground" />}
       <button type="button" disabled={busy} onClick={() => ref.current?.click()}
-        className="rounded-xl bg-primary px-5 py-2.5 font-medium text-primary-foreground disabled:opacity-60">
+        className="sg-button bg-primary px-5 py-2.5 text-sm font-medium disabled:opacity-60">
         {busy ? "Checking…" : label}
       </button>
       <p className="max-w-sm text-xs text-muted-foreground">{hint}</p>

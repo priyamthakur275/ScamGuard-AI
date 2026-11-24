@@ -142,47 +142,46 @@ export default function AdminDashboard() {
 
       {error && <Alert variant="error">{error}</Alert>}
 
-      {/* Real Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <motion.div variants={itemVariants} className="bg-card border border-border rounded-xl p-5">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <motion.div variants={itemVariants} className="console-panel p-5">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-muted-foreground">Total Users</span>
-            <Users className="w-4 h-4 text-blue-500" />
+            <Users className="h-4 w-4 text-primary" />
           </div>
-          <p className="text-2xl font-bold mt-2 text-foreground">{totalUsers}</p>
-          <span className="text-xs text-muted-foreground mt-1 block">Registered in PostgreSQL database</span>
+          <p className="mt-2 font-display text-2xl font-bold tabular-nums text-foreground">{totalUsers}</p>
+          <span className="mt-1 block text-xs text-muted-foreground">Registered accounts</span>
         </motion.div>
 
-        <motion.div variants={itemVariants} className="bg-card border border-border rounded-xl p-5">
+        <motion.div variants={itemVariants} className="console-panel p-5">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-muted-foreground">Total Messages Scanned</span>
-            <Activity className="w-4 h-4 text-primary" />
+            <Activity className="h-4 w-4 text-primary" />
           </div>
-          <p className="text-2xl font-bold mt-2 text-foreground">{totalScans}</p>
-          <span className="text-xs text-muted-foreground mt-1 block">Analysed messages</span>
+          <p className="mt-2 font-display text-2xl font-bold tabular-nums text-foreground">{totalScans}</p>
+          <span className="mt-1 block text-xs text-muted-foreground">Analysed messages</span>
         </motion.div>
 
-        <motion.div variants={itemVariants} className="bg-card border border-border rounded-xl p-5">
+        <motion.div variants={itemVariants} className="console-panel p-5">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-muted-foreground">High Risk Threats</span>
-            <ShieldAlert className="w-4 h-4 text-red-500" />
+            <ShieldAlert className="h-4 w-4 text-destructive" />
           </div>
-          <p className="text-2xl font-bold mt-2 text-red-500">{highThreatScans}</p>
-          <span className="text-xs text-muted-foreground mt-1 block">Flagged with high scam confidence</span>
+          <p className="mt-2 font-display text-2xl font-bold tabular-nums text-destructive">{highThreatScans}</p>
+          <span className="mt-1 block text-xs text-muted-foreground">High scam confidence</span>
         </motion.div>
 
-        <motion.div variants={itemVariants} className="bg-card border border-border rounded-xl p-5">
+        <motion.div variants={itemVariants} className="console-panel p-5">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-muted-foreground">Medium Suspicious</span>
-            <ShieldCheck className="w-4 h-4 text-amber-500" />
+            <ShieldCheck className="h-4 w-4 text-caution" />
           </div>
-          <p className="text-2xl font-bold mt-2 text-amber-500">{mediumThreatScans}</p>
-          <span className="text-xs text-muted-foreground mt-1 block">Requiring user caution</span>
+          <p className="mt-2 font-display text-2xl font-bold tabular-nums text-caution">{mediumThreatScans}</p>
+          <span className="mt-1 block text-xs text-muted-foreground">Requiring user caution</span>
         </motion.div>
       </div>
 
       {/* User Management Table */}
-      <motion.div variants={itemVariants} className="bg-card border border-border rounded-xl overflow-hidden">
+      <motion.div variants={itemVariants} className="console-panel overflow-hidden">
         <div className="p-6 border-b border-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-lg font-semibold">User Directory</h2>

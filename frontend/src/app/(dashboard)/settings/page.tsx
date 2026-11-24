@@ -27,9 +27,9 @@ const SCAN_TABS = [
 
 function Section({ id, title, description, children }: { id: string; title: string; description: string; children: ReactNode }) {
   return (
-    <section id={id} aria-labelledby={`${id}-title`} className="sg-card grid gap-6 border border-border p-6 md:grid-cols-[minmax(0,14rem)_minmax(0,1fr)] md:p-8">
+    <section id={id} aria-labelledby={`${id}-title`} className="console-panel grid gap-6 p-6 md:grid-cols-[minmax(0,14rem)_minmax(0,1fr)] md:p-7">
       <div>
-        <h2 id={`${id}-title`} className="font-display text-lg font-semibold">{title}</h2>
+        <h2 id={`${id}-title`} className="font-display text-lg font-semibold text-foreground">{title}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{description}</p>
       </div>
       <div className="min-w-0">{children}</div>
@@ -218,13 +218,14 @@ export default function SettingsPage() {
 
   return (
     <div className="sg-page flex flex-col gap-6 pb-12">
-      <header className="signal-aurora flex flex-wrap items-center gap-5 rounded-3xl border border-border p-6 md:p-8">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-risk-low font-display text-2xl font-bold text-primary-foreground shadow-lg">
+      <header className="console-panel flex flex-wrap items-center gap-5 p-6 md:p-7">
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-primary/40 bg-primary/15 font-display text-xl font-bold text-primary shadow-[0_0_24px_-6px_rgba(0,229,255,0.45)]">
           {initials}
         </div>
         <div className="min-w-0">
-          <h1 className="font-display text-3xl font-bold">{user?.full_name || "Your account"}</h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="console-kicker mb-1">Workspace Preferences</p>
+          <h1 className="font-display text-2xl font-bold sm:text-3xl">{user?.full_name || "Your account"}</h1>
+          <p className="mt-0.5 font-mono text-xs text-muted-foreground">
             {user?.email}
             {user?.created_at ? ` · member since ${formatDate(user.created_at)}` : ""}
           </p>
@@ -232,9 +233,8 @@ export default function SettingsPage() {
       </header>
 
       {isDemo && (
-        <p className="rounded-2xl border border-risk-medium/40 bg-risk-medium/10 p-4 text-sm">
-          This is the shared demo account, so the name, password and account can&apos;t be changed. Theme and scanning
-          choices still work.
+        <p className="rounded-xl border border-caution/30 bg-caution/10 px-4 py-3 text-xs leading-relaxed text-foreground/90">
+          This is the shared demo account, so the name, password, and account deletion are disabled. Theme and scanning preferences still work.
         </p>
       )}
 

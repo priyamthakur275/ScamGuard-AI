@@ -79,6 +79,7 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activityFilter, setActivityFilter] = useState<"all" | "high">("all");
   const [selectedFinding, setSelectedFinding] = useState<AnalysisResult | null>(null);
 
   const loadDashboard = useCallback(async (refresh = false) => {
@@ -137,8 +138,7 @@ export default function DashboardPage() {
   const topCategory = topCategoryRaw ? scamCategoryLabel(topCategoryRaw) : null;
 
   const allHighPriority = entries.filter(isHighRisk);
-  const highPriority = allHighPriority.slice(0, 5);
-  const recentEntries = entries.slice(0, 6);
+  const visibleActivity = (activityFilter === "high" ? allHighPriority : entries).slice(0, 7);
 
   const indicatorCounts = new Map<string, number>();
   entries.forEach((entry) => {
@@ -333,115 +333,98 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Recent Scan Activity (Reference Panel 2 Bottom) */}
+      {/* Unified Scan Activity + Side Intelligence */}
       {!isLoading && (
-        <Card className="console-panel min-w-0 overflow-hidden">
-          <CardHeader className="flex-row items-center justify-between gap-3 border-b border-border bg-card/60">
-            <div className="min-w-0">
-              <CardTitle className="text-lg">Recent Scan Activity</CardTitle>
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                Latest messages, links, emails, and files inspected in your workspace.
-              </p>
-            </div>
-            <Link href="/history" className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-xs font-medium text-primary hover:underline">
-              View All
-              <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
-            </Link>
-          </CardHeader>
-          <CardContent className="p-0">
-            {recentEntries.length === 0 ? (
-              <EmptyState
-                icon={ScanSearch}
-                title="No activity yet"
-                description="Analyze your first message, link, or screenshot to populate your activity stream."
-                actionHref="/analyze"
-                actionLabel="Analyze a message"
-              />
-            ) : (
-              <ul className="divide-y divide-border">
-                {recentEntries.map((entry) => (
-                  <li
-                    key={entry.id}
-                    className="flex flex-col gap-3 px-4 py-3.5 transition-colors hover:bg-muted/35 md:flex-row md:items-center md:justify-between md:px-6"
-                  >
-                    <div className="flex min-w-0 flex-1 items-center gap-3">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-background/70">
-                        <ChannelIcon inputType={entry.input_type} />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-foreground">{truncate(displayEntryText(entry), 84)}</p>
-                        <p className="mt-0.5 truncate font-mono text-[11px] text-muted-foreground">
-                          {verdictLabel(entry.verdict)}
-                          {entry.scam_category ? ` · ${scamCategoryLabel(entry.scam_category)}` : ""}
-                          {" · Score "}
-                          {formatPercent(entry.threat_score)}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex shrink-0 items-center justify-between gap-3 md:justify-end">
-                      <ThreatBadge threatLevel={entry.threat_level} riskLevel={entry.risk_level} />
-                      <span className="hidden font-mono text-xs text-muted-foreground xl:inline">
-                        {formatDate(entry.created_at)}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="whitespace-nowrap text-primary hover:text-primary"
-                        onClick={() => setSelectedFinding(entry)}
-                      >
-                        <Eye className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
-                        Inspect
-                      </Button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Priority Findings + Recurring Indicators & Phone Lookup */}
-      {!isLoading && (
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.28fr)_minmax(0,0.72fr)]">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.65fr)]">
           <Card className="console-panel min-w-0 overflow-hidden">
-            <CardHeader className="flex-row items-center justify-between gap-3 border-b border-border bg-card/60">
+            <CardHeader className="flex-col items-start justify-between gap-3 border-b border-border bg-card/60 sm:flex-row sm:items-center">
               <div className="min-w-0">
-                <CardTitle className="text-lg">Priority Findings</CardTitle>
+                <CardTitle className="text-lg">Scan Activity</CardTitle>
                 <p className="mt-0.5 text-xs text-muted-foreground">
-                  High and critical risk items requiring review or reporting.
+                  Latest inspections in your workspace.
                 </p>
               </div>
-              <span className="shrink-0 font-mono text-xs text-muted-foreground">
-                {allHighPriority.length} high-risk
-              </span>
+              <div className="flex items-center gap-3 self-stretch sm:self-auto">
+                <div role="group" aria-label="Filter scan activity" className="inline-flex rounded-lg border border-border bg-muted/40 p-0.5">
+                  <button
+                    type="button"
+                    aria-pressed={activityFilter === "all"}
+                    onClick={() => setActivityFilter("all")}
+                    className={cn(
+                      "rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
+                      activityFilter === "all" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    All ({entries.length})
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={activityFilter === "high"}
+                    onClick={() => setActivityFilter("high")}
+                    className={cn(
+                      "rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
+                      activityFilter === "high" ? "bg-card text-destructive shadow-sm" : "text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    High Risk ({allHighPriority.length})
+                  </button>
+                </div>
+                <Link href="/history" className="ml-auto inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-xs font-medium text-primary hover:underline">
+                  View All
+                  <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
+                </Link>
+              </div>
             </CardHeader>
             <CardContent className="p-0">
-              {highPriority.length === 0 ? (
+              {visibleActivity.length === 0 ? (
                 <EmptyState
-                  icon={ShieldCheck}
-                  title="No high-risk findings"
-                  description="New high-risk detections will appear here automatically."
+                  icon={activityFilter === "high" ? ShieldCheck : ScanSearch}
+                  title={activityFilter === "high" ? "No high-risk findings" : "No activity yet"}
+                  description={
+                    activityFilter === "high"
+                      ? "None of your recent scans are flagged as high or critical risk."
+                      : "Analyze your first message, link, or screenshot to populate your activity stream."
+                  }
                   actionHref="/analyze"
-                  actionLabel="Start an investigation"
+                  actionLabel="Analyze a message"
                 />
               ) : (
                 <ul className="divide-y divide-border">
-                  {highPriority.map((entry) => (
+                  {visibleActivity.map((entry) => (
                     <li
                       key={entry.id}
-                      className="flex items-center justify-between gap-3 border-l-2 border-l-destructive/80 px-4 py-3.5 transition-colors hover:bg-muted/30 sm:px-5"
+                      className={cn(
+                        "flex flex-col gap-3 px-4 py-3.5 transition-colors hover:bg-muted/35 sm:flex-row sm:items-center sm:justify-between sm:px-5",
+                        isHighRisk(entry) && activityFilter === "high" && "border-l-2 border-l-destructive/80",
+                      )}
                     >
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-foreground">{truncate(entry.text, 76)}</p>
-                        <p className="mt-0.5 font-mono text-[11px] text-muted-foreground">
-                          {entry.scam_category ? scamCategoryLabel(entry.scam_category) : verdictLabel(entry.verdict)} ·{" "}
-                          {formatPercent(entry.threat_score)} · {formatDate(entry.created_at)}
-                        </p>
+                      <div className="flex min-w-0 flex-1 items-center gap-3">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-background/70">
+                          <ChannelIcon inputType={entry.input_type} />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium text-foreground">{truncate(displayEntryText(entry), 78)}</p>
+                          <p className="mt-0.5 truncate font-mono text-[11px] text-muted-foreground">
+                            {verdictLabel(entry.verdict)}
+                            {entry.scam_category ? ` · ${scamCategoryLabel(entry.scam_category)}` : ""}
+                            {" · "}
+                            {formatPercent(entry.threat_score)}
+                            <span className="hidden xl:inline"> · {formatDate(entry.created_at)}</span>
+                          </p>
+                        </div>
                       </div>
-                      <Button variant="outline" size="sm" className="shrink-0 whitespace-nowrap" onClick={() => setSelectedFinding(entry)}>
-                        Inspect
-                      </Button>
+                      <div className="flex shrink-0 items-center justify-between gap-2.5 sm:justify-end">
+                        <ThreatBadge threatLevel={entry.threat_level} riskLevel={entry.risk_level} />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="whitespace-nowrap text-primary hover:text-primary"
+                          onClick={() => setSelectedFinding(entry)}
+                        >
+                          <Eye className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
+                          Inspect
+                        </Button>
+                      </div>
                     </li>
                   ))}
                 </ul>
@@ -452,7 +435,7 @@ export default function DashboardPage() {
           <div className="flex min-w-0 flex-col gap-5">
             <Card className="console-panel min-w-0">
               <CardHeader className="border-b border-border bg-card/60">
-                <CardTitle className="text-lg">Recurring Indicators</CardTitle>
+                <CardTitle className="text-base font-semibold">Recurring Indicators</CardTitle>
               </CardHeader>
               <CardContent className="pt-4">
                 {recurringIndicators.length === 0 ? (
@@ -460,7 +443,7 @@ export default function DashboardPage() {
                     No recurring URLs, phone numbers, or UPI IDs have appeared across multiple scans yet.
                   </p>
                 ) : (
-                  <div className="space-y-2.5">
+                  <div className="space-y-2">
                     {recurringIndicators.map(([indicator, count]) => (
                       <div
                         key={indicator}

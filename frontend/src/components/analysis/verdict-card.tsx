@@ -27,7 +27,6 @@ import { EmailForensicsPanel } from "@/components/analysis/email-forensics-panel
 import { VoiceSignalsPanel } from "@/components/analysis/voice-signals-panel";
 import { CorrelationPanel } from "@/components/analysis/correlation-panel";
 import { CopilotPanel } from "@/components/analysis/copilot-panel";
-import { RecommendedActions } from "@/components/analysis/recommended-actions";
 import { SimilarPatterns } from "@/components/analysis/similar-patterns";
 import { CountUp } from "@/components/analysis/demo-polish";
 import { CampaignFingerprint, GoldenHourButton, ScamForecast } from "@/components/analysis/protect-features";
@@ -378,8 +377,6 @@ export function VerdictCard({ result, onFeedback, onScanAnother }: VerdictCardPr
             <VoiceSignalsPanel voiceEvidence={(result.metadata?.voice_evidence as VoiceEvidenceSignal[] | undefined) ?? null} />
             <CorrelationPanel correlation={(result.metadata?.correlation as CorrelationSignal[] | undefined) ?? null} />
           </div>
-
-          <RecommendedActions actions={result.recommended_actions} />
 
           {!result.metadata?.is_demo && (
             <div id={`copilot-${result.id}`}>

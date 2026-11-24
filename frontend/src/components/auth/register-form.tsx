@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
 import { CaptchaField } from "@/components/auth/captcha-field";
-import { RefreshCw } from "lucide-react";
 
 export function RegisterForm() {
   const { register } = useAuth();
@@ -106,7 +105,7 @@ export function RegisterForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
       {formError && <Alert variant="error">{formError}</Alert>}
 
       <Input
@@ -128,7 +127,7 @@ export function RegisterForm() {
         onChange={(e) => setPassword(e.target.value)}
         error={fieldErrors.password}
         placeholder="At least 8 characters"
-        hint="Must contain at least 8 characters, one number, and one uppercase letter."
+        hint="At least 8 characters, one number, and one uppercase letter."
         disabled={isSubmitting}
       />
 
@@ -152,7 +151,7 @@ export function RegisterForm() {
         disabled={isSubmitting}
       />
 
-      <div className="flex flex-col gap-2 mt-1">
+      <div className="mt-1 flex flex-col gap-2">
         <Button type="submit" isLoading={isSubmitting} className="w-full" size="lg">
           {isWakingServer
             ? `Connecting to server (${secondsElapsed}s)...`
@@ -160,12 +159,10 @@ export function RegisterForm() {
               ? "Creating account..."
               : "Create account"}
         </Button>
-
-
       </div>
 
       {isWakingServer && (
-        <div className="border border-primary/25 bg-primary/10 p-3 text-center">
+        <div className="rounded-lg border border-primary/25 bg-primary/10 p-3 text-center">
           <p className="text-xs font-medium text-primary">
             Waiting for the server — {secondsElapsed}s elapsed
           </p>
@@ -175,7 +172,7 @@ export function RegisterForm() {
         </div>
       )}
 
-      <p className="text-center text-sm text-muted-foreground">
+      <p className="pt-1 text-center text-xs text-muted-foreground">
         Already have an account?{" "}
         <Link href="/login" className="font-medium text-primary hover:underline">
           Sign in

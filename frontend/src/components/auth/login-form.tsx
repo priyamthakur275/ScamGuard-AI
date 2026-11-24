@@ -11,7 +11,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
 import { CaptchaField } from "@/components/auth/captcha-field";
-import { RefreshCw } from "lucide-react";
 
 export function LoginForm() {
   const { login, demoLogin } = useAuth();
@@ -118,7 +117,7 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
       {formError && <Alert variant="error">{formError}</Alert>}
 
       <Input
@@ -153,7 +152,7 @@ export function LoginForm() {
         />
       )}
 
-      <div className="flex flex-col gap-2 mt-1">
+      <div className="mt-1 flex flex-col gap-2.5">
         <Button type="submit" isLoading={isSubmitting} className="w-full" size="lg">
           {isWakingServer
             ? `Connecting to server (${secondsElapsed}s)...`
@@ -161,16 +160,33 @@ export function LoginForm() {
               ? "Signing in..."
               : "Sign in"}
         </Button>
-        <Button type="button" variant="outline" className="w-full" size="lg" onClick={handleDemo} isLoading={isDemoLoading} disabled={isSubmitting}>
-          Try the demo account
+
+        <div className="relative my-1 flex items-center">
+          <span className="w-full border-t border-border/70" />
+          <span className="bg-card px-2.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+            or
+          </span>
+          <span className="w-full border-t border-border/70" />
+        </div>
+
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full"
+          size="lg"
+          onClick={handleDemo}
+          isLoading={isDemoLoading}
+          disabled={isSubmitting}
+        >
+          Try demo workspace
         </Button>
-        <p className="text-center text-[11px] text-muted-foreground">
-          Opens a shared account with sample scans already analysed. No sign-up needed.
+        <p className="text-center text-[11px] leading-relaxed text-muted-foreground">
+          Explores a shared sandbox preloaded with sample scans.
         </p>
       </div>
 
       {isWakingServer && (
-        <div className="border border-primary/25 bg-primary/10 p-3 text-center">
+        <div className="rounded-lg border border-primary/25 bg-primary/10 p-3 text-center">
           <p className="text-xs font-medium text-primary">
             Waiting for the server — {secondsElapsed}s elapsed
           </p>
@@ -180,10 +196,10 @@ export function LoginForm() {
         </div>
       )}
 
-      <p className="text-center text-sm text-muted-foreground">
-        Don&apos;t have an account?{" "}
+      <p className="pt-1 text-center text-xs text-muted-foreground">
+        New to ScamGuard?{" "}
         <Link href="/register" className="font-medium text-primary hover:underline">
-          Create one
+          Create an account
         </Link>
       </p>
     </form>

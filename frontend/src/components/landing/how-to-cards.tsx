@@ -29,23 +29,23 @@ function FlipCard({ card, n, flipped, onFlip }: { card: Card; n: number; flipped
     >
       <div className={cn("relative h-full w-full rounded-xl transition-transform duration-500 [transform-style:preserve-3d] motion-reduce:transition-none", flipped && "[transform:rotateY(180deg)]")}>
         {/* front */}
-        <div className="absolute inset-0 flex flex-col justify-between rounded-xl border border-border bg-card p-5 [backface-visibility:hidden] group-hover:border-primary/50 group-focus-visible:ring-2 group-focus-visible:ring-primary">
+        <div className="console-panel absolute inset-0 flex flex-col justify-between p-5 [backface-visibility:hidden] group-hover:border-primary/50 group-focus-visible:ring-2 group-focus-visible:ring-primary">
           <div className="flex items-start justify-between">
-            <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary"><Icon className="h-5 w-5" /></span>
-            <span className="text-xs tabular-nums text-muted-foreground">{String(n).padStart(2, "0")}</span>
+            <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-primary/25 bg-primary/10 text-primary"><Icon className="h-5 w-5" /></span>
+            <span className="font-mono text-xs tabular-nums text-muted-foreground">{String(n).padStart(2, "0")}</span>
           </div>
           <div>
-            <p className="text-base font-semibold text-foreground">{card.title}</p>
-            <p className="mt-1 text-sm text-muted-foreground">{card.hint}</p>
+            <p className="font-display text-base font-semibold text-foreground">{card.title}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{card.hint}</p>
           </div>
         </div>
         {/* back */}
-        <div className="absolute inset-0 rounded-xl border border-primary/40 bg-card p-5 [backface-visibility:hidden] [transform:rotateY(180deg)]">
-          <p className="text-sm font-semibold text-foreground">{card.title}</p>
+        <div className="console-panel absolute inset-0 border-primary/40 p-5 [backface-visibility:hidden] [transform:rotateY(180deg)]">
+          <p className="font-display text-sm font-semibold text-primary">{card.title}</p>
           <ol className="mt-3 space-y-2">
             {card.steps.map((s, i) => (
               <li key={i} className="flex gap-2.5 text-[13px] leading-snug text-foreground">
-                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground">{i + 1}</span>
+                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-primary/40 bg-primary/15 font-mono text-[11px] font-semibold text-primary">{i + 1}</span>
                 <span>{s}</span>
               </li>
             ))}
@@ -67,9 +67,9 @@ export function HowToCards() {
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="flex items-center gap-2 text-sm font-medium text-primary"><BookOpen className="h-4 w-4" /> How to use ScamGuard</p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">Everything it does, in three steps each</h2>
-            <p className="mt-2 text-sm text-muted-foreground">Tap a card to flip it and see the steps.</p>
+            <p className="console-kicker flex items-center gap-2"><BookOpen className="h-3.5 w-3.5" /> Interactive Playbooks</p>
+            <h2 className="mt-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Everything it does, in three steps each</h2>
+            <p className="mt-1.5 text-sm text-muted-foreground">Select a playbook card to flip and reveal the workflow.</p>
           </div>
           <button type="button" onClick={() => setOpen(allOpen ? new Set() : new Set(cards.map((_, i) => i)))} className="text-sm font-medium text-primary hover:underline">
             {allOpen ? "Flip all back" : "Show all steps"}

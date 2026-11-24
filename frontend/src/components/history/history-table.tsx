@@ -26,6 +26,17 @@ interface HistoryTableProps {
   onDelete?: (predictionId: string) => void;
 }
 
+function displayEntryText(entry: AnalysisResult): string {
+  const urlMeta = entry.metadata?.url_intelligence as { original_url?: string } | undefined;
+  if (urlMeta?.original_url) return urlMeta.original_url;
+  if (entry.text.startsWith("URL Target:")) {
+    const stripped = entry.text.slice("URL Target:".length).trim();
+    const idx = stripped.indexOf(" Observed URL signals:");
+    return idx >= 0 ? stripped.slice(0, idx).trim() : stripped;
+  }
+  return entry.text;
+}
+
 function getInputIcon(type?: string | null) {
   switch (type?.toLowerCase()) {
     case "url": return <span title="URL"><LinkIcon className="w-4 h-4 text-muted-foreground" /></span>;
@@ -57,8 +68,10 @@ export const HistoryTable = memo(function HistoryTable({ entries, onFeedback, on
   });
 
   const filteredEntries = useMemo(() => {
+    const q = searchQuery.toLowerCase();
     return entries.filter((entry) => {
-      const matchesSearch = entry.text.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch =
+        entry.text.toLowerCase().includes(q) || displayEntryText(entry).toLowerCase().includes(q);
       const matchesVerdict = filterVerdict === "all" || entry.verdict === filterVerdict;
       // Filter on the same level the Threat column displays (threat_level,
       // falling back to risk_level for older scans without one).
@@ -108,8 +121,8 @@ export const HistoryTable = memo(function HistoryTable({ entries, onFeedback, on
   }
 
   return (
-    <div className="flex flex-col gap-6 animate-slide-up">
-      <div className="flex flex-col gap-4 border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-5 animate-slide-up">
+      <div className="console-panel flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col sm:flex-row gap-4 flex-1">
           <div className="relative flex-1 max-w-md group">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
@@ -120,7 +133,7 @@ export const HistoryTable = memo(function HistoryTable({ entries, onFeedback, on
               placeholder="Search messages..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-10 w-full rounded-lg border border-border/50 bg-background/50 pl-10 pr-12 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all shadow-inner"
+              className="h-9 w-full rounded-lg border border-border bg-background/75 pl-9 pr-12 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
             />
             <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none hidden sm:flex items-center">
               <kbd className="inline-flex h-5 items-center gap-1 rounded border border-border bg-muted/50 px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
@@ -128,12 +141,12 @@ export const HistoryTable = memo(function HistoryTable({ entries, onFeedback, on
               </kbd>
             </div>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-2.5">
             <select
               aria-label="Filter verdict"
               value={filterVerdict}
               onChange={(e) => setFilterVerdict(e.target.value)}
-              className="h-10 rounded-lg border border-border/50 bg-background/50 px-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
+              className="h-9 rounded-lg border border-border bg-background/75 px-3 py-1 text-sm leading-normal outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
             >
               <option value="all">All verdicts</option>
               <option value="legitimate">Legitimate</option>
@@ -145,7 +158,7 @@ export const HistoryTable = memo(function HistoryTable({ entries, onFeedback, on
               aria-label="Filter threat level"
               value={filterRiskLevel}
               onChange={(e) => setFilterRiskLevel(e.target.value)}
-              className="h-10 rounded-lg border border-border/50 bg-background/50 px-3 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
+              className="h-9 rounded-lg border border-border bg-background/75 px-3 py-1 text-sm leading-normal outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
             >
               <option value="all">All threat levels</option>
               <option value="very_low">Very low</option>
@@ -157,19 +170,19 @@ export const HistoryTable = memo(function HistoryTable({ entries, onFeedback, on
           </div>
         </div>
         
-        <div className="flex items-center gap-3 self-end sm:self-auto">
-          <Button variant="outline" size="sm" onClick={exportCSV} className="h-10 rounded-lg" title="Export CSV">
-            <Download className="h-4 w-4 mr-2" />
+        <div className="flex items-center gap-2.5 self-end sm:self-auto">
+          <Button variant="outline" size="sm" onClick={exportCSV} className="h-9 rounded-lg" title="Export CSV">
+            <Download className="h-3.5 w-3.5 mr-1.5" />
             CSV
           </Button>
-          <Button variant="outline" size="sm" onClick={exportJSON} className="h-10 rounded-lg" title="Export JSON">
-            <Download className="h-4 w-4 mr-2" />
+          <Button variant="outline" size="sm" onClick={exportJSON} className="h-9 rounded-lg" title="Export JSON">
+            <Download className="h-3.5 w-3.5 mr-1.5" />
             JSON
           </Button>
         </div>
       </div>
 
-      <div className="custom-scrollbar relative max-h-[700px] overflow-x-auto overflow-y-auto border border-border">
+      <div className="console-panel custom-scrollbar relative max-h-[700px] overflow-x-auto overflow-y-auto">
         <table className="w-full text-left text-sm whitespace-nowrap">
           <thead className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl text-xs text-muted-foreground shadow-sm after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-border/50">
             <tr>
@@ -201,8 +214,13 @@ export const HistoryTable = memo(function HistoryTable({ entries, onFeedback, on
                       className={`group hover:bg-primary/5 transition-colors cursor-pointer ${isExpanded ? 'bg-primary/5' : ''}`}
                       onClick={() => setExpandedId(isExpanded ? null : entry.id)}
                     >
-                      <td className="px-4 py-3">{getInputIcon(entry.input_type)}</td>
-                      <td className="px-4 py-3 max-w-[14rem] truncate font-medium text-foreground lg:max-w-[18rem] 2xl:max-w-md" title={entry.text}>{entry.text}</td>
+                      <td className="px-4 py-3.5">{getInputIcon(entry.input_type)}</td>
+                      <td
+                        className="px-4 py-3.5 max-w-[14rem] truncate font-medium text-foreground lg:max-w-[18rem] 2xl:max-w-md"
+                        title={displayEntryText(entry)}
+                      >
+                        {displayEntryText(entry)}
+                      </td>
                       <td className="px-4 py-3">{verdictLabel(entry.verdict)}</td>
                       <td className="px-4 py-3">
                         {entry.threat_level ? (
